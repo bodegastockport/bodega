@@ -25,9 +25,7 @@ export default function Login() {
     const { error: err } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        // Redirect to homepage after clicking the magic link
-        // Supabase will handle the session and redirect
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: `${window.location.origin}/admin`,
       },
     });
 
@@ -46,12 +44,8 @@ export default function Login() {
       <div style={{ width: "100%", maxWidth: "360px" }}>
 
         <div style={{ marginBottom: "32px" }}>
-          <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: "#777777", marginBottom: "8px" }}>
-            Bodega
-          </p>
-          <h1 style={{ fontSize: "20px", color: "#193c47", fontWeight: 400, marginBottom: "8px" }}>
-            Sign in
-          </h1>
+          <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: "#777777", marginBottom: "8px" }}>Bodega</p>
+          <h1 style={{ fontSize: "20px", color: "#193c47", fontWeight: 400, marginBottom: "8px" }}>Sign in</h1>
           <p style={{ fontSize: "12px", color: "#777777", lineHeight: "1.6" }}>
             Enter your email and we'll send you a sign-in link. No password needed.
           </p>
@@ -89,31 +83,21 @@ export default function Login() {
               />
             </div>
 
-            {error && (
-              <p style={{ fontSize: "12px", color: "#c0392b" }}>{error}</p>
-            )}
+            {error && <p style={{ fontSize: "12px", color: "#c0392b" }}>{error}</p>}
 
             <button
               type="submit"
               disabled={!email || submitting}
               style={{
-                width: "100%",
-                padding: "10px 24px",
-                backgroundColor: "#193c47",
-                color: "#f3f2ee",
-                border: "none",
-                borderRadius: "4px",
+                width: "100%", padding: "10px 24px",
+                backgroundColor: "#193c47", color: "#f3f2ee",
+                border: "none", borderRadius: "4px",
                 fontFamily: "'Courier New', Courier, monospace",
-                fontSize: "11px",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
+                fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em",
                 cursor: !email || submitting ? "not-allowed" : "pointer",
                 opacity: !email || submitting ? 0.6 : 1,
                 transition: "background-color 0.15s",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
               }}
               onMouseEnter={e => { if (email && !submitting) e.currentTarget.style.backgroundColor = "#2d6272"; }}
               onMouseLeave={e => { if (email && !submitting) e.currentTarget.style.backgroundColor = "#193c47"; }}
