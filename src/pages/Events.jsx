@@ -121,14 +121,18 @@ export default function Events() {
               <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>Upcoming</p>
               <h2 className="text-xl mb-6" style={{ color: "#193c47", fontWeight: 400 }}>Events at Bodega</h2>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
                 {events.map((event) => (
                   <div key={event.id} style={{ border: "1px solid #d8d6d0", borderRadius: "4px", overflow: "hidden", backgroundColor: "#eceae4" }}>
                     {event.image_url && (
-                      <div style={{ height: "180px", overflow: "hidden" }}>
-                        <img src={event.image_url} alt={event.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      </div>
-                    )}
+  <div style={{ aspectRatio: "4 / 5", overflow: "hidden" }}>
+    <img
+      src={event.image_url}
+      alt={event.title}
+      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+    />
+  </div>
+)}
 
                     <div style={{ padding: "16px" }}>
                       <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>
