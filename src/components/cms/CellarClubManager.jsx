@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Loader2, Plus, Pencil, Trash2, X, Search } from "lucide-react";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const inputStyle = {
   backgroundColor: "#f3f2ee",
@@ -154,7 +155,6 @@ export default function CellarClubManager() {
   return (
     <div className="space-y-6" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
 
-      {/* Header */}
       <div className="flex items-center justify-between">
         <p className="text-xs" style={{ color: "#777777" }}>
           {members.filter(m => m.status === "active").length} active members · {totalBottles} / {VAULT_CAPACITY} bottles stored
@@ -176,7 +176,6 @@ export default function CellarClubManager() {
         </button>
       </div>
 
-      {/* Vault bar */}
       <div style={{
         backgroundColor: "#eceae4",
         border: "1px solid #d8d6d0",
@@ -197,7 +196,6 @@ export default function CellarClubManager() {
         </div>
       </div>
 
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: "#777777" }} />
         <input
@@ -208,15 +206,42 @@ export default function CellarClubManager() {
         />
       </div>
 
-      {/* Form */}
       {editing && (
         <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", borderRadius: "6px", padding: "20px" }}>
-          {["name","email","phone","membership_start","membership_tier"].map((key) => (
-            <div key={key}>
-              <label style={labelStyle}>{key}</label>
-              <input style={inputStyle} value={form[key]} onChange={(e) => f(key, e.target.value)} />
-            </div>
-          ))}
+          
+          <div>
+            <label style={labelStyle}>name</label>
+            <input type="text" style={inputStyle} value={form.name} onChange={(e) => f("name", e.target.value)} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>email</label>
+            <input type="email" style={inputStyle} value={form.email} onChange={(e) => f("email", e.target.value)} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>phone</label>
+            <input type="text" style={inputStyle} value={form.phone} onChange={(e) => f("phone", e.target.value)} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>membership_start</label>
+            <input type="date" style={inputStyle} value={form.membership_start} onChange={(e) => f("membership_start", e.target.value)} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>membership_tier</label>
+            <Select value={form.membership_tier} onValueChange={(v) => f("membership_tier", v)}>
+              <SelectTrigger style={{ ...inputStyle, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <SelectValue placeholder="Select tier" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Cellar 6">Cellar 6</SelectItem>
+                <SelectItem value="Cellar 12">Cellar 12</SelectItem>
+                <SelectItem value="Cellar 24">Cellar 24</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <div className="flex gap-2 mt-4">
             <button onClick={handleSave} style={{ padding: "8px 16px", background: "#193c47", color: "#fff" }}>
@@ -227,7 +252,6 @@ export default function CellarClubManager() {
         </div>
       )}
 
-      {/* List */}
       {filtered.map((m) => (
         <div key={m.id} style={{ backgroundColor: "#eceae4", padding: "12px", borderRadius: "6px" }}>
           <div className="flex justify-between">
