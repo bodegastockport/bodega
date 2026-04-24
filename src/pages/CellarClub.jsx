@@ -159,30 +159,29 @@ export default function CellarClub() {
               Whenever you visit, simply let us know which bottles you'd like and we'll bring them up. A modest corkage fee applies.
             </p>
 
-            {/* Feature circles */}
-            <div className="flex gap-4 mb-8" style={{ maxWidth: "480px" }}>
+            {/* Feature cards */}
+            <div className="grid grid-cols-3 gap-3 mb-6">
               {[
-                { title: "Climate-controlled storage", body: "Ideal temperature and humidity for long-term ageing." },
-                { title: "Drink your own here", body: "Bring stored bottles to any table. Modest corkage applies." },
-                { title: "Member perks", body: "Priority reservations, tastings and limited allocations." },
+                { title: "Climate-controlled storage", body: "Your bottles held at ideal temperature and humidity for long-term ageing." },
+                { title: "Drink your own here", body: "Bring stored bottles to any table. A modest corkage fee applies." },
+                { title: "Member perks", body: "Priority reservations, exclusive tastings and early access to limited allocations." },
               ].map(({ title, body }) => (
-                <div key={title} className="flex flex-col items-center text-center" style={{ flex: 1 }}>
-                  <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: "#193c47", marginBottom: "10px", flexShrink: 0 }} />
-                  <p className="text-xs mb-1" style={{ color: "#2e282a" }}>{title}</p>
+                <div key={title} style={{ border: "1px solid #d8d6d0", padding: "16px" }}>
+                  <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#193c47" }}>{title}</p>
                   <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>{body}</p>
                 </div>
               ))}
             </div>
 
             {/* Big CTA */}
-            <div style={{ backgroundColor: "#193c47", borderRadius: "6px", padding: "24px", maxWidth: "420px" }}>
+            <div style={{ backgroundColor: "#193c47", padding: "24px" }}>
               <h3 className="text-lg mb-2" style={{ color: "#f3f2ee", fontWeight: 400 }}>Join the Cellar Club</h3>
               <p className="text-xs leading-relaxed mb-4" style={{ color: "rgba(243,242,238,0.75)" }}>
                 Store your collection beneath the bar from £21/month. Early bird pricing available for June 2026 sign-ups.
               </p>
               <button
                 onClick={() => setActiveTab("join")}
-                style={{ padding: "8px 20px", backgroundColor: "#f3f2ee", color: "#193c47", border: "none", borderRadius: "4px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer" }}
+                style={{ padding: "8px 20px", backgroundColor: "#f3f2ee", color: "#193c47", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer" }}
               >
                 Start your membership →
               </button>
