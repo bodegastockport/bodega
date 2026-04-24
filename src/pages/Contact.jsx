@@ -42,22 +42,26 @@ export default function Contact() {
     setError(null);
 
     const { error: err } = await supabase
-      .from('contact_submissions')
+      .from("contact_submissions")
       .insert({ ...form, status: "new" });
 
     setSubmitting(false);
-    if (err) { setError("Something went wrong. Please try again."); return; }
+    if (err) {
+      setError("Something went wrong. Please try again.");
+      return;
+    }
     setSent(true);
   };
 
-  const getInputStyle = (field) => ({ ...inputStyle, borderColor: focused === field ? "#193c47" : "#d8d6d0" });
+  const getInputStyle = (field) => ({
+    ...inputStyle,
+    borderColor: focused === field ? "#193c47" : "#d8d6d0"
+  });
 
   return (
     <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace" }}>
       <div className="px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-
-          {/* Left — info */}
           <div>
             <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>Get in touch</p>
             <h1 className="text-xl mb-4" style={{ color: "#193c47", fontWeight: 400 }}>Contact us</h1>
@@ -83,14 +87,15 @@ export default function Contact() {
                 title="Bodega Wine Bar Location"
                 width="100%"
                 height="100%"
-                style={{ border: 0, display: "block" }}
+                style={{ border: 0, display: "block", filter: "grayscale(100%)" }}
                 loading="lazy"
-                src="https://www.google.com/maps/embed/v1/place?key=AIzaSyD-9tSrke72ObEC4pHJnoL8Y6g0-Zf55EU&q=Stockport,Manchester,UK&zoom=14"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2378.3413092342607!2d-2.1689382230294676!3d53.408721870054286!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x487bb379f80925f5%3A0xc246e163d889de2c!2sWear%20Mill%2C%20Chestergate%2C%20Stockport%20SK3%200AG!5e0!3m2!1sen!2suk!4v1777044758773!5m2!1sen!2suk"
               />
             </div>
           </div>
 
-          {/* Right — form */}
           <div>
             <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>Message</p>
             <h2 className="text-xl mb-1" style={{ color: "#193c47", fontWeight: 400 }}>Send a message</h2>
@@ -129,13 +134,18 @@ export default function Contact() {
                     padding: "8px 20px",
                     backgroundColor: "#193c47",
                     color: "#f3f2ee",
-                    border: "none", borderRadius: "4px",
+                    border: "none",
+                    borderRadius: "4px",
                     fontFamily: "'Courier New', Courier, monospace",
-                    fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em",
+                    fontSize: "11px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
                     cursor: isValid && !submitting ? "pointer" : "not-allowed",
                     opacity: !isValid || submitting ? 0.6 : 1,
                     transition: "background-color 0.15s",
-                    display: "flex", alignItems: "center", gap: "6px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
                   }}
                 >
                   {submitting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending...</> : "Send message"}
