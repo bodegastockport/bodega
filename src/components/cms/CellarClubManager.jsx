@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Link } from "react-router-dom";
-import { Loader2, Plus, Pencil, Trash2, X, Search, ExternalLink } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, X, Search } from "lucide-react";
 import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const inputStyle = {
   backgroundColor: "#f3f2ee",
@@ -27,18 +25,6 @@ const labelStyle = {
   fontFamily: "'Courier New', Courier, monospace"
 };
 
-const STATUS_LABEL = {
-  active: "Active",
-  pending: "Pending",
-  inactive: "Inactive"
-};
-
-const STATUS_STYLE = {
-  active: { backgroundColor: "#eaf0ec", color: "#2e6b45", border: "1px solid #c8dace" },
-  pending: { backgroundColor: "#f0ede8", color: "#777777", border: "1px solid #d8d6d0" },
-  inactive: { backgroundColor: "#eceae4", color: "#777777", border: "1px solid #d8d6d0" }
-};
-
 const BLANK = {
   name: "",
   email: "",
@@ -59,18 +45,20 @@ export default function CellarClubManager() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
 
-  const load = async () => {
-  const { data } = await supabase
-    .from('cellar_members')
-    .select(`
-      *,
-      cellar_bottles!cellar_bottles_member_id_fkey ( id )
-    `)
-    .order('created_at', { ascending: false });
+ const load = async () => {
+  setLoading(true);
 
-  const withCounts = (data || []).map(m => ({
+  const { data: membersData } = await supabase
+    .from('cellar_members')
+    .select('*');
+
+  const { data: bottlesData } = await supabase
+    .from('cellar_bottles')
+    .select('member_id');
+
+  const withCounts = (membersData || []).map(m => ({
     ...m,
-    bottle_count: m.cellar_bottles?.length || 0
+    bottle_count: bottlesData?.filter(b => b.member_id === m.id).length || 0
   }));
 
   setMembers(withCounts);
@@ -121,7 +109,10 @@ export default function CellarClubManager() {
     };
 
     if (editing === "new") {
-      const { error } = await supabase.from("cellar_members").insert(payload);
+      const { error } = await supabase
+        .from("cellar_members")
+        .insert(payload);
+
       if (error) {
         toast.error(error.message);
         setSaving(false);
@@ -147,7 +138,11 @@ export default function CellarClubManager() {
   };
 
   const handleDelete = async (id) => {
-    const { error } = await supabase.from("cellar_members").delete().eq("id", id);
+    const { error } = await supabase
+      .from("cellar_members")
+      .delete()
+      .eq("id", id);
+
     if (!error) {
       setMembers((prev) => prev.filter((m) => m.id !== id));
       toast.success("Member removed");
@@ -155,12 +150,14 @@ export default function CellarClubManager() {
   };
 
   const totalBottles = members
-  .filter(m => m.status === "active")
-  .reduce((s, m) => s + (m.bottle_count || 0), 0);
+    .filter((m) => m.status === "active")
+    .reduce((s, m) => s + (m.bottle_count || 0), 0);
 
   const filtered = members.filter((m) => {
     if (!search.trim()) return true;
+
     const q = search.toLowerCase();
+
     return (
       (m.name || "").toLowerCase().includes(q) ||
       (m.email || "").toLowerCase().includes(q) ||
@@ -181,15 +178,34 @@ export default function CellarClubManager() {
 
       <div className="flex items-center justify-between">
         <p className="text-xs" style={{ color: "#777777" }}>
-          {members.filter(m => m.status === "active").length} active members · {totalBottles} / {VAULT_CAPACITY} bottles stored
+          {members.filter((m) => m.status === "active").length} active members · {totalBottles} / {VAULT_CAPACITY} bottles stored
         </p>
-        <button onClick={openNew} style={{ padding: "8px 16px", backgroundColor: "#193c47", color: "#f3f2ee", border: "none", borderRadius: "6px", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}>
+
+        <button
+          onClick={openNew}
+          style={{
+            padding: "8px 16px",
+            backgroundColor: "#193c47",
+            color: "#f3f2ee",
+            border: "none",
+            borderRadius: "6px",
+            fontSize: "12px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px"
+          }}
+        >
           <Plus className="h-3.5 w-3.5" /> Add member
         </button>
       </div>
 
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: "#777777" }} />
+        <Search
+          className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5"
+          style={{ color: "#777777" }}
+        />
+
         <input
           style={{ ...inputStyle, paddingLeft: "34px" }}
           placeholder="Search by name, email or phone…"
@@ -201,7 +217,7 @@ export default function CellarClubManager() {
       {editing && (
         <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", borderRadius: "6px", padding: "24px" }}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {["name","email","phone","membership_start","membership_tier"].map((key) => (
+            {["name", "email", "phone", "membership_start", "membership_tier"].map((key) => (
               <div key={key}>
                 <label style={labelStyle}>{key.replace("_", " ")}</label>
                 <input
@@ -214,10 +230,26 @@ export default function CellarClubManager() {
           </div>
 
           <div className="flex gap-2 mt-4">
-            <button onClick={handleSave} disabled={saving} style={{ padding: "8px 20px", backgroundColor: "#193c47", color: "#fff", borderRadius: "6px" }}>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              style={{
+                padding: "8px 20px",
+                backgroundColor: "#193c47",
+                color: "#fff",
+                borderRadius: "6px"
+              }}
+            >
               {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />} Save
             </button>
-            <button onClick={close} style={{ padding: "8px 16px", border: "1px solid #193c47" }}>
+
+            <button
+              onClick={close}
+              style={{
+                padding: "8px 16px",
+                border: "1px solid #193c47"
+              }}
+            >
               Cancel
             </button>
           </div>
@@ -232,10 +264,12 @@ export default function CellarClubManager() {
                 <p>{m.name}</p>
                 <p className="text-xs">{m.email}</p>
               </div>
+
               <div className="flex gap-2">
                 <button onClick={() => openEdit(m)}>
                   <Pencil className="h-3.5 w-3.5" />
                 </button>
+
                 <button onClick={() => handleDelete(m.id)}>
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
