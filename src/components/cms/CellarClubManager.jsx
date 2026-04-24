@@ -10,21 +10,21 @@ const labelStyle = { display: "block", fontSize: "10px", textTransform: "upperca
 
 const STATUS_LABEL = { active: "Active", pending: "Pending", inactive: "Inactive" };
 const STATUS_STYLE = {
-  active: { backgroundColor: "#eaf0ec", color: "#2e6b45", border: "1px solid #c8dace" },
-  pending: { backgroundColor: "#f0ede8", color: "#777777", border: "1px solid #d8d6d0" },
+  active:   { backgroundColor: "#eaf0ec", color: "#2e6b45", border: "1px solid #c8dace" },
+  pending:  { backgroundColor: "#f0ede8", color: "#777777", border: "1px solid #d8d6d0" },
   inactive: { backgroundColor: "#eceae4", color: "#777777", border: "1px solid #d8d6d0" },
 };
 
-const BLANK = { name: "", email: "", phone: "", membership_start: "", locker_number: "", notes: "", status: "pending", membership_tier: "" };
-const VAULT_CAPACITY = 1152; // 3 walls: 480 + 192 + 480
+const BLANK = { name: "", email: "", phone: "", membership_start: "", notes: "", status: "pending", membership_tier: "" };
+const VAULT_CAPACITY = 1152;
 
 export default function CellarClubManager() {
-  const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState(BLANK);
-  const [saving, setSaving] = useState(false);
-  const [search, setSearch] = useState("");
+  const [members, setMembers]   = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [editing, setEditing]   = useState(null);
+  const [form, setForm]         = useState(BLANK);
+  const [saving, setSaving]     = useState(false);
+  const [search, setSearch]     = useState("");
 
   const load = async () => {
     const { data } = await supabase
@@ -37,9 +37,17 @@ export default function CellarClubManager() {
 
   useEffect(() => { load(); }, []);
 
-  const openNew = () => { setForm(BLANK); setEditing("new"); };
+  const openNew  = () => { setForm(BLANK); setEditing("new"); };
   const openEdit = (m) => {
-    setForm({ name: m.name, email: m.email, phone: m.phone || "", membership_start: m.membership_start || "", locker_number: m.locker_number || "", notes: m.notes || "", status: m.status || "pending", membership_tier: m.membership_tier || "" });
+    setForm({
+      name:             m.name,
+      email:            m.email,
+      phone:            m.phone            || "",
+      membership_start: m.membership_start || "",
+      notes:            m.notes            || "",
+      status:           m.status           || "pending",
+      membership_tier:  m.membership_tier  || "",
+    });
     setEditing(m);
   };
   const close = () => setEditing(null);
@@ -69,18 +77,29 @@ export default function CellarClubManager() {
     }
   };
 
-  // Approximate total from bottles_stored field (updated by bottle check-in/out)
-  const totalBottles = members.filter(m => m.status === "active").reduce((s, m) => s + (m.bottles_stored || 0), 0);
+  const totalBottles = members
+    .filter(m => m.status === "active")
+    .reduce((s, m) => s + (m.bottles_stored || 0), 0);
+
   const filtered = members.filter(m => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
-    return (m.name || "").toLowerCase().includes(q) || (m.email || "").toLowerCase().includes(q) || (m.phone || "").toLowerCase().includes(q) || (m.locker_number || "").toLowerCase().includes(q);
+    return (
+      (m.name  || "").toLowerCase().includes(q) ||
+      (m.email || "").toLowerCase().includes(q) ||
+      (m.phone || "").toLowerCase().includes(q)
+    );
   });
 
-  if (loading) return <div className="flex justify-center py-16"><Loader2 className="h-5 w-5 animate-spin" style={{ color: "#193c47" }} /></div>;
+  if (loading) return (
+    <div className="flex justify-center py-16">
+      <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#193c47" }} />
+    </div>
+  );
 
   return (
     <div className="space-y-6" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <p className="text-xs" style={{ color: "#777777" }}>
@@ -112,7 +131,7 @@ export default function CellarClubManager() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 pointer-events-none" style={{ color: "#777777" }} />
         <input
           style={{ ...inputStyle, paddingLeft: "34px" }}
-          placeholder="Search by name, email, phone or bay…"
+          placeholder="Search by name, email or phone…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -132,12 +151,11 @@ export default function CellarClubManager() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { key: "name", label: "Full name *", type: "text", placeholder: "Member name" },
-              { key: "email", label: "Email *", type: "email", placeholder: "email@example.com" },
-              { key: "phone", label: "Phone", type: "text", placeholder: "Phone number" },
-              { key: "membership_start", label: "Membership start", type: "date" },
-              { key: "locker_number", label: "Locker / bay", type: "text", placeholder: "e.g. A20" },
-              { key: "membership_tier", label: "Tier", type: "text", placeholder: "e.g. Cellar 12" },
+              { key: "name",             label: "Full name *",       type: "text",  placeholder: "Member name" },
+              { key: "email",            label: "Email *",           type: "email", placeholder: "email@example.com" },
+              { key: "phone",            label: "Phone",             type: "text",  placeholder: "Phone number" },
+              { key: "membership_start", label: "Membership start",  type: "date",  placeholder: "" },
+              { key: "membership_tier",  label: "Tier",              type: "text",  placeholder: "e.g. Cellar 12" },
             ].map(({ key, label, type, placeholder }) => (
               <div key={key}>
                 <label style={labelStyle}>{label}</label>
@@ -147,7 +165,9 @@ export default function CellarClubManager() {
             <div>
               <label style={labelStyle}>Status</label>
               <Select value={form.status} onValueChange={(v) => f("status", v)}>
-                <SelectTrigger style={{ ...inputStyle, height: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}><SelectValue /></SelectTrigger>
+                <SelectTrigger style={{ ...inputStyle, height: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
@@ -168,7 +188,9 @@ export default function CellarClubManager() {
             >
               {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />} Save member
             </button>
-            <button onClick={close} style={{ padding: "8px 16px", backgroundColor: "transparent", color: "#193c47", border: "1px solid #193c47", borderRadius: "6px", fontFamily: "'Courier New', Courier, monospace", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer" }}>Cancel</button>
+            <button onClick={close} style={{ padding: "8px 16px", backgroundColor: "transparent", color: "#193c47", border: "1px solid #193c47", borderRadius: "6px", fontFamily: "'Courier New', Courier, monospace", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer" }}>
+              Cancel
+            </button>
           </div>
         </div>
       )}
@@ -192,9 +214,10 @@ export default function CellarClubManager() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-sm" style={{ color: "#2e282a" }}>{m.name}</p>
-                  <span style={{ ...STATUS_STYLE[m.status || "pending"], fontSize: "10px", padding: "2px 8px", borderRadius: "3px", textTransform: "uppercase", letterSpacing: "0.05em" }}>{STATUS_LABEL[m.status || "pending"]}</span>
+                  <span style={{ ...STATUS_STYLE[m.status || "pending"], fontSize: "10px", padding: "2px 8px", borderRadius: "3px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    {STATUS_LABEL[m.status || "pending"]}
+                  </span>
                   {m.membership_tier && <span className="text-xs" style={{ color: "#777777" }}>· {m.membership_tier}</span>}
-                  {m.locker_number && <span className="text-xs" style={{ color: "#777777" }}>· {m.locker_number}</span>}
                 </div>
                 <p className="text-xs mt-0.5" style={{ color: "#777777" }}>{m.email}{m.phone ? ` · ${m.phone}` : ""}</p>
               </div>
