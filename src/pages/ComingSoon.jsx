@@ -39,7 +39,7 @@ export default function ComingSoon() {
 
       {/* Full-page background image */}
       <img
-        src="/images/coming-soon-bg.jpg"
+        src="/images/coming-soon.jpg"
         alt="Bodega wine bar"
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
       />
@@ -53,7 +53,7 @@ export default function ComingSoon() {
         {/* Logo bar */}
         <div>
           <img
-            src="/images/bodega-logo.png"
+            src="/images/bodega-logo.svg"
             alt="Bodega"
             style={{ width: "calc(100% - 48px)", display: "block", margin: "0 24px" }}
           />
