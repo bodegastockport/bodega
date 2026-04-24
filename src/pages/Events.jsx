@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
@@ -22,11 +22,29 @@ const EVENT_TYPES = [
 ];
 
 export default function Events() {
+  const [events, setEvents] = useState([]);
+  const [loadingEvents, setLoadingEvents] = useState(true);
+
   const [form, setForm] = useState({ name: "", email: "", phone: "", event_type: "", date: "", guests: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState(null);
   const [focused, setFocused] = useState(null);
+
+  useEffect(() => {
+    const loadEvents = async () => {
+      const { data } = await supabase
+        .from('events')
+        .select('*')
+        .eq('published', true)
+        .order('date', { ascending: true });
+
+      setEvents(data || []);
+      setLoadingEvents(false);
+    };
+
+    loadEvents();
+  }, []);
 
   const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
   const isValid = form.name && form.email && form.event_type && form.message;
@@ -53,14 +71,38 @@ export default function Events() {
       <div className="px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
 
-          {/* Left — info */}
           <div>
             <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>Private events</p>
             <h1 className="text-xl mb-3" style={{ color: "#193c47", fontWeight: 400 }}>Events & private hire</h1>
             <p className="text-xs leading-relaxed mb-5" style={{ color: "#777777" }}>
               From intimate tastings to full venue hire, Bodega is the perfect backdrop for memorable occasions.
             </p>
+
             <div className="space-y-4">
+              {loadingEvents ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : events.length === 0 ? (
+                <p className="text-xs" style={{ color: "#777777" }}>
+                  No upcoming events.
+                </p>
+              ) : (
+                events.map((ev) => (
+                  <div key={ev.id} style={{ borderLeft: "2px solid #193c47", paddingLeft: "12px" }}>
+                    <p className="text-xs mb-0.5" style={{ color: "#2e282a" }}>
+                      {ev.title}
+                    </p>
+                    <p className="text-xs" style={{ color: "#777777" }}>
+                      {new Date(ev.date).toLocaleDateString()}
+                    </p>
+                    <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>
+                      {ev.description}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="space-y-4 mt-6">
               {EVENT_TYPES.map(({ title, desc }) => (
                 <div key={title} style={{ borderLeft: "2px solid #193c47", paddingLeft: "12px" }}>
                   <p className="text-xs mb-0.5" style={{ color: "#2e282a" }}>{title}</p>
@@ -70,7 +112,6 @@ export default function Events() {
             </div>
           </div>
 
-          {/* Right — form */}
           <div>
             <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>Enquiries</p>
             <h2 className="text-xl mb-1" style={{ color: "#193c47", fontWeight: 400 }}>Make an enquiry</h2>
