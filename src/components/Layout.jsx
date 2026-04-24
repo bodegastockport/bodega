@@ -110,7 +110,7 @@ export default function Layout() {
 
       {/* Footer */}
       <footer
-        style={{ borderTop: "1px solid #d8d6d0", backgroundColor: "#f3f2ee", position: "relative", zIndex: 1, marginTop: isHome ? 0 : "48px" }}
+        style={{ borderTop: "1px solid #d8d6d0", backgroundColor: "#f3f2ee", position: "relative", zIndex: 1 }}
         className="py-8"
       >
         <div className="px-6">
