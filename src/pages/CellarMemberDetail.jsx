@@ -77,12 +77,11 @@ export default function CellarMemberDetail() {
   );
 
   const fields = [
-    { key: "name",             label: "Full name",       type: "text" },
-    { key: "email",            label: "Email",           type: "email" },
-    { key: "phone",            label: "Phone",           type: "text" },
-    { key: "membership_tier",  label: "Membership tier", type: "text" },
-    { key: "membership_start", label: "Membership start",type: "date" },
-    { key: "locker_number",    label: "Locker / bay",    type: "text" },
+    { key: "name",             label: "Full name",        type: "text" },
+    { key: "email",            label: "Email",            type: "email" },
+    { key: "phone",            label: "Phone",            type: "text" },
+    { key: "membership_tier",  label: "Membership tier",  type: "text" },
+    { key: "membership_start", label: "Membership start", type: "date" },
   ];
 
   return (
@@ -110,7 +109,6 @@ export default function CellarMemberDetail() {
                 {member.status || "pending"}
               </span>
               {member.membership_tier && <span className="text-xs" style={{ color: "#777777" }}>· {member.membership_tier}</span>}
-              {member.locker_number && <span className="text-xs" style={{ color: "#777777" }}>· {member.locker_number}</span>}
               <span className="text-xs" style={{ color: "#777777" }}>· {bottleCount} bottles stored</span>
             </div>
           </div>
