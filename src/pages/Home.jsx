@@ -12,7 +12,7 @@ export default function Home() {
         {/* Fixed image — full viewport, left half, behind nav */}
         <div style={{ position: "fixed", top: 0, left: 0, width: "50vw", height: "100vh", zIndex: 0 }}>
           <img
-            src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=1400&q=85"
+            src="/images/hero.jpg"
             alt="Wine at Bodega"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
           />
@@ -59,7 +59,7 @@ export default function Home() {
         {/* Image — 50vh, full width */}
         <div style={{ position: "relative", width: "100%", height: "50vh", flexShrink: 0 }}>
           <img
-            src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=900&q=85"
+            src="/images/hero.jpg"
             alt="Wine at Bodega"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
           />
