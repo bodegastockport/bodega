@@ -188,6 +188,84 @@ export default function Events() {
               </form>
             )}
           </div>
+
+          {events.length > 0 && (
+  <div className="mt-12">
+    <div style={{ borderTop: "1px solid #d8d6d0", paddingTop: "32px" }}>
+      <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>
+        Upcoming
+      </p>
+      <h2 className="text-xl mb-6" style={{ color: "#193c47", fontWeight: 400 }}>
+        Events at Bodega
+      </h2>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {events.map((event) => (
+          <div key={event.id} style={{
+            border: "1px solid #d8d6d0",
+            borderRadius: "4px",
+            overflow: "hidden",
+            backgroundColor: "#eceae4"
+          }}>
+            {event.image_url && (
+              <div style={{ height: "180px", overflow: "hidden" }}>
+                <img
+                  src={event.image_url}
+                  alt={event.title}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              </div>
+            )}
+
+            <div style={{ padding: "16px" }}>
+              <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>
+                {new Date(event.date).toLocaleDateString("en-GB", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric"
+                })}
+              </p>
+
+              <p className="text-sm mb-2" style={{ color: "#193c47" }}>
+                {event.title}
+              </p>
+
+              <p className="text-xs leading-relaxed mb-4" style={{ color: "#777777" }}>
+                {event.description}
+              </p>
+
+              <button
+                onClick={() => {
+                  update("event_type", "Other");
+                  update(
+                    "message",
+                    `I'd like to book a place at: ${event.title} (${new Date(event.date).toLocaleDateString("en-GB")})`
+                  );
+                  document.getElementById("enquiry-form")?.scrollIntoView({ behavior: "smooth" });
+                }}
+                style={{
+                  padding: "7px 16px",
+                  backgroundColor: "#193c47",
+                  color: "#f3f2ee",
+                  border: "none",
+                  borderRadius: "4px",
+                  fontFamily: "'Courier New', Courier, monospace",
+                  fontSize: "11px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  cursor: "pointer"
+                }}
+              >
+                Book a place →
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
         </div>
       </div>
     </div>
