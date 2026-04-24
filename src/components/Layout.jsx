@@ -3,9 +3,7 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 
-// Replace this with the actual Bodega logo path once received from Dan
-// e.g. "/images/bodega-logo.png" or "/images/bodega-logo.svg"
-const LOGO_URL = "/images/bodega-logo.png";
+const LOGO_URL = "/bodega_logo_teal.svg";
 
 const NAV = [
   { to: "/",            label: "Reserve" },
