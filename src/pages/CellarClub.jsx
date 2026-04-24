@@ -125,56 +125,79 @@ export default function CellarClub() {
       {activeTab === "info" && (
         <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)", gap: 0 }}>
 
-          {/* Left — text content */}
-          <div className="px-6 py-8 flex flex-col justify-start">
+          {/* Left — full height flex column */}
+          <div className="flex flex-col" style={{ minHeight: "calc(100vh - 56px)" }}>
 
-            {/* Header row — title + tab switcher side by side */}
-            <div className="flex items-start justify-between gap-4 mb-6" style={{ maxWidth: "520px" }}>
-              <div>
+            {/* Header row — title left, tabs right */}
+            <div className="flex items-center justify-between px-6 pt-8 pb-4" style={{ borderBottom: "1px solid #d8d6d0" }}>
+              <div className="shrink-0">
                 <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>Members only</p>
                 <h1 className="text-xl" style={{ color: "#193c47", fontWeight: 400 }}>The Cellar Club</h1>
               </div>
-              <div className="flex gap-0 shrink-0" style={{ border: "1px solid #d8d6d0", borderRadius: "4px", overflow: "hidden", marginTop: "2px" }}>
-                {TAB_BUTTON("info", "About")}
-                {TAB_BUTTON("pricing", "Pricing")}
-                {TAB_BUTTON("join", "Join")}
+              <div className="flex flex-col" style={{ border: "1px solid #d8d6d0", overflow: "hidden" }}>
+                {["info", "pricing", "join"].map((key, i) => (
+                  <button
+                    key={key}
+                    onClick={() => setActiveTab(key)}
+                    style={{
+                      padding: "6px 16px",
+                      fontFamily: "'Courier New', Courier, monospace",
+                      fontSize: "11px",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      border: "none",
+                      borderBottom: i < 2 ? "1px solid #d8d6d0" : "none",
+                      cursor: "pointer",
+                      backgroundColor: activeTab === key ? "#193c47" : "#f3f2ee",
+                      color: activeTab === key ? "#f3f2ee" : "#777777",
+                      transition: "background-color 0.15s",
+                      textAlign: "left",
+                    }}
+                  >
+                    {key === "info" ? "About" : key.charAt(0).toUpperCase() + key.slice(1)}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Already a member — near the top */}
-            <p className="text-xs mb-6" style={{ color: "#777777" }}>
-              Already a member?{" "}
-              <a href="/my-cellar" style={{ color: "#193c47", textDecoration: "none", borderBottom: "1px solid #193c47" }}>
-                Log in to your cellar →
-              </a>
-            </p>
+            {/* Already a member */}
+            <div className="px-6 py-3" style={{ borderBottom: "1px solid #d8d6d0" }}>
+              <p className="text-xs" style={{ color: "#777777" }}>
+                Already a member?{" "}
+                <a href="/my-cellar" style={{ color: "#193c47", textDecoration: "none", borderBottom: "1px solid #193c47" }}>
+                  Log in to your cellar →
+                </a>
+              </p>
+            </div>
 
             {/* Body copy */}
-            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>How it works</p>
-            <h2 className="text-lg mb-3" style={{ color: "#193c47", fontWeight: 400 }}>Your collection, beneath the bar</h2>
-            <p className="text-xs leading-relaxed mb-2" style={{ color: "#777777", maxWidth: "420px" }}>
-              Beneath Bodega lies a temperature-controlled vault. As a member, you rent a dedicated space — keeping your wine at the perfect conditions for long-term ageing.
-            </p>
-            <p className="text-xs leading-relaxed mb-8" style={{ color: "#777777", maxWidth: "420px" }}>
-              Whenever you visit, simply let us know which bottles you'd like and we'll bring them up. A modest corkage fee applies.
-            </p>
+            <div className="px-6 py-6" style={{ borderBottom: "1px solid #d8d6d0" }}>
+              <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>How it works</p>
+              <h2 className="text-lg mb-3" style={{ color: "#193c47", fontWeight: 400 }}>Your collection, beneath the bar</h2>
+              <p className="text-xs leading-relaxed mb-2" style={{ color: "#777777" }}>
+                Beneath Bodega lies a temperature-controlled vault. As a member, you rent a dedicated space — keeping your wine at the perfect conditions for long-term ageing.
+              </p>
+              <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>
+                Whenever you visit, simply let us know which bottles you'd like and we'll bring them up. A modest corkage fee applies.
+              </p>
+            </div>
 
-            {/* Feature cards */}
-            <div className="grid grid-cols-3 gap-3 mb-6">
+            {/* Feature cards — fill remaining space */}
+            <div className="grid grid-cols-3" style={{ borderBottom: "1px solid #d8d6d0" }}>
               {[
                 { title: "Climate-controlled storage", body: "Your bottles held at ideal temperature and humidity for long-term ageing." },
                 { title: "Drink your own here", body: "Bring stored bottles to any table. A modest corkage fee applies." },
                 { title: "Member perks", body: "Priority reservations, exclusive tastings and early access to limited allocations." },
-              ].map(({ title, body }) => (
-                <div key={title} style={{ border: "1px solid #d8d6d0", padding: "16px" }}>
+              ].map(({ title, body }, i) => (
+                <div key={title} className="flex flex-col" style={{ borderRight: i < 2 ? "1px solid #d8d6d0" : "none", padding: "32px 20px" }}>
                   <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#193c47" }}>{title}</p>
                   <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>{body}</p>
                 </div>
               ))}
             </div>
 
-            {/* Big CTA */}
-            <div style={{ backgroundColor: "#193c47", padding: "24px" }}>
+            {/* CTA — full width, no border radius */}
+            <div className="px-6 py-8" style={{ backgroundColor: "#193c47" }}>
               <h3 className="text-lg mb-2" style={{ color: "#f3f2ee", fontWeight: 400 }}>Join the Cellar Club</h3>
               <p className="text-xs leading-relaxed mb-4" style={{ color: "rgba(243,242,238,0.75)" }}>
                 Store your collection beneath the bar from £21/month. Early bird pricing available for June 2026 sign-ups.
