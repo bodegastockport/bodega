@@ -51,11 +51,25 @@ const btnOutline = {
   cursor: "pointer",
 };
 
+const BLANK_WINE = { name: "", region: "", glass_price: "", bottle_price: "", sort_order: 0 };
+const BLANK_FOOD = { name: "", description: "", serves: "", price: "", sort_order: 0 };
+
 export default function MenuManager() {
   const [sections, setSections] = useState([]);
   const [items, setItems] = useState([]);
   const [foodItems, setFoodItems] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [addingSection, setAddingSection] = useState(false);
+  const [newSectionName, setNewSectionName] = useState("");
+
+  const [addingItemTo, setAddingItemTo] = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
+  const [itemForm, setItemForm] = useState(BLANK_WINE);
+
+  const [addingFood, setAddingFood] = useState(false);
+  const [editingFood, setEditingFood] = useState(null);
+  const [foodForm, setFoodForm] = useState(BLANK_FOOD);
 
   const load = async () => {
     const [{ data: s }, { data: i }, { data: f }] = await Promise.all([
@@ -74,128 +88,155 @@ export default function MenuManager() {
     load();
   }, []);
 
-  const addSection = async (name) => {
-    if (!name.trim()) return;
-    await supabase.from("wine_sections").insert({
-      name,
+  const addSection = async () => {
+    if (!newSectionName.trim()) return;
+
+    const { error } = await supabase.from("wine_sections").insert({
+      name: newSectionName,
       sort_order: sections.length,
     });
+
+    if (error) return toast.error(error.message);
+
+    setNewSectionName("");
+    setAddingSection(false);
     await load();
-    toast.success("Section added");
   };
 
   const deleteSection = async (id) => {
     await supabase.from("wine_items").delete().eq("section_id", id);
     await supabase.from("wine_sections").delete().eq("id", id);
     await load();
-    toast.success("Section removed");
   };
 
-  const addItem = async (section_id, item) => {
-    await supabase.from("wine_items").insert({ ...item, section_id });
-    await load();
-    toast.success("Wine added");
+  const openAddItem = (sectionId) => {
+    setAddingItemTo(sectionId);
+    setEditingItem(null);
+    setItemForm(BLANK_WINE);
   };
 
-  const updateItem = async (id, item) => {
-    await supabase.from("wine_items").update(item).eq("id", id);
+  const openEditItem = (item) => {
+    setEditingItem(item);
+    setAddingItemTo(null);
+    setItemForm(item);
+  };
+
+  const saveItem = async () => {
+    if (!itemForm.name) return;
+
+    if (editingItem) {
+      const { error } = await supabase
+        .from("wine_items")
+        .update(itemForm)
+        .eq("id", editingItem.id);
+
+      if (error) return toast.error(error.message);
+    } else {
+      const { error } = await supabase
+        .from("wine_items")
+        .insert({ ...itemForm, section_id: addingItemTo });
+
+      if (error) return toast.error(error.message);
+    }
+
+    setAddingItemTo(null);
+    setEditingItem(null);
     await load();
-    toast.success("Wine updated");
   };
 
   const deleteItem = async (id) => {
     await supabase.from("wine_items").delete().eq("id", id);
     await load();
-    toast.success("Removed");
   };
 
-  const addFood = async (item) => {
-    await supabase.from("food_items").insert(item);
-    await load();
-    toast.success("Board added");
+  const openAddFood = () => {
+    setAddingFood(true);
+    setEditingFood(null);
+    setFoodForm(BLANK_FOOD);
   };
 
-  const updateFood = async (id, item) => {
-    await supabase.from("food_items").update(item).eq("id", id);
+  const openEditFood = (item) => {
+    setEditingFood(item);
+    setAddingFood(false);
+    setFoodForm(item);
+  };
+
+  const saveFood = async () => {
+    if (!foodForm.name) return;
+
+    if (editingFood) {
+      const { error } = await supabase
+        .from("food_items")
+        .update(foodForm)
+        .eq("id", editingFood.id);
+
+      if (error) return toast.error(error.message);
+    } else {
+      const { error } = await supabase.from("food_items").insert(foodForm);
+
+      if (error) return toast.error(error.message);
+    }
+
+    setAddingFood(false);
+    setEditingFood(null);
     await load();
-    toast.success("Board updated");
   };
 
   const deleteFood = async (id) => {
     await supabase.from("food_items").delete().eq("id", id);
     await load();
-    toast.success("Removed");
   };
 
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#193c47" }} />
+        <Loader2 className="h-5 w-5 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-10" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
+    <div className="space-y-10">
       <div>
-        <div className="flex items-center justify-between mb-5" style={{ borderBottom: "1px solid #d8d6d0", paddingBottom: "10px" }}>
-          <p className="text-xs uppercase tracking-widest" style={{ color: "#777777" }}>
-            Wine list
-          </p>
-          <button style={btnPrimary} onClick={() => addSection("New section")}>
-            <Plus className="h-3 w-3" /> Add section
-          </button>
-        </div>
+        <button onClick={() => setAddingSection(true)}>Add section</button>
 
-        {sections.length === 0 && (
-          <p className="text-sm text-center py-8" style={{ color: "#777777" }}>
-            No wine sections yet. Add your first one.
-          </p>
+        {addingSection && (
+          <div>
+            <input value={newSectionName} onChange={(e) => setNewSectionName(e.target.value)} />
+            <button onClick={addSection}>Save</button>
+          </div>
         )}
 
         {sections.map((section) => {
-          const sectionItems = items
-            .filter((i) => i.section_id === section.id)
-            .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+          const sectionItems = items.filter(
+            (i) => String(i.section_id) === String(section.id)
+          );
 
           return (
-            <div key={section.id} style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", borderRadius: "6px", marginBottom: "12px" }}>
-              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid #d8d6d0" }}>
-                <p className="text-xs uppercase tracking-widest" style={{ color: "#193c47" }}>
-                  {section.name}
-                </p>
-                <div className="flex gap-2">
-                  <button style={btnOutline} onClick={() => addItem(section.id, { name: "New wine" })}>
-                    <Plus className="h-3 w-3" /> Add wine
-                  </button>
-                  <button onClick={() => deleteSection(section.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
+            <div key={section.id}>
+              <p>{section.name}</p>
+
+              <button onClick={() => openAddItem(section.id)}>Add wine</button>
 
               {sectionItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: "1px solid #d8d6d0" }}>
-                  <div>
-                    <p className="text-xs" style={{ color: "#2e282a" }}>
-                      {item.name}
-                    </p>
-                    {item.region && (
-                      <p className="text-xs" style={{ color: "#aaa" }}>
-                        {item.region}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => updateItem(item.id, item)}>
-                      <Pencil className="h-3 w-3" />
-                    </button>
-                    <button onClick={() => deleteItem(item.id)}>
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
+                <div key={item.id}>
+                  <span>{item.name}</span>
+                  <button onClick={() => openEditItem(item)}>Edit</button>
+                  <button onClick={() => deleteItem(item.id)}>Delete</button>
                 </div>
               ))}
+
+              {addingItemTo === section.id && (
+                <div>
+                  <input
+                    value={itemForm.name}
+                    onChange={(e) =>
+                      setItemForm((p) => ({ ...p, name: e.target.value }))
+                    }
+                  />
+                  <button onClick={saveItem}>Save</button>
+                </div>
+              )}
             </div>
           );
         })}
