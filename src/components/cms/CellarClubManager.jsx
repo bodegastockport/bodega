@@ -45,25 +45,26 @@ export default function CellarClubManager() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
 
- const load = async () => {
-  setLoading(true);
+  const load = async () => {
+    setLoading(true);
 
-  const { data: membersData } = await supabase
-    .from('cellar_members')
-    .select('*');
+    const { data: membersData } = await supabase
+      .from("cellar_members")
+      .select("*");
 
-  const { data: bottlesData } = await supabase
-    .from('cellar_bottles')
-    .select('member_id');
+    const { data: bottlesData } = await supabase
+      .from("cellar_bottles")
+      .select("member_id");
 
-  const withCounts = (membersData || []).map(m => ({
-    ...m,
-    bottle_count: bottlesData?.filter(b => b.member_id === m.id).length || 0
-  }));
+    const withCounts = (membersData || []).map((m) => ({
+      ...m,
+      bottle_count:
+        bottlesData?.filter((b) => b.member_id === m.id).length || 0
+    }));
 
-  setMembers(withCounts);
-  setLoading(false);
-};
+    setMembers(withCounts);
+    setLoading(false);
+  };
 
   useEffect(() => {
     load();
@@ -181,31 +182,24 @@ export default function CellarClubManager() {
           {members.filter((m) => m.status === "active").length} active members · {totalBottles} / {VAULT_CAPACITY} bottles stored
         </p>
 
-        <button
-          onClick={openNew}
-          style={{
-            padding: "8px 16px",
-            backgroundColor: "#193c47",
-            color: "#f3f2ee",
-            border: "none",
-            borderRadius: "6px",
-            fontSize: "12px",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px"
-          }}
-        >
+        <button onClick={openNew} style={{
+          padding: "8px 16px",
+          backgroundColor: "#193c47",
+          color: "#f3f2ee",
+          border: "none",
+          borderRadius: "6px",
+          fontSize: "12px",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: "6px"
+        }}>
           <Plus className="h-3.5 w-3.5" /> Add member
         </button>
       </div>
 
       <div className="relative">
-        <Search
-          className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5"
-          style={{ color: "#777777" }}
-        />
-
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: "#777777" }} />
         <input
           style={{ ...inputStyle, paddingLeft: "34px" }}
           placeholder="Search by name, email or phone…"
@@ -214,70 +208,31 @@ export default function CellarClubManager() {
         />
       </div>
 
-      {editing && (
-        <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", borderRadius: "6px", padding: "24px" }}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {["name", "email", "phone", "membership_start", "membership_tier"].map((key) => (
-              <div key={key}>
-                <label style={labelStyle}>{key.replace("_", " ")}</label>
-                <input
-                  style={inputStyle}
-                  value={form[key]}
-                  onChange={(e) => f(key, e.target.value)}
-                />
-              </div>
-            ))}
-          </div>
+      {filtered.map((m) => (
+        <div key={m.id} style={{
+          backgroundColor: "#eceae4",
+          border: "1px solid #d8d6d0",
+          borderRadius: "6px",
+          padding: "16px"
+        }}>
+          <div className="flex justify-between">
+            <div>
+              <p>{m.name}</p>
+              <p className="text-xs">{m.email}</p>
+            </div>
 
-          <div className="flex gap-2 mt-4">
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              style={{
-                padding: "8px 20px",
-                backgroundColor: "#193c47",
-                color: "#fff",
-                borderRadius: "6px"
-              }}
-            >
-              {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />} Save
-            </button>
+            <div className="flex gap-2">
+              <button onClick={() => openEdit(m)}>
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
 
-            <button
-              onClick={close}
-              style={{
-                padding: "8px 16px",
-                border: "1px solid #193c47"
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="space-y-2">
-        {filtered.map((m) => (
-          <div key={m.id} style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", borderRadius: "6px", padding: "16px" }}>
-            <div className="flex justify-between">
-              <div>
-                <p>{m.name}</p>
-                <p className="text-xs">{m.email}</p>
-              </div>
-
-              <div className="flex gap-2">
-                <button onClick={() => openEdit(m)}>
-                  <Pencil className="h-3.5 w-3.5" />
-                </button>
-
-                <button onClick={() => handleDelete(m.id)}>
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
+              <button onClick={() => handleDelete(m.id)}>
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 }
