@@ -72,7 +72,7 @@ export default function ComingSoon() {
             </h2>
 
             <p style={{ fontSize: "13px", lineHeight: 1.75, color: "rgba(243,242,238,0.75)", marginBottom: "36px" }}>
-              A neighbourhood wine bar, private cellar club and bottle shop for people who love good wine. It opens June 5th 2026.
+              A neighbourhood wine bar, private cellar club and bottle shop for people who love good wine opening at Weir Mill, Stockport this summer.
             </p>
 
             {done ? (
@@ -137,7 +137,7 @@ export default function ComingSoon() {
                 )}
 
                 <p style={{ marginTop: "12px", fontSize: "10px", color: "rgba(243,242,238,0.4)", letterSpacing: "0.04em" }}>
-                  No spam. Just the opening date and what's on.
+                  Sign up to know what's on and receive special offers.
                 </p>
               </>
             )}
