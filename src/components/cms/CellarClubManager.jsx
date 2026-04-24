@@ -64,7 +64,7 @@ export default function CellarClubManager() {
     .from('cellar_members')
     .select(`
       *,
-      cellar_bottles ( id )
+      cellar_bottles!cellar_bottles_member_id_fkey ( id )
     `)
     .order('created_at', { ascending: false });
 
