@@ -48,18 +48,12 @@ export default function CellarClubManager() {
   const load = async () => {
     setLoading(true);
 
-    const { data: membersData } = await supabase
-      .from("cellar_members")
-      .select("*");
-
-    const { data: bottlesData } = await supabase
-      .from("cellar_bottles")
-      .select("member_id");
+    const { data: membersData } = await supabase.from("cellar_members").select("*");
+    const { data: bottlesData } = await supabase.from("cellar_bottles").select("member_id");
 
     const withCounts = (membersData || []).map((m) => ({
       ...m,
-      bottle_count:
-        bottlesData?.filter((b) => b.member_id === m.id).length || 0
+      bottle_count: bottlesData?.filter((b) => b.member_id === m.id).length || 0
     }));
 
     setMembers(withCounts);
@@ -99,21 +93,10 @@ export default function CellarClubManager() {
 
     setSaving(true);
 
-    const payload = {
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      membership_start: form.membership_start,
-      membership_tier: form.membership_tier,
-      status: form.status,
-      notes: form.notes
-    };
+    const payload = { ...form };
 
     if (editing === "new") {
-      const { error } = await supabase
-        .from("cellar_members")
-        .insert(payload);
-
+      const { error } = await supabase.from("cellar_members").insert(payload);
       if (error) {
         toast.error(error.message);
         setSaving(false);
@@ -135,18 +118,14 @@ export default function CellarClubManager() {
     await load();
     setSaving(false);
     setEditing(null);
-    toast.success(editing === "new" ? "Member added" : "Member updated");
+    toast.success("Saved");
   };
 
   const handleDelete = async (id) => {
-    const { error } = await supabase
-      .from("cellar_members")
-      .delete()
-      .eq("id", id);
-
+    const { error } = await supabase.from("cellar_members").delete().eq("id", id);
     if (!error) {
       setMembers((prev) => prev.filter((m) => m.id !== id));
-      toast.success("Member removed");
+      toast.success("Removed");
     }
   };
 
@@ -156,9 +135,7 @@ export default function CellarClubManager() {
 
   const filtered = members.filter((m) => {
     if (!search.trim()) return true;
-
     const q = search.toLowerCase();
-
     return (
       (m.name || "").toLowerCase().includes(q) ||
       (m.email || "").toLowerCase().includes(q) ||
@@ -177,9 +154,10 @@ export default function CellarClubManager() {
   return (
     <div className="space-y-6" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
 
+      {/* Header */}
       <div className="flex items-center justify-between">
         <p className="text-xs" style={{ color: "#777777" }}>
-          {members.filter((m) => m.status === "active").length} active members · {totalBottles} / {VAULT_CAPACITY} bottles stored
+          {members.filter(m => m.status === "active").length} active members · {totalBottles} / {VAULT_CAPACITY} bottles stored
         </p>
 
         <button onClick={openNew} style={{
@@ -198,41 +176,73 @@ export default function CellarClubManager() {
         </button>
       </div>
 
+      {/* Vault bar */}
+      <div style={{
+        backgroundColor: "#eceae4",
+        border: "1px solid #d8d6d0",
+        borderRadius: "6px",
+        padding: "16px"
+      }}>
+        <div className="flex justify-between text-xs mb-2" style={{ color: "#777777" }}>
+          <span>Vault capacity</span>
+          <span>{totalBottles} / {VAULT_CAPACITY}</span>
+        </div>
+
+        <div style={{ height: "4px", backgroundColor: "#d8d6d0", borderRadius: "2px" }}>
+          <div style={{
+            height: "100%",
+            width: `${Math.min((totalBottles / VAULT_CAPACITY) * 100, 100)}%`,
+            backgroundColor: "#193c47"
+          }} />
+        </div>
+      </div>
+
+      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: "#777777" }} />
         <input
           style={{ ...inputStyle, paddingLeft: "34px" }}
-          placeholder="Search by name, email or phone…"
+          placeholder="Search..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
+      {/* Form */}
+      {editing && (
+        <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", borderRadius: "6px", padding: "20px" }}>
+          {["name","email","phone","membership_start","membership_tier"].map((key) => (
+            <div key={key}>
+              <label style={labelStyle}>{key}</label>
+              <input style={inputStyle} value={form[key]} onChange={(e) => f(key, e.target.value)} />
+            </div>
+          ))}
+
+          <div className="flex gap-2 mt-4">
+            <button onClick={handleSave} style={{ padding: "8px 16px", background: "#193c47", color: "#fff" }}>
+              Save
+            </button>
+            <button onClick={close}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* List */}
       {filtered.map((m) => (
-        <div key={m.id} style={{
-          backgroundColor: "#eceae4",
-          border: "1px solid #d8d6d0",
-          borderRadius: "6px",
-          padding: "16px"
-        }}>
+        <div key={m.id} style={{ backgroundColor: "#eceae4", padding: "12px", borderRadius: "6px" }}>
           <div className="flex justify-between">
             <div>
               <p>{m.name}</p>
               <p className="text-xs">{m.email}</p>
             </div>
-
             <div className="flex gap-2">
-              <button onClick={() => openEdit(m)}>
-                <Pencil className="h-3.5 w-3.5" />
-              </button>
-
-              <button onClick={() => handleDelete(m.id)}>
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
+              <button onClick={() => openEdit(m)}><Pencil size={14} /></button>
+              <button onClick={() => handleDelete(m.id)}><Trash2 size={14} /></button>
             </div>
           </div>
         </div>
       ))}
+
     </div>
   );
 }
