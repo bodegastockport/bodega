@@ -207,50 +207,136 @@ export default function CellarClubManager() {
       </div>
 
       {editing && (
-        <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", borderRadius: "6px", padding: "20px" }}>
-          
-          <div>
-            <label style={labelStyle}>name</label>
-            <input type="text" style={inputStyle} value={form.name} onChange={(e) => f("name", e.target.value)} />
-          </div>
+  <div style={{
+    backgroundColor: "#eceae4",
+    border: "1px solid #d8d6d0",
+    borderRadius: "6px",
+    padding: "24px"
+  }}>
+    <div className="flex items-center justify-between mb-5">
+      <p className="text-sm" style={{ color: "#2e282a" }}>
+        {editing === "new" ? "New member" : "Edit member"}
+      </p>
+      <button onClick={close} style={{ background: "none", border: "none", cursor: "pointer", color: "#777777" }}>
+        <X className="h-4 w-4" />
+      </button>
+    </div>
 
-          <div>
-            <label style={labelStyle}>email</label>
-            <input type="email" style={inputStyle} value={form.email} onChange={(e) => f("email", e.target.value)} />
-          </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      
+      <div>
+        <label style={labelStyle}>Full name *</label>
+        <input
+          type="text"
+          style={inputStyle}
+          placeholder="Member name"
+          value={form.name}
+          onChange={(e) => f("name", e.target.value)}
+        />
+      </div>
 
-          <div>
-            <label style={labelStyle}>phone</label>
-            <input type="text" style={inputStyle} value={form.phone} onChange={(e) => f("phone", e.target.value)} />
-          </div>
+      <div>
+        <label style={labelStyle}>Email *</label>
+        <input
+          type="email"
+          style={inputStyle}
+          placeholder="email@example.com"
+          value={form.email}
+          onChange={(e) => f("email", e.target.value)}
+        />
+      </div>
 
-          <div>
-            <label style={labelStyle}>membership_start</label>
-            <input type="date" style={inputStyle} value={form.membership_start} onChange={(e) => f("membership_start", e.target.value)} />
-          </div>
+      <div>
+        <label style={labelStyle}>Phone</label>
+        <input
+          type="text"
+          style={inputStyle}
+          placeholder="Phone number"
+          value={form.phone}
+          onChange={(e) => f("phone", e.target.value)}
+        />
+      </div>
 
-          <div>
-            <label style={labelStyle}>membership_tier</label>
-            <Select value={form.membership_tier} onValueChange={(v) => f("membership_tier", v)}>
-              <SelectTrigger style={{ ...inputStyle, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <SelectValue placeholder="Select tier" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Cellar 6">Cellar 6</SelectItem>
-                <SelectItem value="Cellar 12">Cellar 12</SelectItem>
-                <SelectItem value="Cellar 24">Cellar 24</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      <div>
+        <label style={labelStyle}>Membership start</label>
+        <input
+          type="date"
+          style={inputStyle}
+          value={form.membership_start}
+          onChange={(e) => f("membership_start", e.target.value)}
+        />
+      </div>
 
-          <div className="flex gap-2 mt-4">
-            <button onClick={handleSave} style={{ padding: "8px 16px", background: "#193c47", color: "#fff" }}>
-              Save
-            </button>
-            <button onClick={close}>Cancel</button>
-          </div>
-        </div>
-      )}
+      <div>
+        <label style={labelStyle}>Membership tier</label>
+        <input
+          type="text"
+          style={inputStyle}
+          placeholder="e.g. Cellar 6"
+          value={form.membership_tier}
+          onChange={(e) => f("membership_tier", e.target.value)}
+        />
+      </div>
+
+      <div>
+        <label style={labelStyle}>Status</label>
+        <select
+          style={inputStyle}
+          value={form.status}
+          onChange={(e) => f("status", e.target.value)}
+        >
+          <option value="pending">Pending</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      <div className="sm:col-span-2">
+        <label style={labelStyle}>Notes</label>
+        <textarea
+          style={{ ...inputStyle, minHeight: "72px", resize: "none" }}
+          placeholder="Any notes about this member..."
+          value={form.notes}
+          onChange={(e) => f("notes", e.target.value)}
+        />
+      </div>
+
+    </div>
+
+    <div className="flex gap-2 mt-4">
+      <button
+        onClick={handleSave}
+        disabled={saving || !form.name || !form.email}
+        style={{
+          padding: "8px 20px",
+          backgroundColor: saving || !form.name || !form.email ? "#d8d6d0" : "#193c47",
+          color: saving || !form.name || !form.email ? "#777777" : "#f3f2ee",
+          border: "none",
+          borderRadius: "6px",
+          fontSize: "12px",
+          cursor: saving || !form.name || !form.email ? "not-allowed" : "pointer"
+        }}
+      >
+        {saving ? "Saving..." : "Save member"}
+      </button>
+
+      <button
+        onClick={close}
+        style={{
+          padding: "8px 16px",
+          backgroundColor: "transparent",
+          color: "#193c47",
+          border: "1px solid #193c47",
+          borderRadius: "6px",
+          fontSize: "12px",
+          cursor: "pointer"
+        }}
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+)}
 
       {filtered.map((m) => (
         <div key={m.id} style={{ backgroundColor: "#eceae4", padding: "12px", borderRadius: "6px" }}>
