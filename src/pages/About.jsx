@@ -4,7 +4,7 @@ export default function About() {
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
 
         {/* Text */}
-        <div className="px-6 py-8 flex flex-col justify-center" style={{ maxWidth: "560px" }}>
+        <div className="px-6 py-8 flex flex-col justify-start" style={{ maxWidth: "560px" }}>
           <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>Our story</p>
           <h1 className="text-2xl mb-4 leading-snug" style={{ color: "#193c47", fontWeight: 400 }}>
             Born from a love of good wine
