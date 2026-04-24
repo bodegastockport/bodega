@@ -20,6 +20,7 @@ import Gallery from './pages/Gallery';
 import CellarMemberDetail from './pages/CellarMemberDetail';
 import MyCellar from './pages/MyCellar';
 import CellarClub from './pages/CellarClub';
+import ScanBottle from './pages/ScanBottle';
 
 const Spinner = () => (
   <div className="fixed inset-0 flex items-center justify-center" style={{ backgroundColor: "#f3f2ee" }}>
@@ -51,6 +52,7 @@ const AppRoutes = () => {
           <Route path="/settings"      element={<Settings />} />
           <Route path="/my-cellar"     element={<MyCellar />} />
           <Route path="/cellar/:id"    element={<CellarMemberDetail />} />
+          <Route path="/scan/:id"      element={<ScanBottle />} />
         </Route>
 
         <Route path="*" element={<PageNotFound />} />
