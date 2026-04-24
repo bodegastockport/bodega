@@ -2,34 +2,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 
-type WineSection = {
-  id: string;
-  name: string;
-  sort_order: number;
-};
-
-type WineItem = {
-  id: string;
-  name: string;
-  section_id: string;
-  sort_order?: number;
-  glass_price?: string;
-  bottle_price?: string;
-  region?: string;
-};
-
-type FoodItem = {
-  id: string;
-  name: string;
-  price?: string;
-  serves?: string;
-  description?: string;
-};
-
 export default function Menu() {
-  const [sections, setSections] = useState<WineSection[]>([]);
-  const [items, setItems] = useState<WineItem[]>([]);
-  const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
+  const [sections, setSections] = useState([]);
+  const [items, setItems] = useState([]);
+  const [foodItems, setFoodItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -126,10 +102,6 @@ export default function Menu() {
                 );
               })}
             </div>
-
-            <p className="text-xs mt-5" style={{ color: "#aaa" }}>
-              Our full bottle list features many more producers — ask your host for the complete selection.
-            </p>
           </div>
 
           <div>
@@ -176,10 +148,6 @@ export default function Menu() {
                 ))}
               </div>
             )}
-
-            <p className="text-xs mt-4" style={{ color: "#aaa" }}>
-              Please let us know of any allergies or dietary requirements when booking or on arrival.
-            </p>
           </div>
         </div>
       </div>
