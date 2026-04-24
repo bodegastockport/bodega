@@ -82,7 +82,15 @@ export default function Contact() {
                 </div>
               </div>
             </div>
-            <div style={{ border: "1px solid #d8d6d0", borderRadius: "4px", overflow: "hidden", aspectRatio: "4/3" }}>
+            <div
+              style={{
+                border: "1px solid #d8d6d0",
+                borderRadius: "4px",
+                overflow: "hidden",
+                aspectRatio: "4 / 3",
+                maxWidth: "320px"
+              }}
+            >
               <iframe
                 title="Bodega Wine Bar Location"
                 width="100%"
