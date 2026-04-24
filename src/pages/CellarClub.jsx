@@ -123,71 +123,71 @@ export default function CellarClub() {
 
       {/* ── INFO TAB — full height split layout ── */}
       {activeTab === "info" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)", gap: 0 }}>
 
           {/* Left — text content */}
           <div className="px-6 py-8 flex flex-col justify-start">
 
-            {/* Header */}
-            <div className="mb-6">
-              <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>Members only</p>
-              <h1 className="text-xl mb-2" style={{ color: "#193c47", fontWeight: 400 }}>The Cellar Club</h1>
-              <p className="text-xs leading-relaxed" style={{ color: "#777777", maxWidth: "420px" }}>
-                Store your wine collection beneath the bar. Bring it up whenever you like, enjoy it with friends, and let us take care of the rest.
-              </p>
+            {/* Header row — title + tab switcher side by side */}
+            <div className="flex items-start justify-between gap-4 mb-6" style={{ maxWidth: "520px" }}>
+              <div>
+                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>Members only</p>
+                <h1 className="text-xl" style={{ color: "#193c47", fontWeight: 400 }}>The Cellar Club</h1>
+              </div>
+              <div className="flex gap-0 shrink-0" style={{ border: "1px solid #d8d6d0", borderRadius: "4px", overflow: "hidden", marginTop: "2px" }}>
+                {TAB_BUTTON("info", "About")}
+                {TAB_BUTTON("pricing", "Pricing")}
+                {TAB_BUTTON("join", "Join")}
+              </div>
             </div>
 
-            {/* Tab switcher */}
-            <div className="flex gap-0 mb-8" style={{ border: "1px solid #d8d6d0", borderRadius: "4px", overflow: "hidden", width: "fit-content" }}>
-              {TAB_BUTTON("info", "About")}
-              {TAB_BUTTON("pricing", "Pricing")}
-              {TAB_BUTTON("join", "Join")}
-            </div>
+            {/* Already a member — near the top */}
+            <p className="text-xs mb-6" style={{ color: "#777777" }}>
+              Already a member?{" "}
+              <a href="/my-cellar" style={{ color: "#193c47", textDecoration: "none", borderBottom: "1px solid #193c47" }}>
+                Log in to your cellar →
+              </a>
+            </p>
 
-            <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#777777" }}>How it works</p>
+            {/* Body copy */}
+            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>How it works</p>
             <h2 className="text-lg mb-3" style={{ color: "#193c47", fontWeight: 400 }}>Your collection, beneath the bar</h2>
             <p className="text-xs leading-relaxed mb-2" style={{ color: "#777777", maxWidth: "420px" }}>
               Beneath Bodega lies a temperature-controlled vault. As a member, you rent a dedicated space — keeping your wine at the perfect conditions for long-term ageing.
             </p>
-            <p className="text-xs leading-relaxed mb-6" style={{ color: "#777777", maxWidth: "420px" }}>
+            <p className="text-xs leading-relaxed mb-8" style={{ color: "#777777", maxWidth: "420px" }}>
               Whenever you visit, simply let us know which bottles you'd like and we'll bring them up. A modest corkage fee applies.
             </p>
 
-            {/* Feature points — no border lines */}
-            <div className="space-y-4 mb-6">
+            {/* Feature circles */}
+            <div className="flex gap-4 mb-8" style={{ maxWidth: "480px" }}>
               {[
-                { title: "Climate-controlled storage", body: "Your bottles held at ideal temperature and humidity — a professionally managed vault." },
-                { title: "Drink your own here", body: "Bring stored bottles to any table. A modest corkage fee applies — no need to carry anything in." },
-                { title: "Member perks", body: "Priority reservations, exclusive tastings, early access to limited allocations." },
+                { title: "Climate-controlled storage", body: "Ideal temperature and humidity for long-term ageing." },
+                { title: "Drink your own here", body: "Bring stored bottles to any table. Modest corkage applies." },
+                { title: "Member perks", body: "Priority reservations, tastings and limited allocations." },
               ].map(({ title, body }) => (
-                <div key={title}>
+                <div key={title} className="flex flex-col items-center text-center" style={{ flex: 1 }}>
+                  <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: "#193c47", marginBottom: "10px", flexShrink: 0 }} />
                   <p className="text-xs mb-1" style={{ color: "#2e282a" }}>{title}</p>
                   <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>{body}</p>
                 </div>
               ))}
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-3 mb-6" style={{ maxWidth: "380px" }}>
-              {[
-                { label: "Temperature", value: "Precisely controlled" },
-                { label: "Location", value: "Beneath Bodega" },
-                { label: "Access", value: "Staff-managed" },
-                { label: "Billing", value: "Monthly, via Stripe" },
-              ].map(({ label, value }) => (
-                <div key={label} style={{ backgroundColor: "#eceae4", borderRadius: "4px", padding: "10px 12px" }}>
-                  <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>{label}</p>
-                  <p className="text-xs" style={{ color: "#2e282a" }}>{value}</p>
-                </div>
-              ))}
+            {/* Big CTA */}
+            <div style={{ backgroundColor: "#193c47", borderRadius: "6px", padding: "24px", maxWidth: "420px" }}>
+              <h3 className="text-lg mb-2" style={{ color: "#f3f2ee", fontWeight: 400 }}>Join the Cellar Club</h3>
+              <p className="text-xs leading-relaxed mb-4" style={{ color: "rgba(243,242,238,0.75)" }}>
+                Store your collection beneath the bar from £21/month. Early bird pricing available for June 2026 sign-ups.
+              </p>
+              <button
+                onClick={() => setActiveTab("join")}
+                style={{ padding: "8px 20px", backgroundColor: "#f3f2ee", color: "#193c47", border: "none", borderRadius: "4px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer" }}
+              >
+                Start your membership →
+              </button>
             </div>
 
-            <p className="text-xs" style={{ color: "#777777" }}>
-              Already a member?{" "}
-              <a href="/my-cellar" style={{ color: "#193c47", textDecoration: "none", borderBottom: "1px solid #193c47" }}>
-                Log in to your account →
-              </a>
-            </p>
           </div>
 
           {/* Right — full height image */}
