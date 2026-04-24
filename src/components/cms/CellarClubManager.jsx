@@ -60,14 +60,22 @@ export default function CellarClubManager() {
   const [search, setSearch] = useState("");
 
   const load = async () => {
-    const { data } = await supabase
-      .from("cellar_members")
-      .select()
-      .order("created_at", { ascending: false });
+  const { data } = await supabase
+    .from('cellar_members')
+    .select(`
+      *,
+      cellar_bottles ( id )
+    `)
+    .order('created_at', { ascending: false });
 
-    setMembers(data || []);
-    setLoading(false);
-  };
+  const withCounts = (data || []).map(m => ({
+    ...m,
+    bottle_count: m.cellar_bottles?.length || 0
+  }));
+
+  setMembers(withCounts);
+  setLoading(false);
+};
 
   useEffect(() => {
     load();
@@ -147,8 +155,8 @@ export default function CellarClubManager() {
   };
 
   const totalBottles = members
-    .filter((m) => m.status === "active")
-    .reduce((sum, m) => sum + (m.bottles_stored || 0), 0);
+  .filter(m => m.status === "active")
+  .reduce((s, m) => s + (m.bottle_count || 0), 0);
 
   const filtered = members.filter((m) => {
     if (!search.trim()) return true;
