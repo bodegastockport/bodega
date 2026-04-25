@@ -6,14 +6,12 @@ import { supabase } from "@/lib/supabase";
 const inputStyle = {
   backgroundColor: "#f3f2ee",
   border: "1px solid #d8d6d0",
-  borderRadius: "4px",
   fontFamily: "'Courier New', Courier, monospace",
-  fontSize: "13px",
+  fontSize: "12px",
   padding: "7px 10px",
   color: "#2e282a",
   width: "100%",
   outline: "none",
-  transition: "border-color 0.15s",
 };
 
 const labelStyle = {
@@ -34,7 +32,6 @@ const EVENT_TYPES = [
 
 export default function Events() {
   const [events, setEvents] = useState([]);
-  const [bookingEvent, setBookingEvent] = useState(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "", event_type: "", date: "", guests: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
@@ -48,10 +45,8 @@ export default function Events() {
         .select("*")
         .eq("published", true)
         .order("date", { ascending: true });
-
       setEvents(data || []);
     };
-
     loadEvents();
   }, []);
 
@@ -63,253 +58,156 @@ export default function Events() {
     if (!isValid) return;
     setSubmitting(true);
     setError(null);
-
     const { error: err } = await supabase
       .from("hire_enquiries")
       .insert({ ...form, status: "new" });
-
     setSubmitting(false);
-    if (err) {
-      setError("Something went wrong. Please try again.");
-      return;
-    }
+    if (err) { setError("Something went wrong. Please try again."); return; }
     setSent(true);
   };
 
   const getInputStyle = (field) => ({
     ...inputStyle,
-    borderColor: focused === field ? "#193c47" : "#d8d6d0"
+    borderColor: focused === field ? "#193c47" : "#d8d6d0",
   });
 
   return (
     <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace" }}>
-      <div className="px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
 
-          <div>
-            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>Private events</p>
-            <h1 className="text-xl mb-3" style={{ color: "#193c47", fontWeight: 400 }}>Events & private hire</h1>
-            <p className="text-xs leading-relaxed mb-5" style={{ color: "#777777" }}>
-              From intimate tastings to full venue hire, Bodega is the perfect backdrop for memorable occasions.
-            </p>
-            <div className="space-y-4">
-              {EVENT_TYPES.map(({ title, desc }) => (
-                <div key={title} style={{ borderLeft: "2px solid #193c47", paddingLeft: "12px" }}>
-                  <p className="text-xs mb-0.5" style={{ color: "#2e282a" }}>{title}</p>
-                  <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>{desc}</p>
+        {/* Left — copy + bullets + form */}
+        <div className="flex flex-col px-8 py-8" style={{ borderRight: "1px solid #d8d6d0" }}>
+
+          {/* Header */}
+          <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>Private events</p>
+          <h1 className="text-2xl mb-3" style={{ color: "#193c47", fontWeight: 400 }}>Events & private hire</h1>
+          <p className="text-xs leading-relaxed mb-6" style={{ color: "#777777" }}>
+            From intimate tastings to full venue hire, Bodega is the perfect backdrop for memorable occasions.
+          </p>
+
+          {/* Bullets — no border lines, teal headings */}
+          <div className="space-y-4 mb-8">
+            {EVENT_TYPES.map(({ title, desc }) => (
+              <div key={title}>
+                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#193c47" }}>{title}</p>
+                <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>{desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Divider */}
+          <div style={{ borderTop: "1px solid #d8d6d0", marginBottom: "24px" }} />
+
+          {/* Enquiry form */}
+          <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>Enquiries</p>
+          <h2 className="text-lg mb-1" style={{ color: "#193c47", fontWeight: 400 }}>Make an enquiry</h2>
+          <p className="text-xs mb-4" style={{ color: "#777777" }}>Tell us about your event and we'll get back to you within 24 hours.</p>
+
+          {sent ? (
+            <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
+              <p className="text-sm mb-1" style={{ color: "#2e282a" }}>Enquiry received</p>
+              <p className="text-xs mb-4" style={{ color: "#777777" }}>Thanks, {form.name}. We'll be in touch very soon.</p>
+              <button
+                onClick={() => { setSent(false); setForm({ name: "", email: "", phone: "", event_type: "", date: "", guests: "", message: "" }); }}
+                style={{ padding: "7px 16px", backgroundColor: "transparent", color: "#193c47", border: "1px solid #193c47", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}
+              >
+                Send another enquiry
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label style={labelStyle}>Your name</label>
+                  <input style={getInputStyle("name")} placeholder="Full name" value={form.name} onChange={e => update("name", e.target.value)} onFocus={() => setFocused("name")} onBlur={() => setFocused(null)} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Email</label>
+                  <input type="email" style={getInputStyle("email")} placeholder="your@email.com" value={form.email} onChange={e => update("email", e.target.value)} onFocus={() => setFocused("email")} onBlur={() => setFocused(null)} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Phone</label>
+                  <input style={getInputStyle("phone")} placeholder="Optional" value={form.phone} onChange={e => update("phone", e.target.value)} onFocus={() => setFocused("phone")} onBlur={() => setFocused(null)} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Event type</label>
+                  <Select value={form.event_type} onValueChange={v => update("event_type", v)}>
+                    <SelectTrigger style={{ ...getInputStyle("event_type"), height: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Small Group Booking">Small group booking</SelectItem>
+                      <SelectItem value="Full Venue Hire">Full venue hire</SelectItem>
+                      <SelectItem value="Private Tasting">Private tasting</SelectItem>
+                      <SelectItem value="Wine Night">Wine night</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Preferred date</label>
+                  <input type="date" style={getInputStyle("date")} value={form.date} onChange={e => update("date", e.target.value)} onFocus={() => setFocused("date")} onBlur={() => setFocused(null)} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Approx. guests</label>
+                  <input type="number" min="1" style={getInputStyle("guests")} placeholder="Number" value={form.guests} onChange={e => update("guests", e.target.value)} onFocus={() => setFocused("guests")} onBlur={() => setFocused(null)} />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Tell us more</label>
+                <textarea style={{ ...getInputStyle("message"), minHeight: "80px", resize: "none" }} placeholder="Any specific requirements, ideas or questions..." value={form.message} onChange={e => update("message", e.target.value)} onFocus={() => setFocused("message")} onBlur={() => setFocused(null)} />
+              </div>
+              {error && <p style={{ fontSize: "12px", color: "#c0392b" }}>{error}</p>}
+              <button
+                type="submit"
+                disabled={!isValid || submitting}
+                style={{ padding: "8px 20px", backgroundColor: "#193c47", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: isValid && !submitting ? "pointer" : "not-allowed", opacity: !isValid || submitting ? 0.6 : 1, display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                {submitting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending...</> : "Send enquiry"}
+              </button>
+            </form>
+          )}
+        </div>
+
+        {/* Right — 2-column events grid */}
+        <div className="px-8 py-8">
+          <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>Upcoming</p>
+          <h2 className="text-2xl mb-6" style={{ color: "#193c47", fontWeight: 400 }}>Events at Bodega</h2>
+
+          {events.length === 0 ? (
+            <p className="text-xs" style={{ color: "#777777" }}>No upcoming events at the moment. Check back soon.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              {events.map((event) => (
+                <div key={event.id} style={{ overflow: "hidden", borderBottom: "1px solid #d8d6d0", paddingBottom: "16px" }}>
+                  {event.image_url && (
+                    <div style={{ aspectRatio: "3 / 2", overflow: "hidden", marginBottom: "12px" }}>
+                      <img
+                        src={event.image_url}
+                        alt={event.title}
+                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                      />
+                    </div>
+                  )}
+                  <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>
+                    {new Date(event.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                  </p>
+                  <p className="text-sm mb-1" style={{ color: "#193c47", fontWeight: 400 }}>{event.title}</p>
+                  <p className="text-xs leading-relaxed mb-3" style={{ color: "#777777" }}>{event.description}</p>
+                  <button
+                    onClick={() => {
+                      update("event_type", "Other");
+                      update("message", `I'd like to book a place at: ${event.title} (${new Date(event.date).toLocaleDateString("en-GB")})`);
+                    }}
+                    style={{ fontSize: "11px", color: "#193c47", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0, borderBottom: "1px solid #193c47", paddingBottom: "1px" }}
+                  >
+                    Book a place →
+                  </button>
                 </div>
               ))}
             </div>
-          </div>
-
-          <div id="enquiry-form">
-            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>Enquiries</p>
-            <h2 className="text-xl mb-1" style={{ color: "#193c47", fontWeight: 400 }}>Make an enquiry</h2>
-            <p className="text-xs mb-4" style={{ color: "#777777" }}>Tell us about your event and we'll get back to you within 24 hours.</p>
-
-            {sent ? (
-              <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", borderRadius: "4px", padding: "24px" }}>
-                <p className="text-sm mb-1" style={{ color: "#2e282a" }}>Enquiry received</p>
-                <p className="text-xs mb-4" style={{ color: "#777777" }}>Thanks, {form.name}. We'll be in touch very soon.</p>
-                <button
-                  onClick={() => {
-                    setSent(false);
-                    setForm({ name: "", email: "", phone: "", event_type: "", date: "", guests: "", message: "" });
-                  }}
-                  style={{
-                    padding: "7px 16px",
-                    backgroundColor: "transparent",
-                    color: "#193c47",
-                    border: "1px solid #193c47",
-                    borderRadius: "4px",
-                    fontFamily: "'Courier New', Courier, monospace",
-                    fontSize: "11px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    cursor: "pointer"
-                  }}
-                >
-                  Send another enquiry
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label style={labelStyle}>Your name</label>
-                    <input
-                      style={getInputStyle("name")}
-                      placeholder="Full name"
-                      value={form.name}
-                      onChange={(e) => update("name", e.target.value)}
-                      onFocus={() => setFocused("name")}
-                      onBlur={() => setFocused(null)}
-                    />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Email</label>
-                    <input
-                      type="email"
-                      style={getInputStyle("email")}
-                      placeholder="your@email.com"
-                      value={form.email}
-                      onChange={(e) => update("email", e.target.value)}
-                      onFocus={() => setFocused("email")}
-                      onBlur={() => setFocused(null)}
-                    />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Phone</label>
-                    <input
-                      style={getInputStyle("phone")}
-                      placeholder="Optional"
-                      value={form.phone}
-                      onChange={(e) => update("phone", e.target.value)}
-                      onFocus={() => setFocused("phone")}
-                      onBlur={() => setFocused(null)}
-                    />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Event type</label>
-                    <Select value={form.event_type} onValueChange={(v) => update("event_type", v)}>
-                      <SelectTrigger style={{ ...getInputStyle("event_type"), height: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Small Group Booking">Small group booking</SelectItem>
-                        <SelectItem value="Full Venue Hire">Full venue hire</SelectItem>
-                        <SelectItem value="Private Tasting">Private tasting</SelectItem>
-                        <SelectItem value="Wine Night">Wine night</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Preferred date</label>
-                    <input
-                      type="date"
-                      style={getInputStyle("date")}
-                      value={form.date}
-                      onChange={(e) => update("date", e.target.value)}
-                      onFocus={() => setFocused("date")}
-                      onBlur={() => setFocused(null)}
-                    />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Approx. guests</label>
-                    <input
-                      type="number"
-                      min="1"
-                      style={getInputStyle("guests")}
-                      placeholder="Number"
-                      value={form.guests}
-                      onChange={(e) => update("guests", e.target.value)}
-                      onFocus={() => setFocused("guests")}
-                      onBlur={() => setFocused(null)}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label style={labelStyle}>Tell us more</label>
-                  <textarea
-                    style={{ ...getInputStyle("message"), minHeight: "80px", resize: "none" }}
-                    placeholder="Any specific requirements, ideas or questions..."
-                    value={form.message}
-                    onChange={(e) => update("message", e.target.value)}
-                    onFocus={() => setFocused("message")}
-                    onBlur={() => setFocused(null)}
-                  />
-                </div>
-                {error && <p style={{ fontSize: "12px", color: "#c0392b" }}>{error}</p>}
-                <button
-                  type="submit"
-                  disabled={!isValid || submitting}
-                  style={{
-                    padding: "8px 20px",
-                    backgroundColor: "#193c47",
-                    color: "#f3f2ee",
-                    border: "none",
-                    borderRadius: "4px",
-                    fontFamily: "'Courier New', Courier, monospace",
-                    fontSize: "11px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    cursor: isValid && !submitting ? "pointer" : "not-allowed",
-                    opacity: !isValid || submitting ? 0.6 : 1,
-                    transition: "background-color 0.15s",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                  }}
-                >
-                  {submitting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending...</> : "Send enquiry"}
-                </button>
-              </form>
-            )}
-          </div>
+          )}
         </div>
-
-        {events.length > 0 && (
-          <div className="mt-12">
-            <div style={{ borderTop: "1px solid #d8d6d0", paddingTop: "32px" }}>
-              <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>Upcoming</p>
-              <h2 className="text-xl mb-6" style={{ color: "#193c47", fontWeight: 400 }}>Events at Bodega</h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-                {events.map((event) => (
-                  <div key={event.id} style={{ border: "1px solid #d8d6d0", borderRadius: "4px", overflow: "hidden", backgroundColor: "#eceae4" }}>
-                    {event.image_url && (
-                      <div style={{ aspectRatio: "4 / 5", overflow: "hidden" }}>
-                        <img
-                          src={event.image_url}
-                          alt={event.title}
-                          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                        />
-                      </div>
-                    )}
-
-                    <div style={{ padding: "16px" }}>
-                      <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>
-                        {new Date(event.date).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
-                      </p>
-
-                      <p className="text-sm mb-2" style={{ color: "#193c47", fontWeight: 400 }}>
-                        {event.title}
-                      </p>
-
-                      <p className="text-xs leading-relaxed mb-4" style={{ color: "#777777" }}>
-                        {event.description}
-                      </p>
-
-                      <button
-                        onClick={() => {
-                          setBookingEvent(event);
-                          update("event_type", "Other");
-                          update("message", `I'd like to book a place at: ${event.title} (${new Date(event.date).toLocaleDateString("en-GB")})`);
-                          document.getElementById("enquiry-form")?.scrollIntoView({ behavior: "smooth" });
-                        }}
-                        style={{
-                          padding: "7px 16px",
-                          backgroundColor: "#193c47",
-                          color: "#f3f2ee",
-                          border: "none",
-                          borderRadius: "4px",
-                          fontFamily: "'Courier New', Courier, monospace",
-                          fontSize: "11px",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.06em",
-                          cursor: "pointer"
-                        }}
-                      >
-                        Book a place →
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
 
       </div>
     </div>
