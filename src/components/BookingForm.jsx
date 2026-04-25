@@ -74,7 +74,7 @@ export default function BookingForm({ onSuccess }) {
         time: form.time,
         party_size: Number(form.party_size),
         special_requests: form.special_requests || null,
-        status: "pending",
+        status: "confirmed",
       })
       .select()
       .single();

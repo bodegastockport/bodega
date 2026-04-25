@@ -4,10 +4,10 @@ export default function BookingConfirmation({ reservation, onReset }) {
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#777777" }}>Confirmed</p>
-        <h2 className="text-xl" style={{ color: "#2e282a", fontWeight: 400 }}>Reservation received</h2>
+        <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#777777" }}>Booking confirmed</p>
+        <h2 className="text-xl" style={{ color: "#2e282a", fontWeight: 400 }}>See you at Bodega.</h2>
         <p className="text-sm mt-2" style={{ color: "#777777" }}>
-          Thank you, {reservation.guest_name}. We'll confirm your booking shortly via email.
+          Thanks, {reservation.guest_name}. Your table is booked — a confirmation has been sent to {reservation.email}.
         </p>
       </div>
 
@@ -46,8 +46,6 @@ export default function BookingConfirmation({ reservation, onReset }) {
       >
         Make another reservation
       </button>
-
-      <p className="text-xs" style={{ color: "#777777" }}>See you at Bodega.</p>
     </div>
   );
 }
