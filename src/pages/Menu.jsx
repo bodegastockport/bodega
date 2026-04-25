@@ -15,13 +15,11 @@ export default function Menu() {
         supabase.from("wine_items").select("*").order("sort_order"),
         supabase.from("food_items").select("*").order("sort_order"),
       ]);
-
       setSections(s || []);
       setItems(i || []);
       setFoodItems(f || []);
       setLoading(false);
     };
-
     load();
   }, []);
 
@@ -34,122 +32,78 @@ export default function Menu() {
   }
 
   return (
-    <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace" }}>
-      <div className="px-6 py-8">
-        <div className="mb-6">
-          <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>
-            What we pour & serve
-          </p>
-          <h1 className="text-xl mb-1" style={{ color: "#193c47", fontWeight: 400 }}>
-            Menu
-          </h1>
-          <p className="text-xs" style={{ color: "#777777" }}>
-            Our wine list changes seasonally. Prices shown are per glass / per bottle where applicable.
-          </p>
-        </div>
+    <div style={{ fontFamily: "'Courier New', Courier, monospace" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <div>
-            <h2 className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777" }}>
-              Wine list
-            </h2>
-
-            <div className="space-y-6">
-              {sections.map((section) => {
-                const sectionItems = items
-                  .filter((i) => i.section_id === section.id)
-                  .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
-
-                return (
-                  <div key={section.id}>
-                    <h3
-                      className="text-xs uppercase tracking-widest mb-2"
-                      style={{
-                        color: "#193c47",
-                        borderBottom: "1px solid #d8d6d0",
-                        paddingBottom: "5px",
-                      }}
-                    >
-                      {section.name}
-                    </h3>
-
-                    <div className="space-y-2">
-                      {sectionItems.map((wine) => {
-                        const price = [wine.glass_price, wine.bottle_price]
-                          .filter(Boolean)
-                          .join(" / ");
-
-                        return (
-                          <div key={wine.id} className="flex items-start justify-between gap-4">
-                            <div>
-                              <p className="text-xs" style={{ color: "#2e282a" }}>
-                                {wine.name}
-                              </p>
-                              {wine.region && (
-                                <p className="text-xs" style={{ color: "#aaa" }}>
-                                  {wine.region}
-                                </p>
-                              )}
-                            </div>
-                            <span className="text-xs shrink-0" style={{ color: "#2e282a" }}>
-                              {price}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+        {/* Left — wine list, cream */}
+        <div className="px-8 py-8 flex flex-col" style={{ backgroundColor: "#f3f2ee", borderRight: "1px solid #d8d6d0" }}>
+          <div className="mb-6">
+            <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>What we pour</p>
+            <h1 className="text-2xl mb-1" style={{ color: "#193c47", fontWeight: 400 }}>Wine list</h1>
+            <p className="text-xs" style={{ color: "#777777" }}>
+              Our wine list changes seasonally. Prices shown are per glass / per bottle where applicable.
+            </p>
           </div>
 
-          <div>
-            <h2 className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777" }}>
-              Charcuterie & cheese
-            </h2>
+          <div className="space-y-8">
+            {sections.map((section) => {
+              const sectionItems = items
+                .filter(i => i.section_id === section.id)
+                .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
-            <p className="text-xs leading-relaxed mb-4" style={{ color: "#777777" }}>
+              return (
+                <div key={section.id}>
+                  <h3 className="text-xs uppercase tracking-widest mb-3" style={{ color: "#193c47", borderBottom: "1px solid #d8d6d0", paddingBottom: "6px" }}>
+                    {section.name}
+                  </h3>
+                  <div className="space-y-3">
+                    {sectionItems.map((wine) => {
+                      const price = [wine.glass_price, wine.bottle_price].filter(Boolean).join(" / ");
+                      return (
+                        <div key={wine.id} className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="text-xs" style={{ color: "#2e282a" }}>{wine.name}</p>
+                            {wine.region && <p className="text-xs" style={{ color: "#aaa" }}>{wine.region}</p>}
+                          </div>
+                          <span className="text-xs shrink-0" style={{ color: "#2e282a" }}>{price}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right — charcuterie, teal */}
+        <div className="px-8 py-8 flex flex-col" style={{ backgroundColor: "#193c47" }}>
+          <div className="mb-6">
+            <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.5)" }}>What we serve</p>
+            <h2 className="text-2xl mb-1" style={{ color: "#f3f2ee", fontWeight: 400 }}>Charcuterie & cheese</h2>
+            <p className="text-xs" style={{ color: "rgba(243,242,238,0.6)" }}>
               Carefully sourced ingredients that complement what's in your glass.
             </p>
+          </div>
 
-            {foodItems.length > 0 && (
-              <div style={{ border: "1px solid #d8d6d0", borderRadius: "4px", overflow: "hidden" }}>
-                {foodItems.map((board, i) => (
-                  <div
-                    key={board.id}
-                    style={{
-                      backgroundColor: "#eceae4",
-                      padding: "12px 16px",
-                      borderTop: i > 0 ? "1px solid #d8d6d0" : "none",
-                    }}
-                  >
-                    <div className="flex items-start justify-between gap-3 mb-0.5">
-                      <h3 className="text-xs" style={{ color: "#2e282a", fontWeight: 400 }}>
-                        {board.name}
-                      </h3>
-                      <span className="text-xs shrink-0" style={{ color: "#193c47" }}>
-                        {board.price}
-                      </span>
-                    </div>
-
-                    {board.serves && (
-                      <p className="text-xs" style={{ color: "#aaa" }}>
-                        {board.serves}
-                      </p>
-                    )}
-
-                    {board.description && (
-                      <p className="text-xs leading-relaxed mt-0.5" style={{ color: "#777777" }}>
-                        {board.description}
-                      </p>
-                    )}
-                  </div>
-                ))}
+          <div className="space-y-6">
+            {foodItems.map((board) => (
+              <div key={board.id} style={{ borderBottom: "1px solid rgba(243,242,238,0.15)", paddingBottom: "20px" }}>
+                <div className="flex items-start justify-between gap-4 mb-1">
+                  <p className="text-sm" style={{ color: "#f3f2ee", fontWeight: 400 }}>{board.name}</p>
+                  <span className="text-sm shrink-0" style={{ color: "rgba(243,242,238,0.7)" }}>{board.price}</span>
+                </div>
+                {board.serves && (
+                  <p className="text-xs mb-1" style={{ color: "rgba(243,242,238,0.4)" }}>{board.serves}</p>
+                )}
+                {board.description && (
+                  <p className="text-xs leading-relaxed" style={{ color: "rgba(243,242,238,0.6)" }}>{board.description}</p>
+                )}
               </div>
-            )}
+            ))}
           </div>
         </div>
+
       </div>
     </div>
   );
