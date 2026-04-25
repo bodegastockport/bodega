@@ -76,8 +76,9 @@ export default function Menu() {
           </div>
         </div>
 
-        {/* Right — charcuterie, teal */}
-        <div className="px-8 py-8 flex flex-col" style={{ backgroundColor: "#193c47" }}>
+        {/* Right — charcuterie, teal inset panel */}
+        <div className="flex flex-col px-0 py-0" style={{ backgroundColor: "#f3f2ee" }}>
+          <div style={{ margin: "48px", backgroundColor: "#193c47", padding: "40px", height: "calc(100% - 96px)" }}>
           <div className="mb-6">
             <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.5)" }}>What we serve</p>
             <h2 className="text-2xl mb-1" style={{ color: "#f3f2ee", fontWeight: 400 }}>Charcuterie & cheese</h2>
@@ -101,6 +102,7 @@ export default function Menu() {
                 )}
               </div>
             ))}
+          </div>
           </div>
         </div>
 
