@@ -92,9 +92,6 @@ export default function Gallery() {
                 className="max-h-[80vh] max-w-full object-contain"
                 style={{ borderRadius: "6px" }}
               />
-              <p className="text-center text-xs mt-3" style={{ color: "rgba(243,242,238,0.6)" }}>
-                {photos[lightbox].caption || ""}
-              </p>
             </motion.div>
             <button
               className="absolute right-4 p-2 transition-opacity"
