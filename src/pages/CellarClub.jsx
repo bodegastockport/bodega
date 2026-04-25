@@ -135,12 +135,12 @@ export default function CellarClub() {
       <div>
         <label style={labelSt}>Membership tier *</label>
         <select style={{ ...inputSt, appearance: "none", WebkitAppearance: "none" }} value={form.tier} onChange={e => f("tier", e.target.value)} required>
-          <option value="">Select a tier...</option>
-          <optgroup label="Individual">
-            {individualTiers.map(t => <option key={t.name} value={t.name}>{t.name} — {t.price}/month</option>)}
+          <option value="" style={{ color: "#2e282a", backgroundColor: "#fff" }}>Select a tier...</option>
+          <optgroup label="Individual" style={{ color: "#2e282a", backgroundColor: "#fff" }}>
+            {individualTiers.map(t => <option key={t.name} value={t.name} style={{ color: "#2e282a", backgroundColor: "#fff" }}>{t.name} — {t.price}/month</option>)}
           </optgroup>
-          <optgroup label="Corporate">
-            {corporateTiers.map(t => <option key={t.name} value={t.name}>{t.name} — {t.price}/month</option>)}
+          <optgroup label="Corporate" style={{ color: "#2e282a", backgroundColor: "#fff" }}>
+            {corporateTiers.map(t => <option key={t.name} value={t.name} style={{ color: "#2e282a", backgroundColor: "#fff" }}>{t.name} — {t.price}/month</option>)}
           </optgroup>
         </select>
       </div>
