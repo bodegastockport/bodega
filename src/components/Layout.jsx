@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
@@ -19,8 +19,7 @@ export default function Layout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isAuthenticated, logout } = useAuth();
-
-  const isHome = location.pathname === "/";
+  const cursorRef = useRef(null);
 
   const isActive = (to) =>
     to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
@@ -30,8 +29,47 @@ export default function Layout() {
       isActive(to) ? "text-[#193c47]" : "text-[#777777] hover:text-[#2e282a]"
     }`;
 
+  useEffect(() => {
+    const move = (e) => {
+      if (cursorRef.current) {
+        cursorRef.current.style.transform = `translate(${e.clientX - 6}px, ${e.clientY - 6}px)`;
+      }
+    };
+    const show = () => { if (cursorRef.current) cursorRef.current.style.opacity = "1"; };
+    const hide = () => { if (cursorRef.current) cursorRef.current.style.opacity = "0"; };
+
+    window.addEventListener("mousemove", move);
+    document.addEventListener("mouseenter", show);
+    document.addEventListener("mouseleave", hide);
+
+    return () => {
+      window.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseenter", show);
+      document.removeEventListener("mouseleave", hide);
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#f3f2ee", color: "#2e282a", fontFamily: "'Courier New', Courier, monospace" }}>
+    <div className="min-h-screen" style={{ backgroundColor: "#f3f2ee", color: "#2e282a", fontFamily: "'Courier New', Courier, monospace", cursor: "none" }}>
+
+      {/* Custom cursor */}
+      <div
+        ref={cursorRef}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "12px",
+          height: "12px",
+          borderRadius: "50%",
+          backgroundColor: "#193c47",
+          pointerEvents: "none",
+          zIndex: 9999,
+          opacity: 0,
+          transition: "opacity 0.2s",
+          willChange: "transform",
+        }}
+      />
 
       {/* Header */}
       <header
@@ -47,7 +85,6 @@ export default function Layout() {
               alt="Bodega"
               className="h-7 w-auto"
               onError={(e) => {
-                // Fallback to text if logo not found yet
                 e.target.style.display = "none";
                 e.target.nextSibling.style.display = "block";
               }}
@@ -169,7 +206,7 @@ export default function Layout() {
               <button
                 onClick={logout}
                 className="text-xs"
-                style={{ color: "#777777", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0 }}
+                style={{ color: "#777777", background: "none", border: "none", cursor: "none", fontFamily: "'Courier New', Courier, monospace", padding: 0 }}
               >
                 Sign out
               </button>
