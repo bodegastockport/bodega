@@ -7,14 +7,24 @@ export default function About() {
         <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
           <div style={{ width: "100%", maxWidth: "400px", padding: "0 36px" }}>
             <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>Our story</p>
-            <h1 className="text-2xl mb-4 leading-snug" style={{ color: "#193c47", fontWeight: 400 }}>
+            <h1 className="text-2xl mb-4 leading-snug" style={{ color: "#1E4D5A", fontWeight: 400 }}>
               Born from a love of good wine
             </h1>
-            <p className="text-sm leading-relaxed mb-3" style={{ color: "#777777" }}>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+            <p className="text-sm leading-relaxed mb-3" style={{ color: "#0A242C" }}>
+              Bodega is a neighbourhood wine bar built for drinking, not overthinking.
             </p>
-            <p className="text-sm leading-relaxed" style={{ color: "#777777" }}>
-              Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+            <p className="text-sm leading-relaxed mb-3" style={{ color: "#0A242C" }}>
+              Wine can get a bit much — too many rules, too much jargon, not enough fun. We're here to change that. Good bottles, no pressure, no fuss.
+            </p>
+            <p className="text-xs uppercase tracking-widest mb-2 mt-6" style={{ color: "#777777" }}>Why 'Bodega'?</p>
+            <p className="text-sm leading-relaxed mb-3" style={{ color: "#0A242C" }}>
+              In Spain, a bodega might be a cellar, a winery, or a small bar. In parts of Latin America, it's your local shop.
+            </p>
+            <p className="text-sm leading-relaxed mb-3" style={{ color: "#0A242C" }}>
+              We liked that. Because Bodega isn't just one thing. It's somewhere you come for a glass, pick up a bottle on the way home, or keep a few stored for later.
+            </p>
+            <p className="text-sm leading-relaxed" style={{ color: "#0A242C" }}>
+              We love great wine — but we don't believe you need to "know wine" to enjoy it. So, whether you're here for a glass, a bottle, or just a cold lager and a plate of something salty, you're in the right place.
             </p>
           </div>
         </div>
