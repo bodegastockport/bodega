@@ -21,6 +21,7 @@ import Gallery from "./pages/Gallery";
 import CellarMemberDetail from "./pages/CellarMemberDetail";
 import MyCellar from "./pages/MyCellar";
 import CellarClub from "./pages/CellarClub";
+import CellarClubTerms from "./pages/CellarClubTerms";
 import ScanBottle from "./pages/ScanBottle";
 import ComingSoon from "./pages/ComingSoon";
 
@@ -75,6 +76,7 @@ const AppRoutes = () => {
         <Route path="/about" element={<About />} />
         <Route path="/events" element={<Events />} />
         <Route path="/cellar-club" element={<CellarClub />} />
+        <Route path="/cellar-club/terms" element={<CellarClubTerms />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
