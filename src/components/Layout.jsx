@@ -5,7 +5,6 @@ import { useAuth } from "@/lib/AuthContext";
 
 const LOGO_URL = "/bodega_logo_teal.svg";
 
-// Public nav — order: Bookings, About, Gallery, Cellar Club, Events, Contact
 const NAV = [
   { to: "/",            label: "Bookings" },
   { to: "/about",       label: "About" },
@@ -18,8 +17,12 @@ const NAV = [
 export default function Layout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const cursorRef = useRef(null);
+
+  const role = user?.user_metadata?.role;
+  const isTeam = role === "admin" || role === "team";
+  const isMember = isAuthenticated && !isTeam;
 
   const isActive = (to) =>
     to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
@@ -56,26 +59,16 @@ export default function Layout() {
       <div
         ref={cursorRef}
         style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "12px",
-          height: "12px",
-          borderRadius: "50%",
-          backgroundColor: "#1E4D5A",
-          pointerEvents: "none",
-          zIndex: 9999,
-          opacity: 0,
-          transition: "opacity 0.2s",
-          willChange: "transform",
+          position: "fixed", top: 0, left: 0,
+          width: "12px", height: "12px",
+          borderRadius: "50%", backgroundColor: "#1E4D5A",
+          pointerEvents: "none", zIndex: 9999,
+          opacity: 0, transition: "opacity 0.2s", willChange: "transform",
         }}
       />
 
       {/* Header */}
-      <header
-        className="sticky top-0 z-50"
-        style={{ borderBottom: "1px solid #d8d6d0", backgroundColor: "#f3f2ee" }}
-      >
+      <header className="sticky top-0 z-50" style={{ borderBottom: "1px solid #d8d6d0", backgroundColor: "#f3f2ee" }}>
         <div className="w-full px-6 h-14 flex items-center justify-between">
 
           {/* Logo */}
@@ -99,7 +92,7 @@ export default function Layout() {
             {NAV.map(({ to, label }) => (
               <Link key={to} to={to} className={linkClass(to)}>{label}</Link>
             ))}
-            {isAuthenticated && (
+            {isTeam && (
               <Link
                 to="/admin"
                 className="text-xs uppercase tracking-widest transition-colors duration-150"
@@ -110,9 +103,8 @@ export default function Layout() {
                 Admin
               </Link>
             )}
-            {/* Members Login */}
             <Link
-              to="/my-cellar"
+              to={isMember ? "/my-cellar" : "/login"}
               style={{
                 backgroundColor: "#1E4D5A",
                 color: "#ffffff",
@@ -128,16 +120,12 @@ export default function Layout() {
               onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
               onMouseLeave={e => e.currentTarget.style.opacity = "1"}
             >
-              Members Login
+              {isMember ? "My Account" : "Members Login"}
             </Link>
           </nav>
 
           {/* Mobile hamburger */}
-          <button
-            className="md:hidden p-1"
-            style={{ color: "#777777" }}
-            onClick={() => setMobileOpen((v) => !v)}
-          >
+          <button className="md:hidden p-1" style={{ color: "#777777" }} onClick={() => setMobileOpen((v) => !v)}>
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
@@ -155,13 +143,13 @@ export default function Layout() {
                 {label}
               </Link>
             ))}
-            {isAuthenticated && (
+            {isTeam && (
               <Link to="/admin" onClick={() => setMobileOpen(false)} className="block text-xs uppercase tracking-widest" style={{ color: "#777777" }}>
                 Admin
               </Link>
             )}
             <Link
-              to="/my-cellar"
+              to={isMember ? "/my-cellar" : "/login"}
               onClick={() => setMobileOpen(false)}
               style={{
                 display: "inline-block",
@@ -175,7 +163,7 @@ export default function Layout() {
                 borderRadius: "0px",
               }}
             >
-              Members Login
+              {isMember ? "My Account" : "Members Login"}
             </Link>
           </div>
         )}
@@ -186,27 +174,17 @@ export default function Layout() {
       </main>
 
       {/* Footer */}
-      <footer
-        style={{ borderTop: "1px solid #d8d6d0", backgroundColor: "#f3f2ee", position: "relative", zIndex: 1 }}
-        className="py-8"
-      >
+      <footer style={{ borderTop: "1px solid #d8d6d0", backgroundColor: "#f3f2ee", position: "relative", zIndex: 1 }} className="py-8">
         <div className="px-6">
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-8 mb-8">
 
-            {/* Brand */}
             <div>
-              <img
-                src={LOGO_URL}
-                alt="Bodega"
-                className="h-6 w-auto mb-4"
-                onError={(e) => { e.target.style.display = "none"; }}
-              />
+              <img src={LOGO_URL} alt="Bodega" className="h-6 w-auto mb-4" onError={(e) => { e.target.style.display = "none"; }} />
               <p className="text-sm leading-relaxed" style={{ color: "#777777" }}>
                 A neighbourhood wine bar in the heart of Stockport.
               </p>
             </div>
 
-            {/* Find us */}
             <div>
               <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#777777" }}>Find us</p>
               <div className="text-sm space-y-1" style={{ color: "#777777" }}>
@@ -218,7 +196,6 @@ export default function Layout() {
               </div>
             </div>
 
-            {/* Opening hours */}
             <div>
               <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#777777" }}>Opening hours</p>
               <div className="text-sm space-y-1" style={{ color: "#777777" }}>
@@ -229,7 +206,6 @@ export default function Layout() {
               </div>
             </div>
 
-            {/* Quick links — no Menu */}
             <div>
               <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#777777" }}>Quick links</p>
               <div className="space-y-2">
@@ -262,7 +238,7 @@ export default function Layout() {
                 Sign out
               </button>
             ) : (
-              <Link to="/login" className="text-xs" style={{ color: "#777777", textDecoration: "none" }}>
+              <Link to="/team-login" className="text-xs" style={{ color: "#777777", textDecoration: "none" }}>
                 Team sign in
               </Link>
             )}

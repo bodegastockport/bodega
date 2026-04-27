@@ -11,6 +11,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 // Pages
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+import TeamLogin from "./pages/TeamLogin";
 import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
@@ -27,8 +28,7 @@ const Spinner = () => (
   <div className="fixed inset-0 flex items-center justify-center" style={{ backgroundColor: "#f3f2ee" }}>
     <div
       style={{
-        width: "24px",
-        height: "24px",
+        width: "24px", height: "24px",
         border: "2px solid #d8d6d0",
         borderTopColor: "#1E4D5A",
         borderRadius: "50%",
@@ -78,11 +78,10 @@ const AppRoutes = () => {
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
-
-        {/* My Cellar — handles its own auth, no ProtectedRoute needed */}
+        <Route path="/team-login" element={<TeamLogin />} />
         <Route path="/my-cellar" element={<MyCellar />} />
 
-        <Route element={<ProtectedRoute redirectTo="/login" />}>
+        <Route element={<ProtectedRoute redirectTo="/team-login" />}>
           <Route path="/admin" element={<Admin />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/cellar/:id" element={<CellarMemberDetail />} />
