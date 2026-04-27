@@ -7,7 +7,7 @@ const LOGO_URL = "/bodega_logo_teal.svg";
 
 // Public nav — order: Bookings, About, Gallery, Cellar Club, Events, Contact
 const NAV = [
-  { to: "/book",        label: "Bookings" },
+  { to: "/",            label: "Bookings" },
   { to: "/about",       label: "About" },
   { to: "/gallery",     label: "Gallery" },
   { to: "/cellar-club", label: "Cellar Club" },
