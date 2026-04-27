@@ -10,6 +10,7 @@ import GalleryManager from "../components/cms/GalleryManager";
 import HireEnquiriesManager from "../components/cms/HireEnquiriesManager";
 import ContactManager from "../components/cms/ContactManager";
 import CellarClubManager from "../components/cms/CellarClubManager";
+import Settings from "./Settings";
 
 // Roles are stored in Supabase user_metadata: { "role": "admin" } or { "role": "team" }
 // "admin" = full access to all tabs
@@ -29,7 +30,7 @@ const TAB_STYLE_BASE = {
   whiteSpace: "nowrap",
 };
 
-const ALL_TABS   = ["reservations", "cellar", "events", "gallery", "hire", "contact", "team"];
+const ALL_TABS   = ["reservations", "cellar", "events", "gallery", "hire", "contact", "team", "settings"];
 const TEAM_TABS  = ["reservations", "hire", "contact"];
 const TAB_LABELS = {
   reservations: "Reservations",
@@ -39,6 +40,7 @@ const TAB_LABELS = {
   hire:         "Hire enquiries",
   contact:      "Messages",
   team:         "Team",
+  settings:     "Settings",
 };
 
 function TeamManager() {
@@ -83,10 +85,7 @@ function TeamManager() {
           <div>
             <p className="text-sm mb-2" style={{ color: "#0A242C" }}>Invite sent</p>
             <p className="text-xs mb-4" style={{ color: "#777777" }}>They'll receive an email with a link to sign in.</p>
-            <button
-              onClick={() => setSent(false)}
-              style={{ padding: "7px 16px", backgroundColor: "transparent", color: "#1E4D5A", border: "1px solid #1E4D5A", borderRadius: "4px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}
-            >
+            <button onClick={() => setSent(false)} style={{ padding: "7px 16px", backgroundColor: "transparent", color: "#1E4D5A", border: "1px solid #1E4D5A", borderRadius: "4px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}>
               Invite another
             </button>
           </div>
@@ -100,15 +99,10 @@ function TeamManager() {
               <label style={lbl}>Access level</label>
               <div className="flex gap-3">
                 {[
-                  { value: "team",  label: "Team",       desc: "Reservations, hire & messages" },
-                  { value: "admin", label: "Full admin",  desc: "Everything + team management" },
+                  { value: "team",  label: "Team",      desc: "Reservations, hire & messages" },
+                  { value: "admin", label: "Full admin", desc: "Everything + team management" },
                 ].map(({ value, label, desc }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setInviteRole(value)}
-                    style={{ flex: 1, padding: "10px 12px", textAlign: "left", backgroundColor: inviteRole === value ? "#1E4D5A" : "#f3f2ee", color: inviteRole === value ? "#f3f2ee" : "#0A242C", border: `1px solid ${inviteRole === value ? "#1E4D5A" : "#d8d6d0"}`, borderRadius: "4px", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", transition: "all 0.15s" }}
-                  >
+                  <button key={value} type="button" onClick={() => setInviteRole(value)} style={{ flex: 1, padding: "10px 12px", textAlign: "left", backgroundColor: inviteRole === value ? "#1E4D5A" : "#f3f2ee", color: inviteRole === value ? "#f3f2ee" : "#0A242C", border: `1px solid ${inviteRole === value ? "#1E4D5A" : "#d8d6d0"}`, borderRadius: "4px", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", transition: "all 0.15s" }}>
                     <p style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>{label}</p>
                     <p style={{ fontSize: "10px", opacity: 0.75 }}>{desc}</p>
                   </button>
@@ -116,11 +110,7 @@ function TeamManager() {
               </div>
             </div>
             {error && <p style={{ fontSize: "12px", color: "#c0392b" }}>{error}</p>}
-            <button
-              type="submit"
-              disabled={inviting || !inviteEmail}
-              style={{ padding: "8px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", borderRadius: "4px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: inviting || !inviteEmail ? "not-allowed" : "pointer", opacity: inviting || !inviteEmail ? 0.6 : 1, display: "inline-flex", alignItems: "center", gap: "6px", transition: "background-color 0.15s" }}
-            >
+            <button type="submit" disabled={inviting || !inviteEmail} style={{ padding: "8px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", borderRadius: "4px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: inviting || !inviteEmail ? "not-allowed" : "pointer", opacity: inviting || !inviteEmail ? 0.6 : 1, display: "inline-flex", alignItems: "center", gap: "6px", transition: "background-color 0.15s" }}>
               {inviting && <Loader2 className="h-3.5 w-3.5 animate-spin" />} Send invite
             </button>
           </form>
@@ -212,11 +202,7 @@ export default function Admin() {
         {/* Tabs */}
         <div style={{ borderBottom: "1px solid #d8d6d0", marginBottom: "32px" }} className="flex gap-0 overflow-x-auto">
           {availableTabs.map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              style={{ ...TAB_STYLE_BASE, color: tab === t ? "#1E4D5A" : "#777777", borderBottom: tab === t ? "2px solid #1E4D5A" : "2px solid transparent" }}
-            >
+            <button key={t} onClick={() => setTab(t)} style={{ ...TAB_STYLE_BASE, color: tab === t ? "#1E4D5A" : "#777777", borderBottom: tab === t ? "2px solid #1E4D5A" : "2px solid transparent" }}>
               {TAB_LABELS[t]}
             </button>
           ))}
@@ -237,11 +223,7 @@ export default function Admin() {
               </div>
               <div className="flex gap-2">
                 {["list", "calendar"].map((v) => (
-                  <button
-                    key={v}
-                    onClick={() => setView(v)}
-                    style={{ padding: "6px 14px", backgroundColor: view === v ? "#1E4D5A" : "transparent", color: view === v ? "#f3f2ee" : "#777777", border: "1px solid", borderColor: view === v ? "#1E4D5A" : "#d8d6d0", borderRadius: "6px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer", transition: "all 0.15s" }}
-                  >
+                  <button key={v} onClick={() => setView(v)} style={{ padding: "6px 14px", backgroundColor: view === v ? "#1E4D5A" : "transparent", color: view === v ? "#f3f2ee" : "#777777", border: "1px solid", borderColor: view === v ? "#1E4D5A" : "#d8d6d0", borderRadius: "6px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer", transition: "all 0.15s" }}>
                     {v}
                   </button>
                 ))}
@@ -254,11 +236,7 @@ export default function Admin() {
               <>
                 <div style={{ borderBottom: "1px solid #d8d6d0" }} className="flex gap-0">
                   {["today", "upcoming", "past"].map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => setResTab(t)}
-                      style={{ ...TAB_STYLE_BASE, fontSize: "11px", color: resTab === t ? "#1E4D5A" : "#777777", borderBottom: resTab === t ? "2px solid #1E4D5A" : "2px solid transparent" }}
-                    >
+                    <button key={t} onClick={() => setResTab(t)} style={{ ...TAB_STYLE_BASE, fontSize: "11px", color: resTab === t ? "#1E4D5A" : "#777777", borderBottom: resTab === t ? "2px solid #1E4D5A" : "2px solid transparent" }}>
                       {t.charAt(0).toUpperCase() + t.slice(1)} ({counts[t]})
                     </button>
                   ))}
@@ -282,12 +260,13 @@ export default function Admin() {
           </div>
         )}
 
-        {tab === "cellar"  && isAdmin && <CellarClubManager />}
-        {tab === "events"  && isAdmin && <EventsManager />}
-        {tab === "gallery" && isAdmin && <GalleryManager />}
-        {tab === "hire"    && <HireEnquiriesManager />}
-        {tab === "contact" && <ContactManager />}
-        {tab === "team"    && isAdmin && <TeamManager />}
+        {tab === "cellar"   && isAdmin && <CellarClubManager />}
+        {tab === "events"   && isAdmin && <EventsManager />}
+        {tab === "gallery"  && isAdmin && <GalleryManager />}
+        {tab === "hire"     && <HireEnquiriesManager />}
+        {tab === "contact"  && <ContactManager />}
+        {tab === "team"     && isAdmin && <TeamManager />}
+        {tab === "settings" && isAdmin && <Settings />}
       </div>
     </div>
   );
