@@ -79,10 +79,12 @@ const AppRoutes = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
 
+        {/* My Cellar — handles its own auth, no ProtectedRoute needed */}
+        <Route path="/my-cellar" element={<MyCellar />} />
+
         <Route element={<ProtectedRoute redirectTo="/login" />}>
           <Route path="/admin" element={<Admin />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/my-cellar" element={<MyCellar />} />
           <Route path="/cellar/:id" element={<CellarMemberDetail />} />
           <Route path="/scan/:id" element={<ScanBottle />} />
         </Route>
