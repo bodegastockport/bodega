@@ -47,3 +47,8 @@
     font-family: 'Courier New', Courier, monospace;
   }
 }
+
+/* Custom cursor — hide all browser defaults */
+*, *::before, *::after {
+  cursor: none !important;
+}
