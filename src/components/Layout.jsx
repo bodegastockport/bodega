@@ -5,13 +5,13 @@ import { useAuth } from "@/lib/AuthContext";
 
 const LOGO_URL = "/bodega_logo_teal.svg";
 
+// Public nav — order: Bookings, About, Gallery, Cellar Club, Events, Contact
 const NAV = [
-  { to: "/",            label: "Reserve" },
+  { to: "/book",        label: "Bookings" },
   { to: "/about",       label: "About" },
-  { to: "/menu",        label: "Menu" },
-  { to: "/events",      label: "Events" },
-  { to: "/cellar-club", label: "Cellar Club" },
   { to: "/gallery",     label: "Gallery" },
+  { to: "/cellar-club", label: "Cellar Club" },
+  { to: "/events",      label: "Events" },
   { to: "/contact",     label: "Contact" },
 ];
 
@@ -26,7 +26,7 @@ export default function Layout() {
 
   const linkClass = (to) =>
     `text-xs uppercase tracking-widest transition-colors duration-150 ${
-      isActive(to) ? "text-[#193c47]" : "text-[#777777] hover:text-[#2e282a]"
+      isActive(to) ? "text-[#1E4D5A]" : "text-[#777777] hover:text-[#0A242C]"
     }`;
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function Layout() {
   }, []);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#f3f2ee", color: "#2e282a", fontFamily: "'Courier New', Courier, monospace", cursor: "none" }}>
+    <div className="min-h-screen" style={{ backgroundColor: "#f3f2ee", color: "#0A242C", fontFamily: "'Courier New', Courier, monospace", cursor: "none" }}>
 
       {/* Custom cursor */}
       <div
@@ -62,7 +62,7 @@ export default function Layout() {
           width: "12px",
           height: "12px",
           borderRadius: "50%",
-          backgroundColor: "#193c47",
+          backgroundColor: "#1E4D5A",
           pointerEvents: "none",
           zIndex: 9999,
           opacity: 0,
@@ -89,7 +89,7 @@ export default function Layout() {
                 e.target.nextSibling.style.display = "block";
               }}
             />
-            <span style={{ display: "none", fontSize: "16px", fontWeight: 400, color: "#193c47", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            <span style={{ display: "none", fontSize: "16px", fontWeight: 400, color: "#1E4D5A", letterSpacing: "0.1em", textTransform: "uppercase" }}>
               Bodega
             </span>
           </Link>
@@ -100,13 +100,36 @@ export default function Layout() {
               <Link key={to} to={to} className={linkClass(to)}>{label}</Link>
             ))}
             {isAuthenticated && (
-              <Link to="/admin" className="text-xs uppercase tracking-widest transition-colors duration-150" style={{ color: "#777777" }}
-                onMouseEnter={e => e.target.style.color = "#2e282a"}
+              <Link
+                to="/admin"
+                className="text-xs uppercase tracking-widest transition-colors duration-150"
+                style={{ color: "#777777" }}
+                onMouseEnter={e => e.target.style.color = "#0A242C"}
                 onMouseLeave={e => e.target.style.color = "#777777"}
               >
                 Admin
               </Link>
             )}
+            {/* Members Login */}
+            <Link
+              to="/my-cellar"
+              style={{
+                backgroundColor: "#1E4D5A",
+                color: "#ffffff",
+                padding: "6px 14px",
+                fontSize: "11px",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                textDecoration: "none",
+                borderRadius: "0px",
+                transition: "opacity 0.15s",
+                whiteSpace: "nowrap",
+              }}
+              onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
+              onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+            >
+              Members Login
+            </Link>
           </nav>
 
           {/* Mobile hamburger */}
@@ -127,7 +150,7 @@ export default function Layout() {
                 key={to}
                 to={to}
                 onClick={() => setMobileOpen(false)}
-                className={`block text-xs uppercase tracking-widest transition-colors duration-150 ${isActive(to) ? "text-[#193c47]" : "text-[#777777]"}`}
+                className={`block text-xs uppercase tracking-widest transition-colors duration-150 ${isActive(to) ? "text-[#1E4D5A]" : "text-[#777777]"}`}
               >
                 {label}
               </Link>
@@ -137,6 +160,23 @@ export default function Layout() {
                 Admin
               </Link>
             )}
+            <Link
+              to="/my-cellar"
+              onClick={() => setMobileOpen(false)}
+              style={{
+                display: "inline-block",
+                backgroundColor: "#1E4D5A",
+                color: "#ffffff",
+                padding: "6px 14px",
+                fontSize: "11px",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                textDecoration: "none",
+                borderRadius: "0px",
+              }}
+            >
+              Members Login
+            </Link>
           </div>
         )}
       </header>
@@ -152,6 +192,8 @@ export default function Layout() {
       >
         <div className="px-6">
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-8 mb-8">
+
+            {/* Brand */}
             <div>
               <img
                 src={LOGO_URL}
@@ -160,26 +202,34 @@ export default function Layout() {
                 onError={(e) => { e.target.style.display = "none"; }}
               />
               <p className="text-sm leading-relaxed" style={{ color: "#777777" }}>
-                An intimate wine bar in the heart of Stockport, Manchester.
+                A neighbourhood wine bar in the heart of Stockport.
               </p>
             </div>
+
+            {/* Find us */}
             <div>
               <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#777777" }}>Find us</p>
               <div className="text-sm space-y-1" style={{ color: "#777777" }}>
-                <p>Bodega Wine Bar</p>
-                <p>Stockport, Manchester</p>
+                <p>Weir Mill</p>
+                <p>Stockport, SK3 0AG</p>
                 <p className="mt-2">
                   <a href="mailto:hello@bodegawine.co.uk" style={{ color: "#777777" }}>hello@bodegawine.co.uk</a>
                 </p>
               </div>
             </div>
+
+            {/* Opening hours */}
             <div>
               <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#777777" }}>Opening hours</p>
               <div className="text-sm space-y-1" style={{ color: "#777777" }}>
                 <p>Monday — Closed</p>
-                <p>Tuesday – Sunday: 2pm – 9pm</p>
+                <p>Tuesday – Thursday — 2pm to 10pm</p>
+                <p>Friday &amp; Saturday — 2pm to 12am</p>
+                <p>Sunday — 2pm to 10pm</p>
               </div>
             </div>
+
+            {/* Quick links — no Menu */}
             <div>
               <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#777777" }}>Quick links</p>
               <div className="space-y-2">
@@ -189,7 +239,7 @@ export default function Layout() {
                     to={to}
                     className="block text-sm transition-colors duration-150"
                     style={{ color: "#777777" }}
-                    onMouseEnter={e => e.target.style.color = "#2e282a"}
+                    onMouseEnter={e => e.target.style.color = "#0A242C"}
                     onMouseLeave={e => e.target.style.color = "#777777"}
                   >
                     {label}
@@ -198,6 +248,7 @@ export default function Layout() {
               </div>
             </div>
           </div>
+
           <div style={{ borderTop: "1px solid #d8d6d0" }} className="pt-4 flex items-center justify-between flex-wrap gap-3">
             <p className="text-xs" style={{ color: "#777777" }}>
               © {new Date().getFullYear()} Bodega Wine Bar, Stockport. All rights reserved.
