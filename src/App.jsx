@@ -14,7 +14,6 @@ import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
-import Menu from "./pages/Menu";
 import Events from "./pages/Events";
 import Contact from "./pages/Contact";
 import Gallery from "./pages/Gallery";
@@ -31,7 +30,7 @@ const Spinner = () => (
         width: "24px",
         height: "24px",
         border: "2px solid #d8d6d0",
-        borderTopColor: "#193c47",
+        borderTopColor: "#1E4D5A",
         borderRadius: "50%",
         animation: "spin 0.8s linear infinite"
       }}
@@ -74,7 +73,6 @@ const AppRoutes = () => {
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
-        <Route path="/menu" element={<Menu />} />
         <Route path="/events" element={<Events />} />
         <Route path="/cellar-club" element={<CellarClub />} />
         <Route path="/gallery" element={<Gallery />} />
