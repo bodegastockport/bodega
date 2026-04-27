@@ -93,7 +93,6 @@ export default function BookingForm({ onSuccess }) {
 
       const dateStr = format(form.date, "yyyy-MM-dd");
 
-      // Load active tables, excluding any with a date override for this date
       const { data: allTables } = await supabase.from('tables').select().eq('active', true);
       const { data: overrides } = await supabase.from('table_date_overrides').select('table_id').eq('date', dateStr).eq('available', false);
 
@@ -102,12 +101,11 @@ export default function BookingForm({ onSuccess }) {
 
       if (!tables.length) { setCheckingAvailability(false); return; }
 
-      // Load existing reservations for this date
       const { data: existingReservations } = await supabase
         .from('reservations')
         .select('table_id, time')
         .eq('date', dateStr)
-        .in('status', ['pending', 'confirmed']);
+        .in('status', ['confirmed']);
 
       const slots = generateTimeSlots(dayConfig.from, dayConfig.to, slotDuration);
       const availableSlotSet = new Set();
@@ -149,12 +147,11 @@ export default function BookingForm({ onSuccess }) {
     const dateStr = format(form.date, "yyyy-MM-dd");
     const partySize = Number(form.party_size);
 
-    // Find best available table
     const { data: overrides } = await supabase.from('table_date_overrides').select('table_id').eq('date', dateStr).eq('available', false);
     const overriddenIds = (overrides || []).map(o => o.table_id);
 
     const { data: tables } = await supabase.from('tables').select().eq('active', true).gte('capacity', partySize).order('capacity', { ascending: true });
-    const { data: bookedAtSlot } = await supabase.from('reservations').select('table_id').eq('date', dateStr).eq('time', form.time).in('status', ['pending', 'confirmed']);
+    const { data: bookedAtSlot } = await supabase.from('reservations').select('table_id').eq('date', dateStr).eq('time', form.time).in('status', ['confirmed']);
 
     const bookedIds = (bookedAtSlot || []).map(r => r.table_id);
     const availableTable = (tables || []).find(t => !bookedIds.includes(t.id) && !overriddenIds.includes(t.id));
@@ -173,7 +170,7 @@ export default function BookingForm({ onSuccess }) {
       time: form.time,
       party_size: partySize,
       special_requests: form.special_requests || null,
-      status: "pending",
+      status: "confirmed",
       table_id: availableTable.id,
     }).select().single();
 
