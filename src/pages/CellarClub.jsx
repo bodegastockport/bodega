@@ -5,8 +5,6 @@ import { Loader2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-const VAULT_CAPACITY = 50;
-
 const TIERS = [
   { name: "Cellar 6",     bottles: 6,  price: "£21.00", type: "Individual", priceId: "price_CELLAR6_PLACEHOLDER" },
   { name: "Cellar 12",    bottles: 12, price: "£33.50", type: "Individual", priceId: "price_CELLAR12_PLACEHOLDER" },
@@ -19,7 +17,7 @@ const TIERS = [
 
 const BLANK = {
   name: "", email: "", phone: "", dob: null, tier: "",
-  how_heard: "", message: "", marketing: false, agreed_terms: false,
+  how_heard: "", marketing: false, agreed_terms: false,
 };
 
 const overlayInput = {
@@ -39,27 +37,6 @@ const overlayLabel = {
   textTransform: "uppercase",
   letterSpacing: "0.08em",
   color: "rgba(243,242,238,0.55)",
-  marginBottom: "3px",
-  fontFamily: "'Courier New', Courier, monospace",
-};
-
-const lightInput = {
-  backgroundColor: "#f3f2ee",
-  border: "1px solid #d8d6d0",
-  fontFamily: "'Courier New', Courier, monospace",
-  fontSize: "12px",
-  padding: "7px 10px",
-  color: "#0A242C",
-  width: "100%",
-  outline: "none",
-};
-
-const lightLabel = {
-  display: "block",
-  fontSize: "10px",
-  textTransform: "uppercase",
-  letterSpacing: "0.08em",
-  color: "#777777",
   marginBottom: "3px",
   fontFamily: "'Courier New', Courier, monospace",
 };
@@ -91,7 +68,6 @@ export default function CellarClub() {
         membership_tier: form.tier,
         how_did_you_hear: form.how_heard || null,
         marketing_opt_in: form.marketing,
-        notes: form.message || null,
         status: "pending",
       });
 
@@ -107,7 +83,7 @@ export default function CellarClub() {
   const individualTiers = TIERS.filter(t => t.type === "Individual");
   const corporateTiers = TIERS.filter(t => t.type === "Corporate");
 
-  const JoinForm = ({ inputSt, labelSt, isDark }) => (
+  const JoinForm = ({ inputSt, labelSt }) => (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div className="grid grid-cols-2 gap-2">
         <div>
@@ -128,10 +104,7 @@ export default function CellarClub() {
           <label style={labelSt}>Date of birth</label>
           <Popover open={dobOpen} onOpenChange={setDobOpen}>
             <PopoverTrigger asChild>
-              <button
-                type="button"
-                style={{ ...inputSt, textAlign: "left", cursor: "pointer", display: "block" }}
-              >
+              <button type="button" style={{ ...inputSt, textAlign: "left", cursor: "pointer", display: "block" }}>
                 <span style={{ opacity: form.dob ? 1 : 0.5 }}>
                   {form.dob ? format(form.dob, "dd/MM/yyyy") : "DD/MM/YYYY"}
                 </span>
@@ -169,28 +142,15 @@ export default function CellarClub() {
         <input style={inputSt} value={form.how_heard} onChange={e => f("how_heard", e.target.value)} placeholder="Instagram, word of mouth..." />
       </div>
       <div className="flex items-start gap-2">
-        <input
-          type="checkbox"
-          id="marketing"
-          checked={form.marketing}
-          onChange={e => f("marketing", e.target.checked)}
-          style={{ marginTop: "2px", accentColor: "#1E4D5A" }}
-        />
+        <input type="checkbox" id="marketing" checked={form.marketing} onChange={e => f("marketing", e.target.checked)} style={{ marginTop: "2px", accentColor: "#1E4D5A" }} />
         <label htmlFor="marketing" style={{ ...labelSt, textTransform: "none", letterSpacing: 0, lineHeight: "1.5", cursor: "pointer" }}>
           I'm happy to receive updates about events and Cellar Club news.
         </label>
       </div>
       <div className="flex items-start gap-2">
-        <input
-          type="checkbox"
-          id="terms"
-          checked={form.agreed_terms}
-          onChange={e => f("agreed_terms", e.target.checked)}
-          style={{ marginTop: "2px", accentColor: "#1E4D5A" }}
-          required
-        />
+        <input type="checkbox" id="terms" checked={form.agreed_terms} onChange={e => f("agreed_terms", e.target.checked)} style={{ marginTop: "2px", accentColor: "#1E4D5A" }} required />
         <label htmlFor="terms" style={{ ...labelSt, textTransform: "none", letterSpacing: 0, lineHeight: "1.5", cursor: "pointer" }}>
-          I agree to the Cellar Club terms and conditions. {/* Tom to add link/copy */}
+          I agree to the Cellar Club terms and conditions.
         </label>
       </div>
       {error && <p style={{ fontSize: "11px", color: "#e88" }}>{error}</p>}
@@ -198,21 +158,12 @@ export default function CellarClub() {
         type="submit"
         disabled={submitting || !form.name || !form.email || !form.tier || !form.agreed_terms}
         style={{
-          padding: "8px 20px",
-          backgroundColor: "#1E4D5A",
-          color: "#f3f2ee",
-          border: "none",
-          fontFamily: "'Courier New', Courier, monospace",
-          fontSize: "11px",
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
+          padding: "8px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee",
+          border: "none", fontFamily: "'Courier New', Courier, monospace",
+          fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em",
           cursor: submitting || !form.name || !form.email || !form.tier || !form.agreed_terms ? "not-allowed" : "pointer",
           opacity: submitting || !form.name || !form.email || !form.tier || !form.agreed_terms ? 0.5 : 1,
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "6px",
-          width: "100%",
-          justifyContent: "center",
+          display: "inline-flex", alignItems: "center", gap: "6px", width: "100%", justifyContent: "center",
         }}
       >
         {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
@@ -228,17 +179,11 @@ export default function CellarClub() {
       {view === "about" && (
         <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
 
-          <div className="flex flex-col justify-between px-8 py-8" style={{ borderRight: "1px solid #d8d6d0" }}>
+          {/* Left — centred vertically and horizontally, left-aligned within */}
+          <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
+            <div style={{ width: "100%", maxWidth: "400px", padding: "48px 36px" }}>
 
-            <div>
               <h1 className="text-2xl mb-4" style={{ color: "#1E4D5A", fontWeight: 400 }}>The Cellar Club</h1>
-
-              {/* Once full notice */}
-              <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "10px 14px", marginBottom: "16px" }}>
-                <p className="text-xs" style={{ color: "#777777" }}>
-                  <span style={{ color: "#1E4D5A" }}>Membership is limited to {VAULT_CAPACITY} members.</span> Once full, a waiting list will open.
-                </p>
-              </div>
 
               <p className="text-xs leading-relaxed mb-2" style={{ color: "#777777" }}>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
@@ -246,51 +191,45 @@ export default function CellarClub() {
               <p className="text-xs leading-relaxed mb-6" style={{ color: "#777777" }}>
                 Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
               </p>
-            </div>
 
-            <div>
               <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>How it works</p>
               <p className="text-xs leading-relaxed mb-2" style={{ color: "#777777" }}>
                 Beneath Bodega lies a temperature-controlled vault. As a member, you rent a dedicated space — keeping your wine at the perfect conditions for long-term ageing.
               </p>
-              <p className="text-xs leading-relaxed mb-6" style={{ color: "#777777" }}>
+              <p className="text-xs leading-relaxed mb-8" style={{ color: "#777777" }}>
                 Whenever you visit, simply let us know which bottles you'd like and we'll bring them up. A modest corkage fee applies.
               </p>
-            </div>
 
-            <div className="grid grid-cols-3 gap-6 mb-6">
-              {[
-                { title: "Climate-controlled storage", body: "Ideal temperature and humidity for long-term ageing." },
-                { title: "Drink your own here", body: "Bring stored bottles to any table. Modest corkage applies." },
-                { title: "Member perks", body: "Priority reservations, tastings and limited allocations." },
-              ].map(({ title, body }) => (
-                <div key={title}>
-                  <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#1E4D5A" }}>{title}</p>
-                  <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>{body}</p>
-                </div>
-              ))}
-            </div>
+              <div className="grid grid-cols-3 gap-4 mb-8">
+                {[
+                  { title: "Climate-controlled storage", body: "Ideal temperature and humidity for long-term ageing." },
+                  { title: "Drink your own here", body: "Bring stored bottles to any table. Modest corkage applies." },
+                  { title: "Member perks", body: "Priority reservations, tastings and limited allocations." },
+                ].map(({ title, body }) => (
+                  <div key={title}>
+                    <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#1E4D5A" }}>{title}</p>
+                    <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>{body}</p>
+                  </div>
+                ))}
+              </div>
 
-            <div className="flex items-center justify-between pt-4" style={{ borderTop: "1px solid #d8d6d0" }}>
-              <a href="/my-cellar" style={{ fontSize: "11px", color: "#777777", textDecoration: "none", borderBottom: "1px solid #d8d6d0", paddingBottom: "1px" }}>
-                Already a member? Log in →
-              </a>
-              <button
-                onClick={() => setView("pricing")}
-                style={{ padding: "8px 24px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}
-              >
-                View pricing →
-              </button>
+              <div className="flex items-center justify-between pt-4" style={{ borderTop: "1px solid #d8d6d0" }}>
+                <a href="/login" style={{ fontSize: "11px", color: "#777777", textDecoration: "none", borderBottom: "1px solid #d8d6d0", paddingBottom: "1px" }}>
+                  Already a member? Log in →
+                </a>
+                <button
+                  onClick={() => setView("pricing")}
+                  style={{ padding: "8px 24px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}
+                >
+                  View pricing →
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Right — image with join form overlaid */}
           <div style={{ position: "relative", minHeight: "50vh" }}>
-            <img
-              src="/images/cellar-club.jpg"
-              alt="Wine vault"
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-            />
+            <img src="/images/cellar-club.jpg" alt="Wine vault" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
             <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,10,10,0.6)" }} />
             <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
               <div style={{ width: "100%", maxWidth: "340px" }}>
@@ -306,7 +245,7 @@ export default function CellarClub() {
                   <>
                     <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.6)" }}>Join the Cellar Club</p>
                     <h2 className="text-lg mb-4" style={{ color: "#f3f2ee", fontWeight: 400 }}>Start your membership</h2>
-                    <JoinForm inputSt={overlayInput} labelSt={overlayLabel} isDark={true} />
+                    <JoinForm inputSt={overlayInput} labelSt={overlayLabel} />
                   </>
                 )}
               </div>
@@ -318,28 +257,20 @@ export default function CellarClub() {
       {/* ── PRICING VIEW ── */}
       {view === "pricing" && (
         <div className="px-8 py-8" style={{ minHeight: "calc(100vh - 56px)" }}>
-
           <div className="flex items-start justify-between mb-6">
             <div>
-              <button
-                onClick={() => setView("about")}
-                style={{ fontSize: "11px", color: "#777777", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0, marginBottom: "8px", display: "block" }}
-              >
+              <button onClick={() => setView("about")} style={{ fontSize: "11px", color: "#777777", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0, marginBottom: "8px", display: "block" }}>
                 ← Back
               </button>
               <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>Membership</p>
               <h1 className="text-2xl" style={{ color: "#1E4D5A", fontWeight: 400 }}>Pricing</h1>
             </div>
-            <button
-              onClick={() => setJoinOpen(true)}
-              style={{ padding: "10px 28px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}
-            >
+            <button onClick={() => setJoinOpen(true)} style={{ padding: "10px 28px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}>
               Join the Cellar Club →
             </button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
             <div>
               <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#1E4D5A" }}>Individual pricing</p>
               <div style={{ borderTop: "1px solid #d8d6d0" }}>
@@ -354,7 +285,6 @@ export default function CellarClub() {
                 ))}
               </div>
             </div>
-
             <div>
               <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#1E4D5A" }}>Corporate entity pricing</p>
               <div style={{ borderTop: "1px solid #d8d6d0" }}>
@@ -377,30 +307,23 @@ export default function CellarClub() {
         </div>
       )}
 
-      {/* ── JOIN MODAL (pricing page) ── */}
+      {/* ── JOIN MODAL ── */}
       {joinOpen && (
         <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,10,10,0.6)" }} onClick={() => setJoinOpen(false)} />
           <div style={{ position: "relative", backgroundColor: "#1E4D5A", width: "100%", maxWidth: "500px", maxHeight: "90vh", overflowY: "auto", padding: "36px", margin: "0 16px" }}>
-            <button
-              onClick={() => setJoinOpen(false)}
-              style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", cursor: "pointer", color: "rgba(243,242,238,0.5)", fontFamily: "'Courier New', Courier, monospace", fontSize: "18px", lineHeight: 1 }}
-            >
-              ×
-            </button>
+            <button onClick={() => setJoinOpen(false)} style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", cursor: "pointer", color: "rgba(243,242,238,0.5)", fontFamily: "'Courier New', Courier, monospace", fontSize: "18px", lineHeight: 1 }}>×</button>
             {submitted ? (
               <div>
                 <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "rgba(243,242,238,0.6)" }}>You're in</p>
                 <h2 className="text-xl mb-2" style={{ color: "#f3f2ee", fontWeight: 400 }}>Thank you, {form.name.split(" ")[0]}.</h2>
-                <p className="text-xs leading-relaxed" style={{ color: "rgba(243,242,238,0.7)" }}>
-                  Your application has been received. The Bodega team will be in touch shortly.
-                </p>
+                <p className="text-xs leading-relaxed" style={{ color: "rgba(243,242,238,0.7)" }}>Your application has been received. The Bodega team will be in touch shortly.</p>
               </div>
             ) : (
               <>
                 <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.6)" }}>Join the Cellar Club</p>
                 <h2 className="text-xl mb-4" style={{ color: "#f3f2ee", fontWeight: 400 }}>Start your membership</h2>
-                <JoinForm inputSt={overlayInput} labelSt={overlayLabel} isDark={true} />
+                <JoinForm inputSt={overlayInput} labelSt={overlayLabel} />
               </>
             )}
           </div>
