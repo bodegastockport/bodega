@@ -150,7 +150,10 @@ export default function CellarClub() {
       <div className="flex items-start gap-2">
         <input type="checkbox" id="terms" checked={form.agreed_terms} onChange={e => f("agreed_terms", e.target.checked)} style={{ marginTop: "2px", accentColor: "#1E4D5A" }} required />
         <label htmlFor="terms" style={{ ...labelSt, textTransform: "none", letterSpacing: 0, lineHeight: "1.5", cursor: "pointer" }}>
-          I agree to the Cellar Club terms and conditions.
+          I agree to the{" "}
+          <a href="/cellar-club/terms" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(243,242,238,0.8)", textDecoration: "underline" }}>
+            Cellar Club terms and conditions
+          </a>.
         </label>
       </div>
       {error && <p style={{ fontSize: "11px", color: "#e88" }}>{error}</p>}
@@ -179,9 +182,9 @@ export default function CellarClub() {
       {view === "about" && (
         <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
 
-          {/* Left — centred vertically and horizontally, left-aligned within */}
+          {/* Left — centred vertically and horizontally */}
           <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
-            <div style={{ width: "100%", maxWidth: "400px", padding: "48px 36px" }}>
+            <div style={{ width: "100%", maxWidth: "520px", padding: "48px 36px" }}>
 
               <h1 className="text-2xl mb-4" style={{ color: "#1E4D5A", fontWeight: 400 }}>The Cellar Club</h1>
 
