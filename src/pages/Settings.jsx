@@ -51,13 +51,18 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
   const [newClosedDate, setNewClosedDate] = useState("");
 
-  // Tables state
   const [tables, setTables] = useState([]);
   const [tablesLoading, setTablesLoading] = useState(true);
-  const [editingTable, setEditingTable] = useState(null); // { id, name, capacity }
+  const [editingTable, setEditingTable] = useState(null);
   const [addingTable, setAddingTable] = useState(false);
   const [newTable, setNewTable] = useState({ name: "", capacity: "" });
   const [savingTable, setSavingTable] = useState(false);
+
+  const [overrides, setOverrides] = useState([]);
+  const [overridesLoading, setOverridesLoading] = useState(true);
+  const [newOverride, setNewOverride] = useState({ table_id: "", date: "" });
+  const [addingOverride, setAddingOverride] = useState(false);
+  const [savingOverride, setSavingOverride] = useState(false);
 
   const openDays = (() => {
     try { return JSON.parse(settings.open_days); }
@@ -86,9 +91,20 @@ export default function Settings() {
     setTablesLoading(false);
   };
 
+  const loadOverrides = async () => {
+    setOverridesLoading(true);
+    const { data } = await supabase
+      .from('table_date_overrides')
+      .select('*, tables(name)')
+      .order('date', { ascending: true });
+    setOverrides(data || []);
+    setOverridesLoading(false);
+  };
+
   useEffect(() => {
     loadSettings();
     loadTables();
+    loadOverrides();
   }, []);
 
   const saveAll = async () => {
@@ -96,7 +112,6 @@ export default function Settings() {
     const { data: existing } = await supabase.from('bar_settings').select();
     const existingMap = {};
     (existing || []).forEach((r) => { existingMap[r.key] = r.id; });
-
     for (const [key, value] of Object.entries(settings)) {
       if (existingMap[key]) {
         await supabase.from('bar_settings').update({ value }).eq('id', existingMap[key]);
@@ -109,52 +124,32 @@ export default function Settings() {
   };
 
   const updateSetting = (key, value) => setSettings((prev) => ({ ...prev, [key]: value }));
-
   const updateOpenDay = (day, field, value) => {
     const updated = { ...openDays, [day]: { ...openDays[day], [field]: value } };
     updateSetting("open_days", JSON.stringify(updated));
   };
-
   const addClosedDate = () => {
     if (!newClosedDate || closedDates.includes(newClosedDate)) return;
     updateSetting("closed_dates", JSON.stringify([...closedDates, newClosedDate].sort()));
     setNewClosedDate("");
   };
-
   const removeClosedDate = (date) => {
     updateSetting("closed_dates", JSON.stringify(closedDates.filter((d) => d !== date)));
   };
 
-  // Table CRUD
   const saveNewTable = async () => {
     if (!newTable.name.trim() || !newTable.capacity) return;
     setSavingTable(true);
-    const { error } = await supabase.from('tables').insert({
-      name: newTable.name.trim(),
-      capacity: parseInt(newTable.capacity),
-      active: true,
-    });
-    if (!error) {
-      await loadTables();
-      setNewTable({ name: "", capacity: "" });
-      setAddingTable(false);
-      toast.success("Table added");
-    }
+    const { error } = await supabase.from('tables').insert({ name: newTable.name.trim(), capacity: parseInt(newTable.capacity), active: true });
+    if (!error) { await loadTables(); setNewTable({ name: "", capacity: "" }); setAddingTable(false); toast.success("Table added"); }
     setSavingTable(false);
   };
 
   const saveEditTable = async () => {
     if (!editingTable.name.trim() || !editingTable.capacity) return;
     setSavingTable(true);
-    const { error } = await supabase.from('tables').update({
-      name: editingTable.name.trim(),
-      capacity: parseInt(editingTable.capacity),
-    }).eq('id', editingTable.id);
-    if (!error) {
-      await loadTables();
-      setEditingTable(null);
-      toast.success("Table updated");
-    }
+    const { error } = await supabase.from('tables').update({ name: editingTable.name.trim(), capacity: parseInt(editingTable.capacity) }).eq('id', editingTable.id);
+    if (!error) { await loadTables(); setEditingTable(null); toast.success("Table updated"); }
     setSavingTable(false);
   };
 
@@ -165,12 +160,22 @@ export default function Settings() {
 
   const deleteTable = async (id) => {
     const { error } = await supabase.from('tables').delete().eq('id', id);
-    if (!error) {
-      await loadTables();
-      toast.success("Table removed");
-    } else {
-      toast.error("Cannot delete — this table has existing reservations");
-    }
+    if (!error) { await loadTables(); toast.success("Table removed"); }
+    else toast.error("Cannot delete — this table has existing reservations");
+  };
+
+  const saveOverride = async () => {
+    if (!newOverride.table_id || !newOverride.date) return;
+    setSavingOverride(true);
+    const { error } = await supabase.from('table_date_overrides').upsert({ table_id: newOverride.table_id, date: newOverride.date, available: false }, { onConflict: 'table_id,date' });
+    if (!error) { await loadOverrides(); setNewOverride({ table_id: "", date: "" }); setAddingOverride(false); toast.success("Table marked unavailable for that date"); }
+    setSavingOverride(false);
+  };
+
+  const deleteOverride = async (id) => {
+    await supabase.from('table_date_overrides').delete().eq('id', id);
+    await loadOverrides();
+    toast.success("Override removed");
   };
 
   if (loading) return (
@@ -188,15 +193,8 @@ export default function Settings() {
             <h2 className="text-lg" style={{ color: "#0A242C", fontWeight: 400 }}>Venue settings</h2>
             <p className="text-xs mt-1" style={{ color: "#777777" }}>Configure tables, hours and availability</p>
           </div>
-          <button
-            style={btnPrimary}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = "#0A242C"}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = "#1E4D5A"}
-            onClick={saveAll}
-            disabled={saving}
-          >
-            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-            Save changes
+          <button style={btnPrimary} onMouseEnter={e => e.currentTarget.style.backgroundColor = "#0A242C"} onMouseLeave={e => e.currentTarget.style.backgroundColor = "#1E4D5A"} onClick={saveAll} disabled={saving}>
+            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />} Save changes
           </button>
         </div>
 
@@ -204,10 +202,7 @@ export default function Settings() {
         <section className="mb-10">
           <div className="flex items-center justify-between mb-5" style={{ borderBottom: "1px solid #d8d6d0", paddingBottom: "10px" }}>
             <p className="text-xs uppercase tracking-widest" style={{ color: "#777777" }}>Tables</p>
-            <button
-              style={btnOutline}
-              onClick={() => { setAddingTable(true); setEditingTable(null); }}
-            >
+            <button style={btnOutline} onClick={() => { setAddingTable(true); setEditingTable(null); }}>
               <Plus className="h-3 w-3" /> Add table
             </button>
           </div>
@@ -216,25 +211,11 @@ export default function Settings() {
             <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "16px", marginBottom: "12px" }} className="flex gap-3 items-end">
               <div style={{ flex: 2 }}>
                 <label style={labelStyle}>Table name</label>
-                <input
-                  style={{ ...inputStyle, width: "100%" }}
-                  placeholder="e.g. Window Table"
-                  value={newTable.name}
-                  onChange={(e) => setNewTable(p => ({ ...p, name: e.target.value }))}
-                  autoFocus
-                />
+                <input style={{ ...inputStyle, width: "100%" }} placeholder="e.g. Window Table" value={newTable.name} onChange={(e) => setNewTable(p => ({ ...p, name: e.target.value }))} autoFocus />
               </div>
               <div style={{ flex: 1 }}>
                 <label style={labelStyle}>Seats</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="20"
-                  style={{ ...inputStyle, width: "100%" }}
-                  placeholder="4"
-                  value={newTable.capacity}
-                  onChange={(e) => setNewTable(p => ({ ...p, capacity: e.target.value }))}
-                />
+                <input type="number" min="1" max="20" style={{ ...inputStyle, width: "100%" }} placeholder="4" value={newTable.capacity} onChange={(e) => setNewTable(p => ({ ...p, capacity: e.target.value }))} />
               </div>
               <button style={btnPrimary} onClick={saveNewTable} disabled={savingTable || !newTable.name || !newTable.capacity}>
                 {savingTable ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Save
@@ -248,34 +229,19 @@ export default function Settings() {
           {tablesLoading ? (
             <div className="flex justify-center py-8"><Loader2 className="h-4 w-4 animate-spin" style={{ color: "#1E4D5A" }} /></div>
           ) : tables.length === 0 ? (
-            <p className="text-xs py-4" style={{ color: "#777777" }}>No tables yet. Add your first one.</p>
+            <p className="text-xs py-4" style={{ color: "#777777" }}>No tables yet.</p>
           ) : (
             <div className="space-y-2">
               {tables.map((table) => (
                 <div key={table.id} style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "12px 16px" }} className="flex items-center gap-4">
                   <Switch checked={table.active} onCheckedChange={() => toggleTableActive(table)} />
-
                   {editingTable?.id === table.id ? (
                     <>
-                      <input
-                        style={{ ...inputStyle, flex: 2, padding: "5px 9px", fontSize: "12px" }}
-                        value={editingTable.name}
-                        onChange={(e) => setEditingTable(p => ({ ...p, name: e.target.value }))}
-                        autoFocus
-                      />
-                      <input
-                        type="number"
-                        min="1"
-                        max="20"
-                        style={{ ...inputStyle, width: "70px", padding: "5px 9px", fontSize: "12px" }}
-                        value={editingTable.capacity}
-                        onChange={(e) => setEditingTable(p => ({ ...p, capacity: e.target.value }))}
-                      />
+                      <input style={{ ...inputStyle, flex: 2, padding: "5px 9px", fontSize: "12px" }} value={editingTable.name} onChange={(e) => setEditingTable(p => ({ ...p, name: e.target.value }))} autoFocus />
+                      <input type="number" min="1" max="20" style={{ ...inputStyle, width: "70px", padding: "5px 9px", fontSize: "12px" }} value={editingTable.capacity} onChange={(e) => setEditingTable(p => ({ ...p, capacity: e.target.value }))} />
                       <span className="text-xs" style={{ color: "#777777" }}>seats</span>
                       <div className="flex gap-2 ml-auto">
-                        <button style={{ ...btnPrimary, padding: "4px 12px", fontSize: "10px" }} onClick={saveEditTable} disabled={savingTable}>
-                          {savingTable ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
-                        </button>
+                        <button style={{ ...btnPrimary, padding: "4px 12px", fontSize: "10px" }} onClick={saveEditTable} disabled={savingTable}>{savingTable ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}</button>
                         <button style={{ ...btnOutline, padding: "4px 10px", fontSize: "10px" }} onClick={() => setEditingTable(null)}>Cancel</button>
                       </div>
                     </>
@@ -285,21 +251,64 @@ export default function Settings() {
                       <span className="text-xs" style={{ color: "#777777" }}>{table.capacity} seats</span>
                       {!table.active && <span className="text-xs" style={{ color: "#777777", fontStyle: "italic" }}>inactive</span>}
                       <div className="flex gap-2 ml-auto">
-                        <button
-                          onClick={() => setEditingTable({ id: table.id, name: table.name, capacity: table.capacity })}
-                          style={{ padding: "4px 8px", backgroundColor: "transparent", border: "1px solid #d8d6d0", cursor: "pointer", color: "#777777" }}
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </button>
-                        <button
-                          onClick={() => deleteTable(table.id)}
-                          style={{ padding: "4px 8px", backgroundColor: "transparent", border: "1px solid #d8d6d0", cursor: "pointer", color: "#777777" }}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
+                        <button onClick={() => setEditingTable({ id: table.id, name: table.name, capacity: table.capacity })} style={{ padding: "4px 8px", backgroundColor: "transparent", border: "1px solid #d8d6d0", cursor: "pointer", color: "#777777" }}><Pencil className="h-3 w-3" /></button>
+                        <button onClick={() => deleteTable(table.id)} style={{ padding: "4px 8px", backgroundColor: "transparent", border: "1px solid #d8d6d0", cursor: "pointer", color: "#777777" }}><Trash2 className="h-3 w-3" /></button>
                       </div>
                     </>
                   )}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Table date overrides */}
+        <section className="mb-10">
+          <div className="flex items-center justify-between mb-5" style={{ borderBottom: "1px solid #d8d6d0", paddingBottom: "10px" }}>
+            <div>
+              <p className="text-xs uppercase tracking-widest" style={{ color: "#777777" }}>Table unavailability</p>
+              <p className="text-xs mt-1" style={{ color: "#777777" }}>Mark a specific table as unavailable on a specific date</p>
+            </div>
+            <button style={btnOutline} onClick={() => setAddingOverride(true)}><Plus className="h-3 w-3" /> Add</button>
+          </div>
+
+          {addingOverride && (
+            <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "16px", marginBottom: "12px" }} className="flex gap-3 items-end flex-wrap">
+              <div style={{ flex: 2 }}>
+                <label style={labelStyle}>Table</label>
+                <select style={{ ...inputStyle, width: "100%" }} value={newOverride.table_id} onChange={(e) => setNewOverride(p => ({ ...p, table_id: e.target.value }))}>
+                  <option value="">Select table</option>
+                  {tables.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle}>Date</label>
+                <input type="date" style={{ ...inputStyle, width: "100%" }} value={newOverride.date} onChange={(e) => setNewOverride(p => ({ ...p, date: e.target.value }))} />
+              </div>
+              <button style={btnPrimary} onClick={saveOverride} disabled={savingOverride || !newOverride.table_id || !newOverride.date}>
+                {savingOverride ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Save
+              </button>
+              <button style={btnOutline} onClick={() => { setAddingOverride(false); setNewOverride({ table_id: "", date: "" }); }}>
+                <X className="h-3 w-3" /> Cancel
+              </button>
+            </div>
+          )}
+
+          {overridesLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="h-4 w-4 animate-spin" style={{ color: "#1E4D5A" }} /></div>
+          ) : overrides.length === 0 ? (
+            <p className="text-xs py-4" style={{ color: "#777777" }}>No overrides set.</p>
+          ) : (
+            <div className="space-y-2">
+              {overrides.map((o) => (
+                <div key={o.id} style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "10px 16px" }} className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs" style={{ color: "#0A242C" }}>{o.tables?.name}</span>
+                    <span className="text-xs mx-3" style={{ color: "#777777" }}>—</span>
+                    <span className="text-xs" style={{ color: "#777777" }}>{o.date}</span>
+                    <span className="text-xs ml-3" style={{ color: "#c0392b" }}>Unavailable</span>
+                  </div>
+                  <button onClick={() => deleteOverride(o.id)} style={{ padding: "4px 8px", backgroundColor: "transparent", border: "1px solid #d8d6d0", cursor: "pointer", color: "#777777" }}><Trash2 className="h-3 w-3" /></button>
                 </div>
               ))}
             </div>
@@ -316,13 +325,7 @@ export default function Settings() {
             ].map(({ key, label, hint }) => (
               <div key={key}>
                 <label style={labelStyle}>{label}</label>
-                <input
-                  type="number"
-                  min="1"
-                  style={{ ...inputStyle, width: "100%" }}
-                  value={settings[key]}
-                  onChange={(e) => updateSetting(key, e.target.value)}
-                />
+                <input type="number" min="1" style={{ ...inputStyle, width: "100%" }} value={settings[key]} onChange={(e) => updateSetting(key, e.target.value)} />
                 <p className="text-xs mt-1" style={{ color: "#777777" }}>{hint}</p>
               </div>
             ))}
@@ -357,12 +360,10 @@ export default function Settings() {
         {/* Closed dates */}
         <section className="mb-10">
           <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777", borderBottom: "1px solid #d8d6d0", paddingBottom: "10px" }}>Closed dates</p>
-          <p className="text-xs mb-4" style={{ color: "#777777" }}>Block out specific dates — holidays, private events, etc.</p>
+          <p className="text-xs mb-4" style={{ color: "#777777" }}>Block out entire days — holidays, private events, etc.</p>
           <div className="flex gap-2 mb-4">
             <input type="date" style={{ ...inputStyle, width: "180px" }} value={newClosedDate} onChange={(e) => setNewClosedDate(e.target.value)} />
-            <button onClick={addClosedDate} style={{ ...btnOutline }}>
-              <Plus className="h-3.5 w-3.5" /> Add date
-            </button>
+            <button onClick={addClosedDate} style={btnOutline}><Plus className="h-3.5 w-3.5" /> Add date</button>
           </div>
           {closedDates.length === 0 ? (
             <p className="text-xs" style={{ color: "#777777" }}>No closed dates added</p>
@@ -371,9 +372,7 @@ export default function Settings() {
               {closedDates.map((d) => (
                 <div key={d} className="flex items-center gap-1.5" style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "4px 10px" }}>
                   <span className="text-xs" style={{ color: "#0A242C" }}>{d}</span>
-                  <button onClick={() => removeClosedDate(d)} style={{ background: "none", border: "none", cursor: "pointer", color: "#777777", padding: "0 0 0 4px" }}>
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+                  <button onClick={() => removeClosedDate(d)} style={{ background: "none", border: "none", cursor: "pointer", color: "#777777", padding: "0 0 0 4px" }}><Trash2 className="h-3 w-3" /></button>
                 </div>
               ))}
             </div>
@@ -382,7 +381,7 @@ export default function Settings() {
 
         <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "16px" }}>
           <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>
-            Changes to opening hours and booking config affect new bookings only. Remember to click <strong style={{ color: "#0A242C" }}>Save changes</strong> after editing hours or config. Table changes save immediately.
+            Changes to opening hours and booking config affect new bookings only. Remember to click <strong style={{ color: "#0A242C" }}>Save changes</strong> after editing. Table changes save immediately.
           </p>
         </div>
       </div>

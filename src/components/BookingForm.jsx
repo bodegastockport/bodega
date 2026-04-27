@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { format, addDays, isBefore, startOfToday, parseISO } from "date-fns";
+import { format, addDays, isBefore, startOfToday } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -55,13 +55,11 @@ export default function BookingForm({ onSuccess }) {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [focused, setFocused] = useState(null);
 
-  // Settings loaded from Supabase
   const [openDays, setOpenDays] = useState({});
   const [slotDuration, setSlotDuration] = useState(30);
   const [bookingLeadDays, setBookingLeadDays] = useState(28);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
-  // Available slots for selected date
   const [availableSlots, setAvailableSlots] = useState([]);
   const [maxPartySize, setMaxPartySize] = useState(10);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
@@ -72,9 +70,7 @@ export default function BookingForm({ onSuccess }) {
       if (data?.length) {
         const map = {};
         data.forEach((r) => { map[r.key] = r.value; });
-        if (map.open_days) {
-          try { setOpenDays(JSON.parse(map.open_days)); } catch {}
-        }
+        if (map.open_days) { try { setOpenDays(JSON.parse(map.open_days)); } catch {} }
         if (map.slot_duration) setSlotDuration(parseInt(map.slot_duration));
         if (map.booking_lead_days) setBookingLeadDays(parseInt(map.booking_lead_days));
       }
@@ -83,7 +79,6 @@ export default function BookingForm({ onSuccess }) {
     loadSettings();
   }, []);
 
-  // When date changes, load available slots and max party size
   useEffect(() => {
     if (!form.date || !settingsLoaded) return;
     const checkAvailability = async () => {
@@ -94,37 +89,32 @@ export default function BookingForm({ onSuccess }) {
       const dayName = DAYS[form.date.getDay()];
       const dayConfig = openDays[dayName];
 
-      if (!dayConfig?.open) {
-        setCheckingAvailability(false);
-        return;
-      }
+      if (!dayConfig?.open) { setCheckingAvailability(false); return; }
 
-      // Load all active tables
-      const { data: tables } = await supabase.from('tables').select().eq('active', true);
-      if (!tables?.length) {
-        setCheckingAvailability(false);
-        return;
-      }
+      const dateStr = format(form.date, "yyyy-MM-dd");
+
+      // Load active tables, excluding any with a date override for this date
+      const { data: allTables } = await supabase.from('tables').select().eq('active', true);
+      const { data: overrides } = await supabase.from('table_date_overrides').select('table_id').eq('date', dateStr).eq('available', false);
+
+      const overriddenIds = (overrides || []).map(o => o.table_id);
+      const tables = (allTables || []).filter(t => !overriddenIds.includes(t.id));
+
+      if (!tables.length) { setCheckingAvailability(false); return; }
 
       // Load existing reservations for this date
-      const dateStr = format(form.date, "yyyy-MM-dd");
       const { data: existingReservations } = await supabase
         .from('reservations')
-        .select('table_id, time, party_size')
+        .select('table_id, time')
         .eq('date', dateStr)
         .in('status', ['pending', 'confirmed']);
 
       const slots = generateTimeSlots(dayConfig.from, dayConfig.to, slotDuration);
-
-      // For each slot, find which tables are available
       const availableSlotSet = new Set();
       let maxAvailableCapacity = 0;
 
       slots.forEach(slot => {
-        const bookedTableIds = (existingReservations || [])
-          .filter(r => r.time === slot)
-          .map(r => r.table_id);
-
+        const bookedTableIds = (existingReservations || []).filter(r => r.time === slot).map(r => r.table_id);
         const freeTables = tables.filter(t => !bookedTableIds.includes(t.id));
         if (freeTables.length > 0) {
           availableSlotSet.add(slot);
@@ -137,7 +127,6 @@ export default function BookingForm({ onSuccess }) {
       setMaxPartySize(maxAvailableCapacity);
       setCheckingAvailability(false);
     };
-
     checkAvailability();
   }, [form.date, settingsLoaded, openDays, slotDuration]);
 
@@ -145,8 +134,7 @@ export default function BookingForm({ onSuccess }) {
     if (isBefore(date, startOfToday())) return true;
     if (date > addDays(new Date(), bookingLeadDays)) return true;
     const dayName = DAYS[date.getDay()];
-    const dayConfig = openDays[dayName];
-    return !dayConfig?.open;
+    return !openDays[dayName]?.open;
   };
 
   const update = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
@@ -161,23 +149,15 @@ export default function BookingForm({ onSuccess }) {
     const dateStr = format(form.date, "yyyy-MM-dd");
     const partySize = Number(form.party_size);
 
-    // Find best available table for this slot and party size
-    const { data: tables } = await supabase
-      .from('tables')
-      .select()
-      .eq('active', true)
-      .gte('capacity', partySize)
-      .order('capacity', { ascending: true });
+    // Find best available table
+    const { data: overrides } = await supabase.from('table_date_overrides').select('table_id').eq('date', dateStr).eq('available', false);
+    const overriddenIds = (overrides || []).map(o => o.table_id);
 
-    const { data: bookedAtSlot } = await supabase
-      .from('reservations')
-      .select('table_id')
-      .eq('date', dateStr)
-      .eq('time', form.time)
-      .in('status', ['pending', 'confirmed']);
+    const { data: tables } = await supabase.from('tables').select().eq('active', true).gte('capacity', partySize).order('capacity', { ascending: true });
+    const { data: bookedAtSlot } = await supabase.from('reservations').select('table_id').eq('date', dateStr).eq('time', form.time).in('status', ['pending', 'confirmed']);
 
     const bookedIds = (bookedAtSlot || []).map(r => r.table_id);
-    const availableTable = (tables || []).find(t => !bookedIds.includes(t.id));
+    const availableTable = (tables || []).find(t => !bookedIds.includes(t.id) && !overriddenIds.includes(t.id));
 
     if (!availableTable) {
       setError("Sorry, that slot is no longer available. Please choose another time.");
@@ -185,35 +165,24 @@ export default function BookingForm({ onSuccess }) {
       return;
     }
 
-    const { data, error: err } = await supabase
-      .from('reservations')
-      .insert({
-        guest_name: form.guest_name,
-        email: form.email,
-        phone: form.phone,
-        date: dateStr,
-        time: form.time,
-        party_size: partySize,
-        special_requests: form.special_requests || null,
-        status: "pending",
-        table_id: availableTable.id,
-      })
-      .select()
-      .single();
+    const { data, error: err } = await supabase.from('reservations').insert({
+      guest_name: form.guest_name,
+      email: form.email,
+      phone: form.phone,
+      date: dateStr,
+      time: form.time,
+      party_size: partySize,
+      special_requests: form.special_requests || null,
+      status: "pending",
+      table_id: availableTable.id,
+    }).select().single();
 
     setSubmitting(false);
-    if (err) {
-      setError("Something went wrong. Please try again.");
-      return;
-    }
+    if (err) { setError("Something went wrong. Please try again."); return; }
     onSuccess(data);
   };
 
-  const getInputStyle = (field) => ({
-    ...inputStyle,
-    borderColor: focused === field ? "#1E4D5A" : "#d8d6d0",
-  });
-
+  const getInputStyle = (field) => ({ ...inputStyle, borderColor: focused === field ? "#1E4D5A" : "#d8d6d0" });
   const partySizes = Array.from({ length: maxPartySize }, (_, i) => i + 1);
 
   if (!settingsLoaded) return (
@@ -224,30 +193,19 @@ export default function BookingForm({ onSuccess }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      {/* Date / Time / Guests */}
       <div className="grid grid-cols-3 gap-3">
         <div>
           <label style={labelStyle}>Date</label>
           <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
             <PopoverTrigger asChild>
-              <button
-                type="button"
-                style={{ ...getInputStyle("date"), textAlign: "left", cursor: "pointer" }}
-                onFocus={() => setFocused("date")}
-                onBlur={() => setFocused(null)}
-              >
+              <button type="button" style={{ ...getInputStyle("date"), textAlign: "left", cursor: "pointer" }} onFocus={() => setFocused("date")} onBlur={() => setFocused(null)}>
                 <span style={{ color: form.date ? "#0A242C" : "#777777", fontSize: "13px" }}>
                   {form.date ? format(form.date, "d MMM") : "Select"}
                 </span>
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={form.date}
-                onSelect={(d) => { update("date", d); setCalendarOpen(false); }}
-                disabled={isDateDisabled}
-              />
+              <Calendar mode="single" selected={form.date} onSelect={(d) => { update("date", d); setCalendarOpen(false); }} disabled={isDateDisabled} />
             </PopoverContent>
           </Popover>
         </div>
@@ -281,7 +239,6 @@ export default function BookingForm({ onSuccess }) {
         <p style={{ fontSize: "12px", color: "#c0392b" }}>No availability on this date. Please try another day.</p>
       )}
 
-      {/* Contact */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label style={labelStyle}>Full name</label>
@@ -308,15 +265,7 @@ export default function BookingForm({ onSuccess }) {
       <button
         type="submit"
         disabled={!isValid || submitting}
-        style={{
-          width: "100%", padding: "9px 24px", backgroundColor: "#1E4D5A", color: "#f3f2ee",
-          border: "none", borderRadius: "0px", fontFamily: "'Courier New', Courier, monospace",
-          fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em",
-          cursor: isValid && !submitting ? "pointer" : "not-allowed",
-          opacity: !isValid || submitting ? 0.6 : 1,
-          transition: "background-color 0.15s, opacity 0.15s",
-          display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-        }}
+        style={{ width: "100%", padding: "9px 24px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", borderRadius: "0px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: isValid && !submitting ? "pointer" : "not-allowed", opacity: !isValid || submitting ? 0.6 : 1, transition: "background-color 0.15s, opacity 0.15s", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
         onMouseEnter={e => { if (isValid && !submitting) e.currentTarget.style.backgroundColor = "#0A242C"; }}
         onMouseLeave={e => { if (isValid && !submitting) e.currentTarget.style.backgroundColor = "#1E4D5A"; }}
       >

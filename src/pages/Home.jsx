@@ -13,28 +13,14 @@ export default function Home() {
     <>
       {/* Desktop: fixed left image + scrollable right panel */}
       <div className="hidden lg:block">
-        {/* Fixed image — full viewport, left half, behind nav */}
         <div style={{ position: "fixed", top: 0, left: 0, width: "50vw", height: "100vh", zIndex: 0 }}>
           <img
             src="/images/hero.jpg"
             alt="Wine at Bodega"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
           />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,10,10,0.78) 0%, rgba(10,10,10,0.12) 50%, transparent 100%)" }} />
-          <div style={{ position: "absolute", bottom: 0, left: 0, padding: "48px" }}>
-            <p style={{ fontSize: "13px", lineHeight: "1.7", color: "rgba(243,242,238,0.85)", fontFamily: "'Courier New', Courier, monospace", maxWidth: "320px" }}>
-              Intimate wines, curated bites, and an atmosphere made for savouring the moment. Book your spot at Bodega, Stockport.
-            </p>
-            <a
-              href="/about"
-              style={{ display: "inline-block", marginTop: "20px", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: "#f3f2ee", borderBottom: "1px solid rgba(243,242,238,0.5)", paddingBottom: "2px", textDecoration: "none", fontFamily: "'Courier New', Courier, monospace" }}
-            >
-              Our story
-            </a>
-          </div>
         </div>
 
-        {/* Right panel — offset by 50vw, scrollable */}
         <div style={{ marginLeft: "50vw", width: "50vw", minHeight: "100vh", backgroundColor: "#f3f2ee", borderLeft: "1px solid #d8d6d0", display: "flex", flexDirection: "column" }}>
           <div style={{ flex: 1, padding: "32px 36px", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div style={{ width: "100%", maxWidth: "480px" }}>
@@ -72,12 +58,6 @@ export default function Home() {
             alt="Wine at Bodega"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
           />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,10,10,0.75) 0%, rgba(10,10,10,0.1) 60%, transparent 100%)" }} />
-          <div style={{ position: "absolute", bottom: 0, left: 0, padding: "28px" }}>
-            <p style={{ fontSize: "13px", lineHeight: "1.7", color: "rgba(243,242,238,0.85)", fontFamily: "'Courier New', Courier, monospace" }}>
-              Intimate wines, curated bites, and an atmosphere made for savouring the moment.
-            </p>
-          </div>
         </div>
 
         <div style={{ padding: "32px 24px" }}>
