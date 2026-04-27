@@ -23,14 +23,17 @@ export default function Home() {
 
         <div style={{ marginLeft: "50vw", width: "50vw", minHeight: "100vh", backgroundColor: "#f3f2ee", borderLeft: "1px solid #d8d6d0", display: "flex", flexDirection: "column" }}>
           <div style={{ flex: 1, padding: "32px 36px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ width: "100%", maxWidth: "480px" }}>
-              <p style={{ fontSize: "24px", color: "#1E4D5A", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.5", marginBottom: "32px" }}>
-                Wine without the waffle. Great bottles. Cold lager. Proper boards. No lectures, no pretence – just good taste.
+            <div style={{ width: "100%", maxWidth: "400px" }}>
+              <h1 style={{ fontSize: "28px", color: "#1E4D5A", fontWeight: 700, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.3", marginBottom: "14px" }}>
+                Wine without the waffle.
+              </h1>
+              <p style={{ fontSize: "14px", color: "#0A242C", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.7", marginBottom: "32px" }}>
+                Great bottles. Cold lager. Proper boards. No lectures, no pretence – just good taste.
               </p>
-              <div style={{ display: "flex", gap: "12px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
                 <button
                   onClick={openModal}
-                  style={{ padding: "10px 24px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", borderRadius: "0px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer", transition: "background-color 0.15s" }}
+                  style={{ flex: 1, padding: "10px 0", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", borderRadius: "0px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer", transition: "background-color 0.15s" }}
                   onMouseEnter={e => e.currentTarget.style.backgroundColor = "#0A242C"}
                   onMouseLeave={e => e.currentTarget.style.backgroundColor = "#1E4D5A"}
                 >
@@ -38,7 +41,7 @@ export default function Home() {
                 </button>
                 <a
                   href="/cellar-club"
-                  style={{ padding: "10px 24px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", borderRadius: "0px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", textDecoration: "none", display: "inline-block", transition: "background-color 0.15s" }}
+                  style={{ flex: 1, padding: "10px 0", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", borderRadius: "0px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", textDecoration: "none", display: "inline-block", textAlign: "center", transition: "background-color 0.15s" }}
                   onMouseEnter={e => e.currentTarget.style.backgroundColor = "#0A242C"}
                   onMouseLeave={e => e.currentTarget.style.backgroundColor = "#1E4D5A"}
                 >
@@ -61,19 +64,22 @@ export default function Home() {
         </div>
 
         <div style={{ padding: "32px 24px" }}>
-          <p style={{ fontSize: "18px", color: "#1E4D5A", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.5", marginBottom: "24px" }}>
-            Wine without the waffle. Great bottles. Cold lager. Proper boards. No lectures, no pretence – just good taste.
+          <h1 style={{ fontSize: "22px", color: "#1E4D5A", fontWeight: 700, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.3", marginBottom: "12px" }}>
+            Wine without the waffle.
+          </h1>
+          <p style={{ fontSize: "13px", color: "#0A242C", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.7", marginBottom: "24px" }}>
+            Great bottles. Cold lager. Proper boards. No lectures, no pretence – just good taste.
           </p>
-          <div style={{ display: "flex", gap: "12px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
             <button
               onClick={openModal}
-              style={{ padding: "10px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", borderRadius: "0px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}
+              style={{ flex: 1, padding: "10px 0", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", borderRadius: "0px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}
             >
               Bookings
             </button>
             <a
               href="/cellar-club"
-              style={{ padding: "10px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", borderRadius: "0px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", textDecoration: "none", display: "inline-block" }}
+              style={{ flex: 1, padding: "10px 0", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", borderRadius: "0px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", textDecoration: "none", display: "inline-block", textAlign: "center" }}
             >
               Cellar Club
             </a>
