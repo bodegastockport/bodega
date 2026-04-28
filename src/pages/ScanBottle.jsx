@@ -5,9 +5,8 @@ import { useAuth } from "@/lib/AuthContext";
 import { Loader2, Wine, User, MapPin, CheckCircle, AlertTriangle } from "lucide-react";
 
 export default function ScanBottle() {
-  const { id }       = useParams();
-  const { user }     = useNavigate();
-  const navigate     = useNavigate();
+  const { id }             = useParams();
+  const navigate           = useNavigate();
   const { user: authUser } = useAuth();
 
   const [bottle,   setBottle]   = useState(null);
@@ -21,9 +20,9 @@ export default function ScanBottle() {
   const hasAccess = role === "admin" || role === "team";
 
   useEffect(() => {
-    if (!hasAccess) return;
+    if (!authUser) return;
     loadBottle();
-  }, [id]);
+  }, [id, authUser]);
 
   async function loadBottle() {
     setLoading(true);
@@ -79,36 +78,35 @@ export default function ScanBottle() {
 
     setDone(true);
     setChecking(false);
-    // Refresh bottle data to show updated quantity
     setBottle(prev => ({ ...prev, quantity: newQty, status: newQty <= 0 ? "checked_out" : prev.status }));
   }
 
-  // ── Not logged in ──────────────────────────────────────────────────────────
-  if (!hasAccess) {
+  // ── Not logged in
+  if (!authUser) {
     return (
       <div style={pageStyle}>
         <div style={cardStyle}>
           <AlertTriangle style={{ color: "#c0392b", margin: "0 auto 12px", display: "block" }} size={28} />
           <p style={headingStyle}>Not signed in</p>
-          <p style={mutedStyle}>Please sign in to the admin panel first.</p>
-          <button onClick={() => navigate("/login")} style={btnStyle}>
-            Go to sign in
+          <p style={mutedStyle}>Please sign in first.</p>
+          <button onClick={() => navigate("/team-login")} style={btnStyle}>
+            Team sign in
           </button>
         </div>
       </div>
     );
   }
 
-  // ── Loading ────────────────────────────────────────────────────────────────
+  // ── Loading
   if (loading) {
     return (
       <div style={{ ...pageStyle, justifyContent: "center" }}>
-        <Loader2 size={24} className="animate-spin" style={{ color: "#193c47" }} />
+        <Loader2 size={24} className="animate-spin" style={{ color: "#1E4D5A" }} />
       </div>
     );
   }
 
-  // ── Not found ──────────────────────────────────────────────────────────────
+  // ── Not found
   if (error && !bottle) {
     return (
       <div style={pageStyle}>
@@ -116,15 +114,15 @@ export default function ScanBottle() {
           <AlertTriangle style={{ color: "#c0392b", margin: "0 auto 12px", display: "block" }} size={28} />
           <p style={headingStyle}>Bottle not found</p>
           <p style={mutedStyle}>{error}</p>
-          <button onClick={() => navigate("/admin#cellar")} style={btnOutlineStyle}>
-            Back to Cellar Club
+          <button onClick={() => navigate("/admin")} style={btnOutlineStyle}>
+            Back to admin
           </button>
         </div>
       </div>
     );
   }
 
-  // ── Already checked out ────────────────────────────────────────────────────
+  // ── Already checked out
   if (bottle?.status === "checked_out") {
     return (
       <div style={pageStyle}>
@@ -136,15 +134,15 @@ export default function ScanBottle() {
           {bottle.vintage && <p style={mutedStyle}>{bottle.vintage}</p>}
           <div style={dividerStyle} />
           <p style={mutedStyle}>This bottle has already been checked out. If it has been returned, please re-add it to the member's account.</p>
-          <button onClick={() => navigate("/admin#cellar")} style={{ ...btnOutlineStyle, marginTop: "20px" }}>
-            Back to Cellar Club
+          <button onClick={() => navigate("/admin")} style={{ ...btnOutlineStyle, marginTop: "20px" }}>
+            Back to admin
           </button>
         </div>
       </div>
     );
   }
 
-  // ── Checked out successfully ───────────────────────────────────────────────
+  // ── Checked out successfully
   if (done) {
     return (
       <div style={pageStyle}>
@@ -161,18 +159,16 @@ export default function ScanBottle() {
             <p style={{ ...mutedStyle, marginTop: "8px" }}>No bottles remaining — record marked as checked out</p>
           )}
           <div style={dividerStyle} />
-          {member && (
-            <p style={mutedStyle}>{member.name}</p>
-          )}
-          <button onClick={() => navigate("/admin#cellar")} style={{ ...btnOutlineStyle, marginTop: "20px" }}>
-            Back to Cellar Club
+          {member && <p style={mutedStyle}>{member.name}</p>}
+          <button onClick={() => navigate("/admin")} style={{ ...btnOutlineStyle, marginTop: "20px" }}>
+            Back to admin
           </button>
         </div>
       </div>
     );
   }
 
-  // ── Main scan view ─────────────────────────────────────────────────────────
+  // ── Main scan view
   return (
     <div style={pageStyle}>
       <div style={cardStyle}>
@@ -181,9 +177,8 @@ export default function ScanBottle() {
           Bodega Cellar Club — Checkout
         </p>
 
-        {/* Bottle details */}
         <div style={rowStyle}>
-          <Wine size={14} style={{ color: "#193c47", flexShrink: 0, marginTop: "2px" }} />
+          <Wine size={14} style={{ color: "#1E4D5A", flexShrink: 0, marginTop: "2px" }} />
           <div>
             <p style={labelStyle}>Bottle</p>
             <p style={valueStyle}>{bottle.wine_name}</p>
@@ -192,23 +187,19 @@ export default function ScanBottle() {
           </div>
         </div>
 
-        {/* Location */}
-        {(bottle.section || bottle.position) && (
+        {(bottle.cellar_location) && (
           <div style={rowStyle}>
-            <MapPin size={14} style={{ color: "#193c47", flexShrink: 0, marginTop: "2px" }} />
+            <MapPin size={14} style={{ color: "#1E4D5A", flexShrink: 0, marginTop: "2px" }} />
             <div>
               <p style={labelStyle}>Location</p>
-              <p style={valueStyle}>
-                {[bottle.section, bottle.position].filter(Boolean).join(" / ")}
-              </p>
+              <p style={valueStyle}>{bottle.cellar_location}</p>
             </div>
           </div>
         )}
 
-        {/* Member */}
         {member && (
           <div style={rowStyle}>
-            <User size={14} style={{ color: "#193c47", flexShrink: 0, marginTop: "2px" }} />
+            <User size={14} style={{ color: "#1E4D5A", flexShrink: 0, marginTop: "2px" }} />
             <div>
               <p style={labelStyle}>Member</p>
               <p style={valueStyle}>{member.name}</p>
@@ -217,7 +208,6 @@ export default function ScanBottle() {
           </div>
         )}
 
-        {/* Quantity */}
         <div style={{ ...rowStyle, borderBottom: "none", paddingBottom: 0 }}>
           <div style={{ width: 14, flexShrink: 0 }} />
           <div>
@@ -226,21 +216,14 @@ export default function ScanBottle() {
           </div>
         </div>
 
-        {error && (
-          <p style={{ fontSize: "12px", color: "#c0392b", marginTop: "12px" }}>{error}</p>
-        )}
+        {error && <p style={{ fontSize: "12px", color: "#c0392b", marginTop: "12px" }}>{error}</p>}
 
         <div style={dividerStyle} />
 
-        {/* Check out button */}
         <button
           onClick={handleCheckOut}
           disabled={checking}
-          style={{
-            ...btnStyle,
-            opacity: checking ? 0.6 : 1,
-            cursor: checking ? "not-allowed" : "pointer",
-          }}
+          style={{ ...btnStyle, opacity: checking ? 0.6 : 1, cursor: checking ? "not-allowed" : "pointer" }}
         >
           {checking
             ? <><Loader2 size={14} className="animate-spin" /> Checking out…</>
@@ -248,10 +231,7 @@ export default function ScanBottle() {
           }
         </button>
 
-        <button
-          onClick={() => navigate("/admin#cellar")}
-          style={{ ...btnOutlineStyle, marginTop: "8px" }}
-        >
+        <button onClick={() => navigate("/admin")} style={{ ...btnOutlineStyle, marginTop: "8px" }}>
           Cancel
         </button>
 
@@ -260,106 +240,13 @@ export default function ScanBottle() {
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const pageStyle = {
-  backgroundColor: "#f3f2ee",
-  minHeight: "100vh",
-  display: "flex",
-  alignItems: "flex-start",
-  justifyContent: "center",
-  padding: "40px 16px",
-  fontFamily: "'Courier New', Courier, monospace",
-};
-
-const cardStyle = {
-  backgroundColor: "#eceae4",
-  border: "1px solid #d8d6d0",
-  borderRadius: "6px",
-  padding: "28px 24px",
-  width: "100%",
-  maxWidth: "360px",
-};
-
-const headingStyle = {
-  fontSize: "16px",
-  color: "#2e282a",
-  fontWeight: 400,
-  marginBottom: "4px",
-  textAlign: "center",
-  fontFamily: "'Courier New', Courier, monospace",
-};
-
-const mutedStyle = {
-  fontSize: "12px",
-  color: "#777777",
-  margin: "2px 0",
-  textAlign: "center",
-  fontFamily: "'Courier New', Courier, monospace",
-};
-
-const labelStyle = {
-  fontSize: "9px",
-  textTransform: "uppercase",
-  letterSpacing: "0.1em",
-  color: "#777777",
-  marginBottom: "2px",
-  fontFamily: "'Courier New', Courier, monospace",
-};
-
-const valueStyle = {
-  fontSize: "14px",
-  color: "#2e282a",
-  fontWeight: 400,
-  fontFamily: "'Courier New', Courier, monospace",
-};
-
-const rowStyle = {
-  display: "flex",
-  gap: "10px",
-  paddingBottom: "12px",
-  borderBottom: "1px solid #d8d6d0",
-  marginBottom: "12px",
-};
-
-const dividerStyle = {
-  borderTop: "1px solid #d8d6d0",
-  margin: "20px 0",
-};
-
-const btnStyle = {
-  width: "100%",
-  padding: "12px",
-  backgroundColor: "#193c47",
-  color: "#f3f2ee",
-  border: "none",
-  borderRadius: "4px",
-  fontFamily: "'Courier New', Courier, monospace",
-  fontSize: "12px",
-  textTransform: "uppercase",
-  letterSpacing: "0.08em",
-  cursor: "pointer",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "8px",
-  transition: "background-color 0.15s",
-};
-
-const btnOutlineStyle = {
-  width: "100%",
-  padding: "10px",
-  backgroundColor: "transparent",
-  color: "#777777",
-  border: "1px solid #d8d6d0",
-  borderRadius: "4px",
-  fontFamily: "'Courier New', Courier, monospace",
-  fontSize: "11px",
-  textTransform: "uppercase",
-  letterSpacing: "0.08em",
-  cursor: "pointer",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  transition: "border-color 0.15s",
-};
+const pageStyle = { backgroundColor: "#f3f2ee", minHeight: "100vh", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 16px", fontFamily: "'Courier New', Courier, monospace" };
+const cardStyle = { backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "28px 24px", width: "100%", maxWidth: "360px" };
+const headingStyle = { fontSize: "16px", color: "#0A242C", fontWeight: 400, marginBottom: "4px", textAlign: "center", fontFamily: "'Courier New', Courier, monospace" };
+const mutedStyle = { fontSize: "12px", color: "#777777", margin: "2px 0", textAlign: "center", fontFamily: "'Courier New', Courier, monospace" };
+const labelStyle = { fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.1em", color: "#777777", marginBottom: "2px", fontFamily: "'Courier New', Courier, monospace" };
+const valueStyle = { fontSize: "14px", color: "#0A242C", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace" };
+const rowStyle = { display: "flex", gap: "10px", paddingBottom: "12px", borderBottom: "1px solid #d8d6d0", marginBottom: "12px" };
+const dividerStyle = { borderTop: "1px solid #d8d6d0", margin: "20px 0" };
+const btnStyle = { width: "100%", padding: "12px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", borderRadius: "0px", fontFamily: "'Courier New', Courier, monospace", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "background-color 0.15s" };
+const btnOutlineStyle = { width: "100%", padding: "10px", backgroundColor: "transparent", color: "#777777", border: "1px solid #d8d6d0", borderRadius: "0px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "border-color 0.15s" };
