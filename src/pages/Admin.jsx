@@ -142,7 +142,8 @@ export default function Admin() {
     const { data } = await supabase
       .from("reservations")
       .select("*, tables(name)")
-      .order("date", { ascending: false })
+      .order("date", { ascending: true })
+      .order("time", { ascending: true })
       .limit(200);
     setReservations(data || []);
     setLoading(false);
