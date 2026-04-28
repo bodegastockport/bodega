@@ -49,27 +49,13 @@ export default function MyCellar() {
       .update({ status: 'inactive' })
       .eq('id', member.id);
 
-    if (!error) {
-      await supabase.auth.signOut();
-      setCancelled(true);
-    }
+    if (!error) setCancelled(true);
     setCancelling(false);
   };
 
   if (loading) return (
     <div className="flex justify-center items-center" style={{ minHeight: "60vh" }}>
       <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#1E4D5A" }} />
-    </div>
-  );
-
-  if (cancelled) return (
-    <div className="max-w-lg mx-auto px-6 py-20 text-center" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
-      <p className="text-sm mb-2" style={{ color: "#0A242C" }}>Membership cancelled</p>
-      <p className="text-sm leading-relaxed" style={{ color: "#777777" }}>
-        Your Cellar Club membership has been cancelled. We're sorry to see you go. If you have bottles in storage, please contact us at{" "}
-        <a href="mailto:hello@bodegawine.co.uk" style={{ color: "#1E4D5A" }}>hello@bodegawine.co.uk</a> to arrange collection.
-      </p>
-      <a href="/" style={{ display: "inline-block", marginTop: "24px", fontSize: "11px", color: "#777777", textDecoration: "none" }}>← Back to Bodega</a>
     </div>
   );
 
@@ -193,53 +179,67 @@ export default function MyCellar() {
         {activeTab === "membership" && (
           <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
             <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777" }}>Membership details</p>
-            <div className="space-y-4 mb-8">
-              {[
-                { label: "Tier", value: member.membership_tier || "—" },
-                { label: "Member since", value: member.membership_start ? format(parseISO(member.membership_start), "d MMMM yyyy") : "—" },
-                { label: "Locker / bay", value: member.locker_number || "—" },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex justify-between" style={{ borderBottom: "1px solid #d8d6d0", paddingBottom: "12px" }}>
-                  <p className="text-xs uppercase tracking-widest" style={{ color: "#777777" }}>{label}</p>
-                  <p className="text-xs capitalize" style={{ color: "#0A242C" }}>{value}</p>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs mb-8" style={{ color: "#777777" }}>
-              To update your membership details, please contact us at{" "}
-              <a href="mailto:hello@bodegawine.co.uk" style={{ color: "#1E4D5A" }}>hello@bodegawine.co.uk</a>.
-            </p>
 
-            {/* Cancel membership */}
-            <div style={{ borderTop: "1px solid #d8d6d0", paddingTop: "24px" }}>
-              {!confirmCancel ? (
-                <button
-                  onClick={() => setConfirmCancel(true)}
-                  style={{ fontSize: "11px", color: "#777777", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", textTransform: "uppercase", letterSpacing: "0.06em", textDecoration: "underline" }}
-                >
-                  Cancel membership
-                </button>
-              ) : (
-                <div>
-                  <p className="text-xs mb-4" style={{ color: "#0A242C" }}>Are you sure you want to cancel your membership? This cannot be undone. If you have bottles in storage, please contact us to arrange collection.</p>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={handleCancel}
-                      disabled={cancelling}
-                      style={{ padding: "8px 20px", backgroundColor: "#c0392b", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: cancelling ? "not-allowed" : "pointer", opacity: cancelling ? 0.6 : 1, display: "flex", alignItems: "center", gap: "6px" }}
-                    >
-                      {cancelling && <Loader2 className="h-3 w-3 animate-spin" />} Yes, cancel my membership
-                    </button>
-                    <button
-                      onClick={() => setConfirmCancel(false)}
-                      style={{ padding: "8px 16px", backgroundColor: "transparent", color: "#777777", border: "1px solid #d8d6d0", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer" }}
-                    >
-                      Keep membership
-                    </button>
-                  </div>
+            {cancelled ? (
+              <div style={{ backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", padding: "20px", marginBottom: "24px" }}>
+                <p className="text-sm mb-2" style={{ color: "#0A242C" }}>Your membership has been cancelled.</p>
+                <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>
+                  If you have bottles in storage, please contact us at{" "}
+                  <a href="mailto:hello@bodegawine.co.uk" style={{ color: "#1E4D5A" }}>hello@bodegawine.co.uk</a> to arrange collection.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-4 mb-8">
+                  {[
+                    { label: "Tier", value: member.membership_tier || "—" },
+                    { label: "Member since", value: member.membership_start ? format(parseISO(member.membership_start), "d MMMM yyyy") : "—" },
+                    { label: "Locker / bay", value: member.locker_number || "—" },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="flex justify-between" style={{ borderBottom: "1px solid #d8d6d0", paddingBottom: "12px" }}>
+                      <p className="text-xs uppercase tracking-widest" style={{ color: "#777777" }}>{label}</p>
+                      <p className="text-xs capitalize" style={{ color: "#0A242C" }}>{value}</p>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </div>
+                <p className="text-xs mb-8" style={{ color: "#777777" }}>
+                  To update your membership details, please contact us at{" "}
+                  <a href="mailto:hello@bodegawine.co.uk" style={{ color: "#1E4D5A" }}>hello@bodegawine.co.uk</a>.
+                </p>
+
+                <div style={{ borderTop: "1px solid #d8d6d0", paddingTop: "24px" }}>
+                  {!confirmCancel ? (
+                    <button
+                      onClick={() => setConfirmCancel(true)}
+                      style={{ fontSize: "11px", color: "#777777", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", textTransform: "uppercase", letterSpacing: "0.06em", textDecoration: "underline" }}
+                    >
+                      Cancel membership
+                    </button>
+                  ) : (
+                    <div>
+                      <p className="text-xs mb-4" style={{ color: "#0A242C" }}>
+                        Are you sure you want to cancel your membership? If you have bottles in storage, please contact us to arrange collection before cancelling.
+                      </p>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={handleCancel}
+                          disabled={cancelling}
+                          style={{ padding: "8px 20px", backgroundColor: "#c0392b", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: cancelling ? "not-allowed" : "pointer", opacity: cancelling ? 0.6 : 1, display: "flex", alignItems: "center", gap: "6px" }}
+                        >
+                          {cancelling && <Loader2 className="h-3 w-3 animate-spin" />} Yes, cancel my membership
+                        </button>
+                        <button
+                          onClick={() => setConfirmCancel(false)}
+                          style={{ padding: "8px 16px", backgroundColor: "transparent", color: "#777777", border: "1px solid #d8d6d0", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer" }}
+                        >
+                          Keep membership
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
