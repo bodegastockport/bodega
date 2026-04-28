@@ -24,7 +24,7 @@ export default function Home() {
         <div style={{ marginLeft: "50vw", width: "50vw", minHeight: "100vh", backgroundColor: "#f3f2ee", borderLeft: "1px solid #d8d6d0", display: "flex", flexDirection: "column" }}>
           <div style={{ flex: 1, padding: "32px 36px", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div style={{ width: "100%", maxWidth: "400px" }}>
-              <h1 style={{ fontSize: "28px", color: "#1E4D5A", fontWeight: 700, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.3", marginBottom: "14px" }}>
+              <h1 style={{ fontSize: "28px", color: "#1E4D5A", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.3", marginBottom: "14px" }}>
                 Wine without the waffle.
               </h1>
               <p style={{ fontSize: "14px", color: "#0A242C", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.7", marginBottom: "32px" }}>
@@ -64,7 +64,7 @@ export default function Home() {
         </div>
 
         <div style={{ padding: "32px 24px" }}>
-          <h1 style={{ fontSize: "22px", color: "#1E4D5A", fontWeight: 700, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.3", marginBottom: "12px" }}>
+          <h1 style={{ fontSize: "22px", color: "#1E4D5A", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.3", marginBottom: "12px" }}>
             Wine without the waffle.
           </h1>
           <p style={{ fontSize: "13px", color: "#0A242C", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.7", marginBottom: "24px" }}>
