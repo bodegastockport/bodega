@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
-import { Loader2, Wine, User, MapPin, CheckCircle, AlertTriangle } from "lucide-react";
+import { Loader2, Wine, User, MapPin, AlertTriangle } from "lucide-react";
 
 export default function ScanBottle() {
   const { id }             = useParams();
@@ -77,7 +77,6 @@ export default function ScanBottle() {
     setChecking(false);
   }
 
-  // ── Not logged in
   if (!authUser) {
     return (
       <div style={pageStyle}>
@@ -91,7 +90,6 @@ export default function ScanBottle() {
     );
   }
 
-  // ── No access
   if (!hasAccess) {
     return (
       <div style={pageStyle}>
@@ -104,7 +102,6 @@ export default function ScanBottle() {
     );
   }
 
-  // ── Loading
   if (loading) {
     return (
       <div style={{ ...pageStyle, justifyContent: "center" }}>
@@ -113,7 +110,6 @@ export default function ScanBottle() {
     );
   }
 
-  // ── Not found
   if (error && !bottle) {
     return (
       <div style={pageStyle}>
@@ -127,17 +123,16 @@ export default function ScanBottle() {
     );
   }
 
-  // ── Checked out successfully — MUST come before consumed check
+  // ── Success — MUST come before consumed check
   if (done) {
     return (
       <div style={pageStyle}>
         <div style={cardStyle}>
-          <CheckCircle style={{ color: "#1a5c38", margin: "0 auto 12px", display: "block" }} size={32} />
-          <p style={{ ...headingStyle, color: "#1a5c38" }}>Checked out</p>
-          <p style={mutedStyle}>{bottle.wine_name}{bottle.vintage ? ` · ${bottle.vintage}` : ""}</p>
-          <div style={dividerStyle} />
+          <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: "#1E4D5A", marginBottom: "12px", textAlign: "center" }}>Success</p>
+          <p style={headingStyle}>{bottle.wine_name}{bottle.vintage ? ` · ${bottle.vintage}` : ""}</p>
           {member && <p style={mutedStyle}>{member.name}</p>}
-          <button onClick={() => navigate("/admin")} style={{ ...btnOutlineStyle, marginTop: "20px" }}>Back to admin</button>
+          <div style={dividerStyle} />
+          <button onClick={() => navigate("/admin")} style={{ ...btnOutlineStyle, marginTop: "4px" }}>Back to admin</button>
         </div>
       </div>
     );
