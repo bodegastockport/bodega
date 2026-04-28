@@ -69,6 +69,7 @@ export default function CellarClub() {
         how_did_you_hear: form.how_heard || null,
         marketing_opt_in: form.marketing,
         status: "active",
+        membership_start: new Date().toISOString().split('T')[0],
       });
 
     if (memberErr) {
