@@ -59,14 +59,11 @@ export default function ScanBottle() {
     setChecking(true);
     setError(null);
 
-    const newQty = (bottle.quantity || 1) - 1;
-
     const { error: updateErr } = await supabase
       .from("cellar_bottles")
       .update({
-        quantity:   newQty,
-        status:     newQty <= 0 ? "checked_out" : bottle.status,
-        updated_at: new Date().toISOString(),
+        status: "consumed",
+        checked_out_at: new Date().toISOString(),
       })
       .eq("id", bottle.id);
 
@@ -78,7 +75,7 @@ export default function ScanBottle() {
 
     setDone(true);
     setChecking(false);
-    setBottle(prev => ({ ...prev, quantity: newQty, status: newQty <= 0 ? "checked_out" : prev.status }));
+    setBottle(prev => ({ ...prev, status: "consumed" }));
   }
 
   // ── Not logged in
@@ -89,9 +86,20 @@ export default function ScanBottle() {
           <AlertTriangle style={{ color: "#c0392b", margin: "0 auto 12px", display: "block" }} size={28} />
           <p style={headingStyle}>Not signed in</p>
           <p style={mutedStyle}>Please sign in first.</p>
-          <button onClick={() => navigate("/team-login")} style={btnStyle}>
-            Team sign in
-          </button>
+          <button onClick={() => navigate("/team-login")} style={btnStyle}>Team sign in</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── No access
+  if (!hasAccess) {
+    return (
+      <div style={pageStyle}>
+        <div style={cardStyle}>
+          <AlertTriangle style={{ color: "#c0392b", margin: "0 auto 12px", display: "block" }} size={28} />
+          <p style={headingStyle}>Access denied</p>
+          <p style={mutedStyle}>Staff access only.</p>
         </div>
       </div>
     );
@@ -114,29 +122,25 @@ export default function ScanBottle() {
           <AlertTriangle style={{ color: "#c0392b", margin: "0 auto 12px", display: "block" }} size={28} />
           <p style={headingStyle}>Bottle not found</p>
           <p style={mutedStyle}>{error}</p>
-          <button onClick={() => navigate("/admin")} style={btnOutlineStyle}>
-            Back to admin
-          </button>
+          <button onClick={() => navigate("/admin")} style={btnOutlineStyle}>Back to admin</button>
         </div>
       </div>
     );
   }
 
-  // ── Already checked out
-  if (bottle?.status === "checked_out") {
+  // ── Already consumed
+  if (bottle?.status === "consumed" || bottle?.status === "checked_out") {
     return (
       <div style={pageStyle}>
         <div style={cardStyle}>
-          <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: "#777777", marginBottom: "16px" }}>
+          <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: "#777777", marginBottom: "16px", textAlign: "center" }}>
             Already checked out
           </p>
           <p style={headingStyle}>{bottle.wine_name}</p>
           {bottle.vintage && <p style={mutedStyle}>{bottle.vintage}</p>}
           <div style={dividerStyle} />
           <p style={mutedStyle}>This bottle has already been checked out. If it has been returned, please re-add it to the member's account.</p>
-          <button onClick={() => navigate("/admin")} style={{ ...btnOutlineStyle, marginTop: "20px" }}>
-            Back to admin
-          </button>
+          <button onClick={() => navigate("/admin")} style={{ ...btnOutlineStyle, marginTop: "20px" }}>Back to admin</button>
         </div>
       </div>
     );
@@ -150,19 +154,9 @@ export default function ScanBottle() {
           <CheckCircle style={{ color: "#1a5c38", margin: "0 auto 12px", display: "block" }} size={32} />
           <p style={{ ...headingStyle, color: "#1a5c38" }}>Checked out</p>
           <p style={mutedStyle}>{bottle.wine_name}{bottle.vintage ? ` · ${bottle.vintage}` : ""}</p>
-          {bottle.quantity > 0 && (
-            <p style={{ ...mutedStyle, marginTop: "8px" }}>
-              {bottle.quantity} {bottle.quantity === 1 ? "bottle" : "bottles"} remaining in vault
-            </p>
-          )}
-          {bottle.quantity <= 0 && (
-            <p style={{ ...mutedStyle, marginTop: "8px" }}>No bottles remaining — record marked as checked out</p>
-          )}
           <div style={dividerStyle} />
           {member && <p style={mutedStyle}>{member.name}</p>}
-          <button onClick={() => navigate("/admin")} style={{ ...btnOutlineStyle, marginTop: "20px" }}>
-            Back to admin
-          </button>
+          <button onClick={() => navigate("/admin")} style={{ ...btnOutlineStyle, marginTop: "20px" }}>Back to admin</button>
         </div>
       </div>
     );
@@ -187,7 +181,7 @@ export default function ScanBottle() {
           </div>
         </div>
 
-        {(bottle.cellar_location) && (
+        {bottle.cellar_location && (
           <div style={rowStyle}>
             <MapPin size={14} style={{ color: "#1E4D5A", flexShrink: 0, marginTop: "2px" }} />
             <div>
@@ -227,7 +221,7 @@ export default function ScanBottle() {
         >
           {checking
             ? <><Loader2 size={14} className="animate-spin" /> Checking out…</>
-            : `Check out 1 bottle`
+            : "Check out 1 bottle"
           }
         </button>
 
