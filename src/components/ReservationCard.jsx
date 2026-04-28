@@ -41,11 +41,12 @@ export default function ReservationCard({ reservation, onUpdate }) {
         </span>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
         {[
           { label: "Date", value: format(parseISO(reservation.date), "dd MMM yyyy") },
           { label: "Time", value: reservation.time },
           { label: "Guests", value: reservation.party_size },
+          { label: "Table", value: reservation.tables?.name || "—" },
           { label: "Phone", value: reservation.phone },
         ].map(({ label, value }) => (
           <div key={label}>

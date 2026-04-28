@@ -12,10 +12,6 @@ import ContactManager from "../components/cms/ContactManager";
 import CellarClubManager from "../components/cms/CellarClubManager";
 import Settings from "./Settings";
 
-// Roles are stored in Supabase user_metadata: { "role": "admin" } or { "role": "team" }
-// "admin" = full access to all tabs
-// "team"  = reservations, hire enquiries, messages only
-
 const TAB_STYLE_BASE = {
   padding: "8px 16px",
   fontFamily: "'Courier New', Courier, monospace",
@@ -80,7 +76,6 @@ function TeamManager() {
         <p className="text-xs mb-5 leading-relaxed" style={{ color: "#777777" }}>
           They'll receive an email to sign in. You control their access level — only admin users can invite others.
         </p>
-
         {sent ? (
           <div>
             <p className="text-sm mb-2" style={{ color: "#0A242C" }}>Invite sent</p>
@@ -144,7 +139,11 @@ export default function Admin() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from("reservations").select().order("date", { ascending: false }).limit(200);
+    const { data } = await supabase
+      .from("reservations")
+      .select("*, tables(name)")
+      .order("date", { ascending: false })
+      .limit(200);
     setReservations(data || []);
     setLoading(false);
   };
@@ -171,15 +170,15 @@ export default function Admin() {
   const filtered = reservations.filter((r) => {
     const q = !search || r.guest_name?.toLowerCase().includes(search.toLowerCase()) || r.email?.toLowerCase().includes(search.toLowerCase()) || r.phone?.includes(search);
     if (!q) return false;
-    if (resTab === "upcoming") return r.status === "pending" || r.status === "confirmed";
-    if (resTab === "today")    return isToday(parseISO(r.date)) && (r.status === "pending" || r.status === "confirmed");
+    if (resTab === "upcoming") return r.status === "confirmed";
+    if (resTab === "today")    return isToday(parseISO(r.date)) && r.status === "confirmed";
     if (resTab === "past")     return r.status === "completed" || r.status === "cancelled";
     return true;
   });
 
   const counts = {
-    upcoming: reservations.filter(r => r.status === "pending" || r.status === "confirmed").length,
-    today:    reservations.filter(r => isToday(parseISO(r.date)) && (r.status === "pending" || r.status === "confirmed")).length,
+    upcoming: reservations.filter(r => r.status === "confirmed").length,
+    today:    reservations.filter(r => isToday(parseISO(r.date)) && r.status === "confirmed").length,
     past:     reservations.filter(r => r.status === "completed" || r.status === "cancelled").length,
   };
 
@@ -199,7 +198,6 @@ export default function Admin() {
           </div>
         </div>
 
-        {/* Tabs */}
         <div style={{ borderBottom: "1px solid #d8d6d0", marginBottom: "32px" }} className="flex gap-0 overflow-x-auto">
           {availableTabs.map((t) => (
             <button key={t} onClick={() => setTab(t)} style={{ ...TAB_STYLE_BASE, color: tab === t ? "#1E4D5A" : "#777777", borderBottom: tab === t ? "2px solid #1E4D5A" : "2px solid transparent" }}>
@@ -208,7 +206,6 @@ export default function Admin() {
           ))}
         </div>
 
-        {/* Reservations */}
         {tab === "reservations" && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
