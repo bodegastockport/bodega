@@ -8,14 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const inputStyle = { backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", borderRadius: "6px", fontFamily: "'Courier New', Courier, monospace", fontSize: "13px", padding: "9px 12px", color: "#0A242C", width: "100%", outline: "none", transition: "border-color 0.15s" };
 const labelStyle = { display: "block", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#777777", marginBottom: "5px", fontFamily: "'Courier New', Courier, monospace" };
 
-const STATUS_LABEL = { active: "Active", pending: "Pending", inactive: "Inactive" };
-const STATUS_STYLE = {
-  active:   { backgroundColor: "#eaf0ec", color: "#2e6b45", border: "1px solid #c8dace" },
-  pending:  { backgroundColor: "#f0ede8", color: "#777777", border: "1px solid #d8d6d0" },
-  inactive: { backgroundColor: "#eceae4", color: "#777777", border: "1px solid #d8d6d0" },
-};
-
-const BLANK = { name: "", email: "", phone: "", membership_start: "", locker_number: "", notes: "", status: "pending", membership_tier: "" };
+const BLANK = { name: "", email: "", phone: "", membership_start: "", locker_number: "", notes: "", status: "active", membership_tier: "" };
 const VAULT_CAPACITY = 1152;
 
 export default function CellarClubManager() {
@@ -30,6 +23,7 @@ export default function CellarClubManager() {
     const { data } = await supabase
       .from('cellar_members')
       .select()
+      .eq('status', 'active')
       .order('created_at', { ascending: false });
     setMembers(data || []);
     setLoading(false);
@@ -39,7 +33,7 @@ export default function CellarClubManager() {
 
   const openNew = () => { setForm(BLANK); setEditing("new"); };
   const openEdit = (m) => {
-    setForm({ name: m.name, email: m.email, phone: m.phone || "", membership_start: m.membership_start || "", locker_number: m.locker_number || "", notes: m.notes || "", status: m.status || "pending", membership_tier: m.membership_tier || "" });
+    setForm({ name: m.name, email: m.email, phone: m.phone || "", membership_start: m.membership_start || "", locker_number: m.locker_number || "", notes: m.notes || "", status: m.status || "active", membership_tier: m.membership_tier || "" });
     setEditing(m);
   };
   const close = () => setEditing(null);
@@ -61,15 +55,15 @@ export default function CellarClubManager() {
     toast.success(editing === "new" ? "Member added" : "Member updated");
   };
 
-  const handleDelete = async (id) => {
-    const { error } = await supabase.from('cellar_members').delete().eq('id', id);
+  const handleDeactivate = async (id) => {
+    const { error } = await supabase.from('cellar_members').update({ status: 'inactive' }).eq('id', id);
     if (!error) {
       setMembers((p) => p.filter((m) => m.id !== id));
-      toast.success("Member removed");
+      toast.success("Member deactivated");
     }
   };
 
-  const totalBottles = members.filter(m => m.status === "active").reduce((s, m) => s + (m.bottles_stored || 0), 0);
+  const totalBottles = members.reduce((s, m) => s + (m.bottles_stored || 0), 0);
 
   const filtered = members.filter(m => {
     if (!search.trim()) return true;
@@ -82,10 +76,9 @@ export default function CellarClubManager() {
   return (
     <div className="space-y-6" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
 
-      {/* Header */}
       <div className="flex items-center justify-between">
         <p className="text-xs" style={{ color: "#777777" }}>
-          {members.filter(m => m.status === "active").length} active members · {totalBottles} / {VAULT_CAPACITY} bottles stored
+          {members.length} active members · {totalBottles} / {VAULT_CAPACITY} bottles stored
         </p>
         <button
           onClick={openNew}
@@ -97,7 +90,6 @@ export default function CellarClubManager() {
         </button>
       </div>
 
-      {/* Vault capacity bar */}
       <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "16px" }}>
         <div className="flex justify-between text-xs mb-2" style={{ color: "#777777" }}>
           <span>Vault capacity</span>
@@ -108,15 +100,9 @@ export default function CellarClubManager() {
         </div>
       </div>
 
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 pointer-events-none" style={{ color: "#777777" }} />
-        <input
-          style={{ ...inputStyle, paddingLeft: "34px" }}
-          placeholder="Search by name, email, phone or bay…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <input style={{ ...inputStyle, paddingLeft: "34px" }} placeholder="Search by name, email, phone or bay…" value={search} onChange={(e) => setSearch(e.target.value)} />
         {search && (
           <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ background: "none", border: "none", cursor: "pointer", color: "#777777" }}>
             <X className="h-3.5 w-3.5" />
@@ -124,7 +110,6 @@ export default function CellarClubManager() {
         )}
       </div>
 
-      {/* Form */}
       {editing && (
         <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
           <div className="flex items-center justify-between mb-5">
@@ -133,29 +118,18 @@ export default function CellarClubManager() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { key: "name",             label: "Full name *",       type: "text",  placeholder: "Member name" },
-              { key: "email",            label: "Email *",           type: "email", placeholder: "email@example.com" },
-              { key: "phone",            label: "Phone",             type: "text",  placeholder: "Phone number" },
-              { key: "membership_start", label: "Membership start",  type: "date" },
-              { key: "locker_number",    label: "Locker / bay",      type: "text",  placeholder: "e.g. A20" },
-              { key: "membership_tier",  label: "Tier",              type: "text",  placeholder: "e.g. Cellar 12" },
+              { key: "name",             label: "Full name *",      type: "text",  placeholder: "Member name" },
+              { key: "email",            label: "Email *",          type: "email", placeholder: "email@example.com" },
+              { key: "phone",            label: "Phone",            type: "text",  placeholder: "Phone number" },
+              { key: "membership_start", label: "Membership start", type: "date" },
+              { key: "locker_number",    label: "Locker / bay",     type: "text",  placeholder: "e.g. A20" },
+              { key: "membership_tier",  label: "Tier",             type: "text",  placeholder: "e.g. Cellar 12" },
             ].map(({ key, label, type, placeholder }) => (
               <div key={key}>
                 <label style={labelStyle}>{label}</label>
                 <input type={type} style={inputStyle} value={form[key]} onChange={(e) => f(key, e.target.value)} placeholder={placeholder} />
               </div>
             ))}
-            <div>
-              <label style={labelStyle}>Status</label>
-              <Select value={form.status} onValueChange={(v) => f("status", v)}>
-                <SelectTrigger style={{ ...inputStyle, height: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <div className="sm:col-span-2">
               <label style={labelStyle}>Notes</label>
               <textarea style={{ ...inputStyle, minHeight: "72px", resize: "none" }} value={form.notes} onChange={(e) => f("notes", e.target.value)} placeholder="Any notes about this member..." />
@@ -174,10 +148,9 @@ export default function CellarClubManager() {
         </div>
       )}
 
-      {/* Members list */}
       {members.length === 0 ? (
         <div className="text-center py-16" style={{ color: "#777777" }}>
-          <p className="text-sm">No members yet.</p>
+          <p className="text-sm">No active members.</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12" style={{ color: "#777777" }}>
@@ -193,7 +166,6 @@ export default function CellarClubManager() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-sm" style={{ color: "#0A242C" }}>{m.name}</p>
-                  <span style={{ ...STATUS_STYLE[m.status || "pending"], fontSize: "10px", padding: "2px 8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>{STATUS_LABEL[m.status || "pending"]}</span>
                   {m.membership_tier && <span className="text-xs" style={{ color: "#777777" }}>· {m.membership_tier}</span>}
                   {m.locker_number && <span className="text-xs" style={{ color: "#777777" }}>· {m.locker_number}</span>}
                 </div>
@@ -208,7 +180,7 @@ export default function CellarClubManager() {
                 <button onClick={() => openEdit(m)} style={{ padding: "4px 8px", backgroundColor: "transparent", border: "1px solid #d8d6d0", cursor: "pointer", color: "#777777" }}>
                   <Pencil className="h-3.5 w-3.5" />
                 </button>
-                <button onClick={() => handleDelete(m.id)} style={{ padding: "4px 8px", backgroundColor: "transparent", border: "1px solid #d8d6d0", cursor: "pointer", color: "#777777" }}>
+                <button onClick={() => handleDeactivate(m.id)} style={{ padding: "4px 8px", backgroundColor: "transparent", border: "1px solid #d8d6d0", cursor: "pointer", color: "#777777" }}>
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>

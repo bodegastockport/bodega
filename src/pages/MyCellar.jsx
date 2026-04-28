@@ -10,6 +10,9 @@ export default function MyCellar() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState("inventory");
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelled, setCancelled] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -19,7 +22,8 @@ export default function MyCellar() {
       const { data: members } = await supabase
         .from('cellar_members')
         .select()
-        .eq('email', user.email);
+        .eq('email', user.email)
+        .eq('status', 'active');
 
       if (!members?.length) { setNotFound(true); setLoading(false); return; }
 
@@ -38,17 +42,43 @@ export default function MyCellar() {
     load();
   }, []);
 
+  const handleCancel = async () => {
+    setCancelling(true);
+    const { error } = await supabase
+      .from('cellar_members')
+      .update({ status: 'inactive' })
+      .eq('id', member.id);
+
+    if (!error) {
+      await supabase.auth.signOut();
+      setCancelled(true);
+    }
+    setCancelling(false);
+  };
+
   if (loading) return (
     <div className="flex justify-center items-center" style={{ minHeight: "60vh" }}>
-      <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#193c47" }} />
+      <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#1E4D5A" }} />
+    </div>
+  );
+
+  if (cancelled) return (
+    <div className="max-w-lg mx-auto px-6 py-20 text-center" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
+      <p className="text-sm mb-2" style={{ color: "#0A242C" }}>Membership cancelled</p>
+      <p className="text-sm leading-relaxed" style={{ color: "#777777" }}>
+        Your Cellar Club membership has been cancelled. We're sorry to see you go. If you have bottles in storage, please contact us at{" "}
+        <a href="mailto:hello@bodegawine.co.uk" style={{ color: "#1E4D5A" }}>hello@bodegawine.co.uk</a> to arrange collection.
+      </p>
+      <a href="/" style={{ display: "inline-block", marginTop: "24px", fontSize: "11px", color: "#777777", textDecoration: "none" }}>← Back to Bodega</a>
     </div>
   );
 
   if (notFound) return (
     <div className="max-w-lg mx-auto px-6 py-20 text-center" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
-      <p className="text-sm mb-2" style={{ color: "#2e282a" }}>No cellar account found</p>
+      <p className="text-sm mb-2" style={{ color: "#0A242C" }}>No cellar account found</p>
       <p className="text-sm leading-relaxed" style={{ color: "#777777" }}>
-        We couldn't find a Cellar Club account linked to your email. Please contact us at Bodega to get set up.
+        We couldn't find an active Cellar Club account linked to your email. Please contact us at{" "}
+        <a href="mailto:hello@bodegawine.co.uk" style={{ color: "#1E4D5A" }}>hello@bodegawine.co.uk</a>.
       </p>
     </div>
   );
@@ -63,7 +93,7 @@ export default function MyCellar() {
     letterSpacing: "0.06em",
     border: "none",
     cursor: "pointer",
-    backgroundColor: active ? "#193c47" : "#f3f2ee",
+    backgroundColor: active ? "#1E4D5A" : "#f3f2ee",
     color: active ? "#f3f2ee" : "#777777",
     transition: "background-color 0.15s",
   });
@@ -73,34 +103,33 @@ export default function MyCellar() {
       <div className="max-w-[1100px] mx-auto px-6 py-10 sm:py-14">
 
         {/* Hero panel */}
-        <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", borderRadius: "6px", padding: "32px", marginBottom: "24px" }}>
+        <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "32px", marginBottom: "24px" }}>
           <div className="flex items-center gap-4 mb-6">
-            <div className="h-12 w-12 rounded shrink-0 flex items-center justify-center" style={{ backgroundColor: "#d8d6d0" }}>
-              <span style={{ fontSize: "20px", color: "#193c47" }}>{member.name?.[0]?.toUpperCase()}</span>
+            <div className="h-12 w-12 shrink-0 flex items-center justify-center" style={{ backgroundColor: "#d8d6d0" }}>
+              <span style={{ fontSize: "20px", color: "#1E4D5A" }}>{member.name?.[0]?.toUpperCase()}</span>
             </div>
             <div>
               <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>Cellar Club Member</p>
-              <h1 className="text-xl" style={{ color: "#2e282a", fontWeight: 400 }}>{member.name}</h1>
+              <h1 className="text-xl" style={{ color: "#0A242C", fontWeight: 400 }}>{member.name}</h1>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {[
               { label: "Bottles stored", value: totalStored },
               { label: "Locker / bay", value: member.locker_number || "—" },
               { label: "Member since", value: member.membership_start ? format(parseISO(member.membership_start), "MMM yyyy") : "—" },
-              { label: "Status", value: member.status || "pending" },
             ].map(({ label, value }) => (
-              <div key={label} style={{ backgroundColor: "#f3f2ee", borderRadius: "4px", padding: "14px" }}>
+              <div key={label} style={{ backgroundColor: "#f3f2ee", padding: "14px" }}>
                 <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>{label}</p>
-                <p className="text-sm capitalize" style={{ color: "#2e282a" }}>{value}</p>
+                <p className="text-sm capitalize" style={{ color: "#0A242C" }}>{value}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-0 mb-6" style={{ border: "1px solid #d8d6d0", borderRadius: "4px", overflow: "hidden", width: "fit-content" }}>
+        <div className="flex gap-0 mb-6" style={{ border: "1px solid #d8d6d0", overflow: "hidden", width: "fit-content" }}>
           {[["inventory", "My bottles"], ["history", "History"], ["membership", "Membership"]].map(([key, label]) => (
             <button key={key} onClick={() => setActiveTab(key)}
               style={{ ...TAB_STYLE(activeTab === key), borderRight: key !== "membership" ? "1px solid #d8d6d0" : "none" }}>
@@ -111,9 +140,9 @@ export default function MyCellar() {
 
         {/* Inventory tab */}
         {activeTab === "inventory" && (
-          <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", borderRadius: "6px", padding: "24px" }}>
+          <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
             <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777" }}>
-              Current inventory <span style={{ textTransform: "none", letterSpacing: "normal", color: "#777777" }}>({totalStored} bottles)</span>
+              Current inventory <span style={{ textTransform: "none", letterSpacing: "normal" }}>({totalStored} bottles)</span>
             </p>
             {storedBottles.length === 0 ? (
               <p className="text-sm text-center py-12" style={{ color: "#777777" }}>No bottles stored yet.</p>
@@ -122,12 +151,12 @@ export default function MyCellar() {
                 {storedBottles.map((b) => (
                   <div key={b.id} className="flex items-center justify-between py-3 gap-3" style={{ borderBottom: "1px solid #d8d6d0" }}>
                     <div>
-                      <p className="text-sm" style={{ color: "#2e282a" }}>{b.wine_name}</p>
+                      <p className="text-sm" style={{ color: "#0A242C" }}>{b.wine_name}</p>
                       <p className="text-xs mt-0.5" style={{ color: "#777777" }}>
                         {[b.producer, b.vintage, b.cellar_location].filter(Boolean).join(" · ")}
                       </p>
                     </div>
-                    <span className="text-xs shrink-0" style={{ color: "#2e282a", backgroundColor: "#d8d6d0", padding: "3px 8px", borderRadius: "3px" }}>×{b.quantity}</span>
+                    <span className="text-xs shrink-0" style={{ color: "#0A242C", backgroundColor: "#d8d6d0", padding: "3px 8px" }}>×{b.quantity}</span>
                   </div>
                 ))}
               </div>
@@ -137,7 +166,7 @@ export default function MyCellar() {
 
         {/* History tab */}
         {activeTab === "history" && (
-          <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", borderRadius: "6px", padding: "24px" }}>
+          <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
             <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777" }}>Consumption history</p>
             {consumedBottles.length === 0 ? (
               <p className="text-sm text-center py-12" style={{ color: "#777777" }}>No consumed bottles yet.</p>
@@ -146,7 +175,7 @@ export default function MyCellar() {
                 {consumedBottles.map((b) => (
                   <div key={b.id} className="flex items-center justify-between py-3 gap-3" style={{ borderBottom: "1px solid #d8d6d0" }}>
                     <div>
-                      <p className="text-sm" style={{ color: "#2e282a" }}>{b.wine_name}</p>
+                      <p className="text-sm" style={{ color: "#0A242C" }}>{b.wine_name}</p>
                       <p className="text-xs mt-0.5" style={{ color: "#777777" }}>
                         {[b.producer, b.vintage].filter(Boolean).join(" · ")}
                         {b.checked_out_at && ` · Consumed ${format(parseISO(b.checked_out_at), "d MMM yyyy")}`}
@@ -162,25 +191,55 @@ export default function MyCellar() {
 
         {/* Membership tab */}
         {activeTab === "membership" && (
-          <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", borderRadius: "6px", padding: "24px" }}>
+          <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
             <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777" }}>Membership details</p>
-            <div className="space-y-4">
+            <div className="space-y-4 mb-8">
               {[
                 { label: "Tier", value: member.membership_tier || "—" },
-                { label: "Status", value: member.status || "—" },
                 { label: "Member since", value: member.membership_start ? format(parseISO(member.membership_start), "d MMMM yyyy") : "—" },
                 { label: "Locker / bay", value: member.locker_number || "—" },
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between" style={{ borderBottom: "1px solid #d8d6d0", paddingBottom: "12px" }}>
                   <p className="text-xs uppercase tracking-widest" style={{ color: "#777777" }}>{label}</p>
-                  <p className="text-xs capitalize" style={{ color: "#2e282a" }}>{value}</p>
+                  <p className="text-xs capitalize" style={{ color: "#0A242C" }}>{value}</p>
                 </div>
               ))}
             </div>
-            <p className="text-xs mt-6" style={{ color: "#777777" }}>
+            <p className="text-xs mb-8" style={{ color: "#777777" }}>
               To update your membership details, please contact us at{" "}
-              <a href="mailto:hello@bodegawine.co.uk" style={{ color: "#193c47" }}>hello@bodegawine.co.uk</a>.
+              <a href="mailto:hello@bodegawine.co.uk" style={{ color: "#1E4D5A" }}>hello@bodegawine.co.uk</a>.
             </p>
+
+            {/* Cancel membership */}
+            <div style={{ borderTop: "1px solid #d8d6d0", paddingTop: "24px" }}>
+              {!confirmCancel ? (
+                <button
+                  onClick={() => setConfirmCancel(true)}
+                  style={{ fontSize: "11px", color: "#777777", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", textTransform: "uppercase", letterSpacing: "0.06em", textDecoration: "underline" }}
+                >
+                  Cancel membership
+                </button>
+              ) : (
+                <div>
+                  <p className="text-xs mb-4" style={{ color: "#0A242C" }}>Are you sure you want to cancel your membership? This cannot be undone. If you have bottles in storage, please contact us to arrange collection.</p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleCancel}
+                      disabled={cancelling}
+                      style={{ padding: "8px 20px", backgroundColor: "#c0392b", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: cancelling ? "not-allowed" : "pointer", opacity: cancelling ? 0.6 : 1, display: "flex", alignItems: "center", gap: "6px" }}
+                    >
+                      {cancelling && <Loader2 className="h-3 w-3 animate-spin" />} Yes, cancel my membership
+                    </button>
+                    <button
+                      onClick={() => setConfirmCancel(false)}
+                      style={{ padding: "8px 16px", backgroundColor: "transparent", color: "#777777", border: "1px solid #d8d6d0", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer" }}
+                    >
+                      Keep membership
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
