@@ -75,7 +75,6 @@ export default function ScanBottle() {
 
     setDone(true);
     setChecking(false);
-    setBottle(prev => ({ ...prev, status: "consumed" }));
   }
 
   // ── Not logged in
@@ -128,6 +127,22 @@ export default function ScanBottle() {
     );
   }
 
+  // ── Checked out successfully — MUST come before consumed check
+  if (done) {
+    return (
+      <div style={pageStyle}>
+        <div style={cardStyle}>
+          <CheckCircle style={{ color: "#1a5c38", margin: "0 auto 12px", display: "block" }} size={32} />
+          <p style={{ ...headingStyle, color: "#1a5c38" }}>Checked out</p>
+          <p style={mutedStyle}>{bottle.wine_name}{bottle.vintage ? ` · ${bottle.vintage}` : ""}</p>
+          <div style={dividerStyle} />
+          {member && <p style={mutedStyle}>{member.name}</p>}
+          <button onClick={() => navigate("/admin")} style={{ ...btnOutlineStyle, marginTop: "20px" }}>Back to admin</button>
+        </div>
+      </div>
+    );
+  }
+
   // ── Already consumed
   if (bottle?.status === "consumed" || bottle?.status === "checked_out") {
     return (
@@ -140,22 +155,6 @@ export default function ScanBottle() {
           {bottle.vintage && <p style={mutedStyle}>{bottle.vintage}</p>}
           <div style={dividerStyle} />
           <p style={mutedStyle}>This bottle has already been checked out. If it has been returned, please re-add it to the member's account.</p>
-          <button onClick={() => navigate("/admin")} style={{ ...btnOutlineStyle, marginTop: "20px" }}>Back to admin</button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Checked out successfully
-  if (done) {
-    return (
-      <div style={pageStyle}>
-        <div style={cardStyle}>
-          <CheckCircle style={{ color: "#1a5c38", margin: "0 auto 12px", display: "block" }} size={32} />
-          <p style={{ ...headingStyle, color: "#1a5c38" }}>Checked out</p>
-          <p style={mutedStyle}>{bottle.wine_name}{bottle.vintage ? ` · ${bottle.vintage}` : ""}</p>
-          <div style={dividerStyle} />
-          {member && <p style={mutedStyle}>{member.name}</p>}
           <button onClick={() => navigate("/admin")} style={{ ...btnOutlineStyle, marginTop: "20px" }}>Back to admin</button>
         </div>
       </div>
