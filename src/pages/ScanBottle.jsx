@@ -128,9 +128,8 @@ export default function ScanBottle() {
     return (
       <div style={pageStyle}>
         <div style={cardStyle}>
-          <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: "#1E4D5A", marginBottom: "12px", textAlign: "center" }}>Success</p>
-          <p style={headingStyle}>{bottle.wine_name}{bottle.vintage ? ` · ${bottle.vintage}` : ""}</p>
-          {member && <p style={mutedStyle}>{member.name}</p>}
+          <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: "#1E4D5A", marginBottom: "16px", textAlign: "center" }}>Success</p>
+          <p style={headingStyle}>{bottle.wine_name}{bottle.vintage ? ` · ${bottle.vintage}` : ""} has been checked out{member ? ` for ${member.name}` : ""}.</p>
           <div style={dividerStyle} />
           <button onClick={() => navigate("/admin")} style={{ ...btnOutlineStyle, marginTop: "4px" }}>Back to admin</button>
         </div>
