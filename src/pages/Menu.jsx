@@ -119,19 +119,18 @@ export default function Menu() {
 
       {/* Desktop */}
       <div className="hidden lg:grid lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
-        <div style={{ borderRight: "1px solid #d8d6d0", display: "flex", flexDirection: "column" }}>
-          {!menuUrl ? <NoMenu /> : (
-            <>
-              <div style={{ flex: 1, overflow: "hidden" }}>
-                <PDFContent canvasRef={desktopCanvasRef} />
-              </div>
-              {!rendering && !renderError && (
-                <div style={{ padding: "12px 16px", borderTop: "1px solid #d8d6d0", display: "flex", justifyContent: "flex-end" }}>
-                  <DownloadBtn />
-                </div>
-              )}
-            </>
-          )}
+        <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
+          <div style={{ width: "100%", maxWidth: "520px", padding: "48px 64px" }}>
+            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#0A242C" }}>What we pour</p>
+            <h1 className="text-2xl mb-4 leading-snug" style={{ color: "#1E4D5A", fontWeight: 400 }}>Good wine, no waffle.</h1>
+            <p className="text-sm leading-relaxed mb-3" style={{ color: "#0A242C" }}>
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+            </p>
+            <p className="text-sm leading-relaxed mb-8" style={{ color: "#0A242C" }}>
+              Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt.
+            </p>
+            <DownloadBtn />
+          </div>
         </div>
         <div style={{ position: "relative" }}>
           <img src="/images/menu.jpg" alt="Food at Bodega" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
@@ -143,13 +142,16 @@ export default function Menu() {
         <div style={{ position: "relative", height: "50vw", minHeight: "200px", flexShrink: 0 }}>
           <img src="/images/menu.jpg" alt="Food at Bodega" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
-        <div style={{ padding: "24px" }}>
-          {!menuUrl ? <NoMenu /> : (
-            <>
-              <PDFContent canvasRef={mobileCanvasRef} />
-              {!rendering && !renderError && <div style={{ marginTop: "16px" }}><DownloadBtn /></div>}
-            </>
-          )}
+        <div style={{ padding: "32px 24px" }}>
+          <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#0A242C" }}>What we pour</p>
+          <h1 style={{ fontSize: "22px", color: "#1E4D5A", fontWeight: 400, marginBottom: "12px" }}>Good wine, no waffle.</h1>
+          <p className="text-sm leading-relaxed mb-3" style={{ color: "#0A242C" }}>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+          </p>
+          <p className="text-sm leading-relaxed mb-8" style={{ color: "#0A242C" }}>
+            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt.
+          </p>
+          <DownloadBtn />
         </div>
       </div>
     </div>
