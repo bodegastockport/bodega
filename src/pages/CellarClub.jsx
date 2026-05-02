@@ -222,23 +222,23 @@ export default function CellarClub() {
 
               <h1 className="text-2xl mb-4" style={{ color: "#1E4D5A", fontWeight: 400 }}>A wine storage concept like no other.</h1>
 
-              <p className="text-xs leading-relaxed mb-4" style={{ color: "#777777", letterSpacing: "-0.02em" }}>
+              <p className="text-xs leading-relaxed mb-4" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
                 Wine storage, done properly. A simple membership that lets you keep your bottles with us — in perfect conditions, ready when you are.
               </p>
-              <p className="text-xs leading-relaxed mb-4" style={{ color: "#777777", letterSpacing: "-0.02em" }}>
+              <p className="text-xs leading-relaxed mb-4" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
                 There's a temperature and humidity-controlled wine vault right here in Bodega. Members get their own space to store bottles as they should be — not too warm, not too cold, just right for ageing.
               </p>
-              <p className="text-xs leading-relaxed mb-6" style={{ color: "#777777", letterSpacing: "-0.02em" }}>
+              <p className="text-xs leading-relaxed mb-6" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
                 The best part? You can drink your own wine here whenever you like. Just pay a small corkage and we'll take care of the rest.
               </p>
 
-              <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>How it works</p>
-              <p className="text-xs leading-relaxed mb-8" style={{ color: "#777777", letterSpacing: "-0.02em" }}>
+              <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#0A242C" }}>How it works</p>
+              <p className="text-xs leading-relaxed mb-8" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
                 Fill out the form, pick your tier and then start storing. Wine needs to be dropped off at least a day before you plan to drink it here. Drop-offs are by appointment, between 2–6pm Tuesday to Thursday and between 2–4pm Friday to Sunday.
               </p>
 
               <div className="flex items-center justify-between pt-4" style={{ borderTop: "1px solid #d8d6d0" }}>
-                <a href="/login" style={{ fontSize: "11px", color: "#777777", textDecoration: "none", borderBottom: "1px solid #d8d6d0", paddingBottom: "1px", letterSpacing: "-0.02em" }}>
+                <a href="/login" style={{ fontSize: "11px", color: "#0A242C", textDecoration: "none", borderBottom: "1px solid #d8d6d0", paddingBottom: "1px", letterSpacing: "-0.02em" }}>
                   Already a member? Log in →
                 </a>
                 <button onClick={() => setView("pricing")} style={{ padding: "8px 24px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}>
@@ -281,8 +281,8 @@ export default function CellarClub() {
         <div className="px-8 py-8" style={{ minHeight: "calc(100vh - 56px)" }}>
           <div className="flex items-start justify-between mb-6">
             <div>
-              <button onClick={() => setView("about")} style={{ fontSize: "11px", color: "#777777", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0, marginBottom: "8px", display: "block" }}>← Back</button>
-              <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>Membership</p>
+              <button onClick={() => setView("about")} style={{ fontSize: "11px", color: "#0A242C", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0, marginBottom: "8px", display: "block" }}>← Back</button>
+              <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>Membership</p>
               <h1 className="text-2xl" style={{ color: "#1E4D5A", fontWeight: 400 }}>Pricing</h1>
             </div>
             <button onClick={() => setJoinOpen(true)} style={{ padding: "10px 28px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}>
