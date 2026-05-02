@@ -1,37 +1,10 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState } from "react";
 import BookingForm from "../components/BookingForm";
 import BookingConfirmation from "../components/BookingConfirmation";
-
-const HERO_IMAGES = [
-  "/images/hero.jpg",
-  "/images/hero2.jpg",
-  "/images/hero3.jpg",
-  "/images/hero4.jpg",
-];
-
-const FADE_DURATION = 1500;
-const SLIDE_INTERVAL = 6000;
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const firstLoadedRef = useRef(false);
-  const intervalRef = useRef(null);
-
-  const handleFirstLoad = () => {
-    if (firstLoadedRef.current) return;
-    firstLoadedRef.current = true;
-    intervalRef.current = setInterval(() => {
-      setActiveIndex(i => (i + 1) % HERO_IMAGES.length);
-    }, SLIDE_INTERVAL);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
 
   const openModal = () => { setModalOpen(true); setConfirmed(null); };
   const closeModal = () => { setModalOpen(false); setConfirmed(null); };
@@ -40,29 +13,12 @@ export default function Home() {
     <>
       {/* Desktop: fixed left image + scrollable right panel */}
       <div className="hidden lg:block">
-        <div style={{
-          position: "fixed", top: 0, left: 0,
-          width: "50vw", height: "100vh",
-          zIndex: 0, overflow: "hidden",
-          backgroundColor: "#0A242C",
-        }}>
-          {HERO_IMAGES.map((src, i) => (
-            <img
-              key={src}
-              src={src}
-              alt=""
-              onLoad={i === 0 ? handleFirstLoad : undefined}
-              style={{
-                position: "absolute", inset: 0,
-                width: "100%", height: "100%",
-                objectFit: "cover",
-                opacity: i === activeIndex ? 1 : 0,
-                transition: `opacity ${FADE_DURATION}ms ease-in-out`,
-                zIndex: i === activeIndex ? 2 : 1,
-                willChange: "opacity",
-              }}
-            />
-          ))}
+        <div style={{ position: "fixed", top: 0, left: 0, width: "50vw", height: "100vh", zIndex: 0 }}>
+          <img
+            src="/images/hero.jpg"
+            alt="Wine at Bodega"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          />
         </div>
 
         <div style={{ marginLeft: "50vw", width: "50vw", minHeight: "100vh", backgroundColor: "#f3f2ee", borderLeft: "1px solid #d8d6d0", display: "flex", flexDirection: "column" }}>
@@ -99,27 +55,12 @@ export default function Home() {
 
       {/* Mobile: stacked layout */}
       <div className="lg:hidden flex flex-col" style={{ backgroundColor: "#f3f2ee" }}>
-        <div style={{
-          position: "relative", width: "100%", height: "50vh",
-          flexShrink: 0, overflow: "hidden",
-          backgroundColor: "#0A242C",
-        }}>
-          {HERO_IMAGES.map((src, i) => (
-            <img
-              key={src}
-              src={src}
-              alt=""
-              style={{
-                position: "absolute", inset: 0,
-                width: "100%", height: "100%",
-                objectFit: "cover",
-                opacity: i === activeIndex ? 1 : 0,
-                transition: `opacity ${FADE_DURATION}ms ease-in-out`,
-                zIndex: i === activeIndex ? 2 : 1,
-                willChange: "opacity",
-              }}
-            />
-          ))}
+        <div style={{ position: "relative", width: "100%", height: "50vh", flexShrink: 0 }}>
+          <img
+            src="/images/hero.jpg"
+            alt="Wine at Bodega"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          />
         </div>
 
         <div style={{ padding: "32px 24px" }}>
