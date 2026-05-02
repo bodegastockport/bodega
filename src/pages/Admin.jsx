@@ -10,6 +10,7 @@ import GalleryManager from "../components/cms/GalleryManager";
 import HireEnquiriesManager from "../components/cms/HireEnquiriesManager";
 import ContactManager from "../components/cms/ContactManager";
 import CellarClubManager from "../components/cms/CellarClubManager";
+import MenuManager from "../components/cms/MenuManager";
 import Settings from "./Settings";
 
 const TAB_STYLE_BASE = {
@@ -26,13 +27,14 @@ const TAB_STYLE_BASE = {
   whiteSpace: "nowrap",
 };
 
-const ALL_TABS   = ["reservations", "cellar", "events", "gallery", "hire", "contact", "team", "settings"];
+const ALL_TABS   = ["reservations", "cellar", "events", "gallery", "menu", "hire", "contact", "team", "settings"];
 const TEAM_TABS  = ["reservations", "hire", "contact"];
 const TAB_LABELS = {
   reservations: "Reservations",
   cellar:       "Cellar Club",
   events:       "Events",
   gallery:      "Gallery",
+  menu:         "Menu",
   hire:         "Hire enquiries",
   contact:      "Messages",
   team:         "Team",
@@ -261,6 +263,7 @@ export default function Admin() {
         {tab === "cellar"   && isAdmin && <CellarClubManager />}
         {tab === "events"   && isAdmin && <EventsManager />}
         {tab === "gallery"  && isAdmin && <GalleryManager />}
+        {tab === "menu"     && isAdmin && <MenuManager />}
         {tab === "hire"     && <HireEnquiriesManager />}
         {tab === "contact"  && <ContactManager />}
         {tab === "team"     && isAdmin && <TeamManager />}
