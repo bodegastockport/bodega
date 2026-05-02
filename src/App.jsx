@@ -15,6 +15,7 @@ import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
 import Events from "./pages/Events";
+import Menu from "./pages/Menu";
 import Contact from "./pages/Contact";
 import Gallery from "./pages/Gallery";
 import CellarMemberDetail from "./pages/CellarMemberDetail";
@@ -58,6 +59,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/events" element={<Events />} />
+        <Route path="/menu" element={<Menu />} />
         <Route path="/cellar-club" element={<CellarClub />} />
         <Route path="/cellar-club/terms" element={<CellarClubTerms />} />
         <Route path="/gallery" element={<Gallery />} />
