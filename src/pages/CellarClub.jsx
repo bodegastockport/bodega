@@ -17,7 +17,7 @@ const TIERS = [
 
 const BLANK = {
   name: "", email: "", phone: "", dob: null, tier: "",
-  address: "", how_heard: "", marketing: false, agreed_terms: false,
+  address_line1: "", postcode: "", how_heard: "", marketing: false, agreed_terms: false,
 };
 
 const overlayInput = {
@@ -97,7 +97,11 @@ const JoinForm = ({
     </div>
     <div>
       <label style={labelSt}>Address *</label>
-      <input style={inputSt} value={form.address} onChange={e => f("address", e.target.value)} required placeholder="123 Example Street, Manchester, M1 1AA" />
+      <input style={inputSt} value={form.address_line1} onChange={e => f("address_line1", e.target.value)} required placeholder="123 Example Street, Manchester" />
+    </div>
+    <div>
+      <label style={labelSt}>Postcode *</label>
+      <input style={{...inputSt, textTransform: "uppercase"}} value={form.postcode} onChange={e => f("postcode", e.target.value.toUpperCase())} required placeholder="M1 1AA" />
     </div>
     <div>
       <label style={labelSt}>Membership tier *</label>
@@ -133,13 +137,13 @@ const JoinForm = ({
     {error && <p style={{ fontSize: "11px", color: "#e88" }}>{error}</p>}
     <button
       type="submit"
-      disabled={submitting || !form.name || !form.email || !form.tier || !form.address || !form.agreed_terms}
+      disabled={submitting || !form.name || !form.email || !form.tier || !form.address_line1 || !form.postcode || !form.agreed_terms}
       style={{
         padding: "8px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee",
         border: "none", fontFamily: "'Courier New', Courier, monospace",
         fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em",
-        cursor: submitting || !form.name || !form.email || !form.tier || !form.address || !form.agreed_terms ? "not-allowed" : "pointer",
-        opacity: submitting || !form.name || !form.email || !form.tier || !form.address || !form.agreed_terms ? 0.5 : 1,
+        cursor: submitting || !form.name || !form.email || !form.tier || !form.address_line1 || !form.postcode || !form.agreed_terms ? "not-allowed" : "pointer",
+        opacity: submitting || !form.name || !form.email || !form.tier || !form.address_line1 || !form.postcode || !form.agreed_terms ? 0.5 : 1,
         display: "inline-flex", alignItems: "center", gap: "6px", width: "100%", justifyContent: "center",
       }}
     >
@@ -162,7 +166,7 @@ export default function CellarClub() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.tier || !form.address || !form.agreed_terms) return;
+    if (!form.name || !form.email || !form.tier || !form.address_line1 || !form.postcode || !form.agreed_terms) return;
     setSubmitting(true);
     setError(null);
 
@@ -173,7 +177,8 @@ export default function CellarClub() {
         email: form.email,
         phone: form.phone || null,
         birthday: form.dob ? format(form.dob, "yyyy-MM-dd") : null,
-        address: form.address,
+        address_line1: form.address_line1,
+        postcode: form.postcode,
         membership_tier: form.tier,
         how_did_you_hear: form.how_heard || null,
         marketing_opt_in: form.marketing,
