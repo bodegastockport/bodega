@@ -35,12 +35,8 @@ export default function Menu() {
 
         {/* Left — PDF viewer */}
         <div className="flex flex-col px-8 py-8" style={{ borderRight: "1px solid #d8d6d0" }}>
-          <div className="mb-4 flex items-start justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>What we pour</p>
-              <h1 className="text-2xl" style={{ color: "#1E4D5A", fontWeight: 400 }}>Our menu</h1>
-            </div>
-            {menuUrl && (
+          {menuUrl && (
+            <div className="mb-4 flex justify-end">
               <a
                 href={menuUrl}
                 target="_blank"
@@ -51,8 +47,8 @@ export default function Menu() {
               >
                 Open full screen ↗
               </a>
-            )}
-          </div>
+            </div>
+          )}
 
           {menuUrl ? (
             !pdfError ? (
@@ -106,13 +102,6 @@ export default function Menu() {
 
         {/* Menu content */}
         <div style={{ padding: "24px" }}>
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>What we pour</p>
-              <h1 style={{ fontSize: "20px", color: "#1E4D5A", fontWeight: 400 }}>Our menu</h1>
-            </div>
-          </div>
-
           {menuUrl ? (
             <div>
               <iframe
