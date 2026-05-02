@@ -43,6 +43,10 @@
     font-weight: 400;
   }
 
+  p {
+    letter-spacing: -0.06em;
+  }
+
   input, textarea, select, button, label, a, p, span, div {
     font-family: 'Courier New', Courier, monospace;
   }
