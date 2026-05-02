@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import BookingForm from "../components/BookingForm";
 import BookingConfirmation from "../components/BookingConfirmation";
 
@@ -16,39 +16,25 @@ export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [firstLoaded, setFirstLoaded] = useState(false);
+  const firstLoadedRef = useRef(false);
   const intervalRef = useRef(null);
 
-  // Start rotation only after first image has loaded
-  useEffect(() => {
-    if (!firstLoaded) return;
+  const handleFirstLoad = () => {
+    if (firstLoadedRef.current) return;
+    firstLoadedRef.current = true;
     intervalRef.current = setInterval(() => {
       setActiveIndex(i => (i + 1) % HERO_IMAGES.length);
     }, SLIDE_INTERVAL);
-    return () => clearInterval(intervalRef.current);
-  }, [firstLoaded]);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
 
   const openModal = () => { setModalOpen(true); setConfirmed(null); };
   const closeModal = () => { setModalOpen(false); setConfirmed(null); };
-
-  // Rendered inline (not as a sub-component) to prevent remount on state change
-  const heroImages = HERO_IMAGES.map((src, i) => (
-    <img
-      key={src}
-      src={src}
-      alt=""
-      onLoad={() => { if (i === 0) setFirstLoaded(true); }}
-      style={{
-        position: "absolute", inset: 0,
-        width: "100%", height: "100%",
-        objectFit: "cover",
-        opacity: i === activeIndex ? 1 : 0,
-        transition: firstLoaded ? `opacity ${FADE_DURATION}ms ease-in-out` : "none",
-        zIndex: i === activeIndex ? 2 : 1,
-        willChange: "opacity",
-      }}
-    />
-  ));
 
   return (
     <>
@@ -60,7 +46,23 @@ export default function Home() {
           zIndex: 0, overflow: "hidden",
           backgroundColor: "#0A242C",
         }}>
-          {heroImages}
+          {HERO_IMAGES.map((src, i) => (
+            <img
+              key={src}
+              src={src}
+              alt=""
+              onLoad={i === 0 ? handleFirstLoad : undefined}
+              style={{
+                position: "absolute", inset: 0,
+                width: "100%", height: "100%",
+                objectFit: "cover",
+                opacity: i === activeIndex ? 1 : 0,
+                transition: `opacity ${FADE_DURATION}ms ease-in-out`,
+                zIndex: i === activeIndex ? 2 : 1,
+                willChange: "opacity",
+              }}
+            />
+          ))}
         </div>
 
         <div style={{ marginLeft: "50vw", width: "50vw", minHeight: "100vh", backgroundColor: "#f3f2ee", borderLeft: "1px solid #d8d6d0", display: "flex", flexDirection: "column" }}>
@@ -102,7 +104,22 @@ export default function Home() {
           flexShrink: 0, overflow: "hidden",
           backgroundColor: "#0A242C",
         }}>
-          {heroImages}
+          {HERO_IMAGES.map((src, i) => (
+            <img
+              key={src}
+              src={src}
+              alt=""
+              style={{
+                position: "absolute", inset: 0,
+                width: "100%", height: "100%",
+                objectFit: "cover",
+                opacity: i === activeIndex ? 1 : 0,
+                transition: `opacity ${FADE_DURATION}ms ease-in-out`,
+                zIndex: i === activeIndex ? 2 : 1,
+                willChange: "opacity",
+              }}
+            />
+          ))}
         </div>
 
         <div style={{ padding: "32px 24px" }}>
