@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/AuthContext";
 const LOGO_URL = "/bodega_logo_teal.svg";
 
 const NAV = [
-  { to: "/",            label: "Bookings" },
+  { to: "/",            label: "Home" },
   { to: "/about",       label: "About" },
   { to: "/gallery",     label: "Gallery" },
   { to: "/cellar-club", label: "Cellar Club" },
@@ -76,7 +76,8 @@ export default function Layout() {
             <img
               src={LOGO_URL}
               alt="Bodega"
-              className="h-7 w-auto"
+              className="w-auto"
+              style={{ height: "36px" }}
               onError={(e) => {
                 e.target.style.display = "none";
                 e.target.nextSibling.style.display = "block";
@@ -180,14 +181,15 @@ export default function Layout() {
 
             <div>
               <img src={LOGO_URL} alt="Bodega" className="h-6 w-auto mb-4" onError={(e) => { e.target.style.display = "none"; }} />
-              <p className="text-sm leading-relaxed" style={{ color: "#777777" }}>
+              <p className="text-sm leading-relaxed" style={{ color: "#777777", letterSpacing: "-0.02em" }}>
                 A neighbourhood wine bar in the heart of Stockport.
               </p>
             </div>
 
             <div>
               <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#777777" }}>Find us</p>
-              <div className="text-sm space-y-1" style={{ color: "#777777" }}>
+              <div className="text-sm space-y-1" style={{ color: "#777777", letterSpacing: "-0.02em" }}>
+                <p>Engine Room</p>
                 <p>Weir Mill</p>
                 <p>Stockport, SK3 0AG</p>
                 <p className="mt-2">
@@ -198,11 +200,9 @@ export default function Layout() {
 
             <div>
               <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#777777" }}>Opening hours</p>
-              <div className="text-sm space-y-1" style={{ color: "#777777" }}>
+              <div className="text-sm space-y-1" style={{ color: "#777777", letterSpacing: "-0.02em" }}>
                 <p>Monday — Closed</p>
-                <p>Tuesday – Thursday — 2pm to 10pm</p>
-                <p>Friday &amp; Saturday — 2pm to 12am</p>
-                <p>Sunday — 2pm to 10pm</p>
+                <p>Tuesday – Sunday — 2pm to late</p>
               </div>
             </div>
 
@@ -214,7 +214,7 @@ export default function Layout() {
                     key={to}
                     to={to}
                     className="block text-sm transition-colors duration-150"
-                    style={{ color: "#777777" }}
+                    style={{ color: "#777777", letterSpacing: "-0.02em" }}
                     onMouseEnter={e => e.target.style.color = "#0A242C"}
                     onMouseLeave={e => e.target.style.color = "#777777"}
                   >
@@ -226,22 +226,35 @@ export default function Layout() {
           </div>
 
           <div style={{ borderTop: "1px solid #d8d6d0" }} className="pt-4 flex items-center justify-between flex-wrap gap-3">
-            <p className="text-xs" style={{ color: "#777777" }}>
-              © {new Date().getFullYear()} Bodega Wine Bar, Stockport. All rights reserved.
+            <p className="text-xs" style={{ color: "#777777", letterSpacing: "-0.02em" }}>
+              © {new Date().getFullYear()} Bodega, Stockport. All rights reserved.
             </p>
-            {isAuthenticated ? (
-              <button
-                onClick={logout}
+            <div className="flex items-center gap-4">
+              <a
+                href="https://www.rolke.studio"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-xs"
-                style={{ color: "#777777", background: "none", border: "none", cursor: "none", fontFamily: "'Courier New', Courier, monospace", padding: 0 }}
+                style={{ color: "#777777", textDecoration: "none", letterSpacing: "-0.02em" }}
+                onMouseEnter={e => e.target.style.color = "#0A242C"}
+                onMouseLeave={e => e.target.style.color = "#777777"}
               >
-                Sign out
-              </button>
-            ) : (
-              <Link to="/team-login" className="text-xs" style={{ color: "#777777", textDecoration: "none" }}>
-                Team sign in
-              </Link>
-            )}
+                Website by Rolke
+              </a>
+              {isAuthenticated ? (
+                <button
+                  onClick={logout}
+                  className="text-xs"
+                  style={{ color: "#777777", background: "none", border: "none", cursor: "none", fontFamily: "'Courier New', Courier, monospace", padding: 0, letterSpacing: "-0.02em" }}
+                >
+                  Sign out
+                </button>
+              ) : (
+                <Link to="/team-login" className="text-xs" style={{ color: "#777777", textDecoration: "none", letterSpacing: "-0.02em" }}>
+                  Team sign in
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </footer>

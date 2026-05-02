@@ -1,24 +1,68 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BookingForm from "../components/BookingForm";
 import BookingConfirmation from "../components/BookingConfirmation";
+
+const HERO_IMAGES = [
+  "/images/hero.jpg",
+  "/images/hero2.jpg",
+  "/images/hero3.jpeg",
+  "/images/hero4.jpg",
+];
+
+const FADE_DURATION = 1000; // ms
+const SLIDE_INTERVAL = 5000; // ms between transitions
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [nextIndex, setNextIndex] = useState(null);
+  const [fading, setFading] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const next = (currentIndex + 1) % HERO_IMAGES.length;
+      setNextIndex(next);
+      setFading(true);
+      setTimeout(() => {
+        setCurrentIndex(next);
+        setNextIndex(null);
+        setFading(false);
+      }, FADE_DURATION);
+    }, SLIDE_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [currentIndex]);
 
   const openModal = () => { setModalOpen(true); setConfirmed(null); };
   const closeModal = () => { setModalOpen(false); setConfirmed(null); };
+
+  const HeroImage = ({ src, opacity, zIndex }) => (
+    <img
+      src={src}
+      alt="Bodega"
+      style={{
+        position: "absolute", inset: 0,
+        width: "100%", height: "100%",
+        objectFit: "cover",
+        opacity,
+        zIndex,
+        transition: `opacity ${FADE_DURATION}ms ease-in-out`,
+      }}
+    />
+  );
 
   return (
     <>
       {/* Desktop: fixed left image + scrollable right panel */}
       <div className="hidden lg:block">
-        <div style={{ position: "fixed", top: 0, left: 0, width: "50vw", height: "100vh", zIndex: 0 }}>
-          <img
-            src="/images/hero.jpg"
-            alt="Wine at Bodega"
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-          />
+        <div style={{ position: "fixed", top: 0, left: 0, width: "50vw", height: "100vh", zIndex: 0, overflow: "hidden" }}>
+          {/* Current image */}
+          <HeroImage src={HERO_IMAGES[currentIndex]} opacity={1} zIndex={1} />
+          {/* Next image fading in on top */}
+          {nextIndex !== null && (
+            <HeroImage src={HERO_IMAGES[nextIndex]} opacity={fading ? 1 : 0} zIndex={2} />
+          )}
         </div>
 
         <div style={{ marginLeft: "50vw", width: "50vw", minHeight: "100vh", backgroundColor: "#f3f2ee", borderLeft: "1px solid #d8d6d0", display: "flex", flexDirection: "column" }}>
@@ -27,7 +71,7 @@ export default function Home() {
               <h1 style={{ fontSize: "28px", color: "#1E4D5A", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.3", marginBottom: "14px" }}>
                 Wine without the waffle.
               </h1>
-              <p style={{ fontSize: "14px", color: "#0A242C", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.7", marginBottom: "32px" }}>
+              <p style={{ fontSize: "14px", color: "#0A242C", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.7", marginBottom: "32px", letterSpacing: "-0.02em" }}>
                 Great bottles. Cold lager. Proper boards. No lectures, no pretence – just good taste.
               </p>
               <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
@@ -55,19 +99,18 @@ export default function Home() {
 
       {/* Mobile: stacked layout */}
       <div className="lg:hidden flex flex-col" style={{ backgroundColor: "#f3f2ee" }}>
-        <div style={{ position: "relative", width: "100%", height: "50vh", flexShrink: 0 }}>
-          <img
-            src="/images/hero.jpg"
-            alt="Wine at Bodega"
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-          />
+        <div style={{ position: "relative", width: "100%", height: "50vh", flexShrink: 0, overflow: "hidden" }}>
+          <HeroImage src={HERO_IMAGES[currentIndex]} opacity={1} zIndex={1} />
+          {nextIndex !== null && (
+            <HeroImage src={HERO_IMAGES[nextIndex]} opacity={fading ? 1 : 0} zIndex={2} />
+          )}
         </div>
 
         <div style={{ padding: "32px 24px" }}>
           <h1 style={{ fontSize: "22px", color: "#1E4D5A", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.3", marginBottom: "12px" }}>
             Wine without the waffle.
           </h1>
-          <p style={{ fontSize: "13px", color: "#0A242C", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.7", marginBottom: "24px" }}>
+          <p style={{ fontSize: "13px", color: "#0A242C", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.7", marginBottom: "24px", letterSpacing: "-0.02em" }}>
             Great bottles. Cold lager. Proper boards. No lectures, no pretence – just good taste.
           </p>
           <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
@@ -107,7 +150,7 @@ export default function Home() {
                 <div style={{ marginBottom: "24px" }}>
                   <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: "#777777", marginBottom: "6px", fontFamily: "'Courier New', Courier, monospace" }}>Reservations</p>
                   <h2 style={{ fontSize: "18px", color: "#1E4D5A", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace" }}>Make a booking</h2>
-                  <p style={{ fontSize: "12px", marginTop: "4px", color: "#777777", fontFamily: "'Courier New', Courier, monospace" }}>Choose your date, time, and party size below.</p>
+                  <p style={{ fontSize: "12px", marginTop: "4px", color: "#777777", fontFamily: "'Courier New', Courier, monospace", letterSpacing: "-0.02em" }}>Choose your date, time, and party size below.</p>
                 </div>
                 <BookingForm onSuccess={(res) => setConfirmed(res)} />
               </>
