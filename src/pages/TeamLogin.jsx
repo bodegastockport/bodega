@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 
@@ -15,34 +16,54 @@ const inputStyle = {
   transition: "border-color 0.15s",
 };
 
-export default function TeamLogin() {
-  const [email, setEmail]           = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [sent, setSent]             = useState(false);
-  const [error, setError]           = useState(null);
-  const [focused, setFocused]       = useState(false);
+const labelStyle = {
+  display: "block",
+  fontSize: "10px",
+  textTransform: "uppercase",
+  letterSpacing: "0.08em",
+  color: "#777777",
+  marginBottom: "5px",
+  fontFamily: "'Courier New', Courier, monospace",
+};
 
-  const handleSubmit = async (e) => {
+export default function TeamLogin() {
+  const navigate = useNavigate();
+  const [email, setEmail]         = useState("");
+  const [password, setPassword]   = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [magicSent, setMagicSent] = useState(false);
+  const [error, setError]         = useState(null);
+  const [focusedField, setFocusedField] = useState(null);
+
+  const handlePasswordLogin = async (e) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || !password) return;
+    setSubmitting(true);
+    setError(null);
+
+    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+
+    setSubmitting(false);
+    if (err) {
+      setError("Incorrect email or password. Try again or use the magic link below.");
+      return;
+    }
+    navigate("/admin");
+  };
+
+  const handleMagicLink = async () => {
+    if (!email) { setError("Enter your email address first."); return; }
     setSubmitting(true);
     setError(null);
 
     const { error: err } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/admin`,
-      },
+      options: { emailRedirectTo: `${window.location.origin}/admin` },
     });
 
     setSubmitting(false);
-
-    if (err) {
-      setError("Something went wrong. Please try again.");
-      return;
-    }
-
-    setSent(true);
+    if (err) { setError("Something went wrong. Please try again."); return; }
+    setMagicSent(true);
   };
 
   return (
@@ -52,40 +73,51 @@ export default function TeamLogin() {
         <div style={{ marginBottom: "32px" }}>
           <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: "#777777", marginBottom: "8px" }}>Bodega</p>
           <h1 style={{ fontSize: "20px", color: "#1E4D5A", fontWeight: 400, marginBottom: "8px" }}>Team sign in</h1>
-          <p style={{ fontSize: "12px", color: "#777777", lineHeight: "1.6" }}>
-            Enter your email and we'll send you a sign-in link.
+          <p style={{ fontSize: "12px", color: "#0A242C", lineHeight: "1.6" }}>
+            Sign in with your email and password.
           </p>
         </div>
 
-        {sent ? (
+        {magicSent ? (
           <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
             <p className="text-sm mb-2" style={{ color: "#0A242C" }}>Check your email</p>
-            <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>
-              We've sent a sign-in link to <strong style={{ color: "#0A242C" }}>{email}</strong>. Click the link to access the admin panel.
+            <p className="text-xs leading-relaxed" style={{ color: "#0A242C" }}>
+              We've sent a sign-in link to <strong>{email}</strong>. Click the link to access the admin panel.
             </p>
             <button
-              onClick={() => { setSent(false); setEmail(""); }}
+              onClick={() => { setMagicSent(false); setEmail(""); setPassword(""); }}
               style={{ marginTop: "16px", padding: "7px 16px", backgroundColor: "transparent", color: "#1E4D5A", border: "1px solid #1E4D5A", borderRadius: "0px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}
             >
-              Use a different email
+              Back to login
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handlePasswordLogin} className="space-y-4">
             <div>
-              <label style={{ display: "block", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#777777", marginBottom: "5px", fontFamily: "'Courier New', Courier, monospace" }}>
-                Email address
-              </label>
+              <label style={labelStyle}>Email address</label>
               <input
                 type="email"
                 required
-                style={{ ...inputStyle, borderColor: focused ? "#1E4D5A" : "#d8d6d0" }}
+                style={{ ...inputStyle, borderColor: focusedField === "email" ? "#1E4D5A" : "#d8d6d0" }}
                 placeholder="your@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                onFocus={() => setFocused(true)}
-                onBlur={() => setFocused(false)}
+                onFocus={() => setFocusedField("email")}
+                onBlur={() => setFocusedField(null)}
                 autoFocus
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Password</label>
+              <input
+                type="password"
+                required
+                style={{ ...inputStyle, borderColor: focusedField === "password" ? "#1E4D5A" : "#d8d6d0" }}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setFocusedField("password")}
+                onBlur={() => setFocusedField(null)}
               />
             </div>
 
@@ -93,23 +125,34 @@ export default function TeamLogin() {
 
             <button
               type="submit"
-              disabled={!email || submitting}
+              disabled={!email || !password || submitting}
               style={{
                 width: "100%", padding: "10px 24px",
                 backgroundColor: "#1E4D5A", color: "#f3f2ee",
                 border: "none", borderRadius: "0px",
                 fontFamily: "'Courier New', Courier, monospace",
                 fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em",
-                cursor: !email || submitting ? "not-allowed" : "pointer",
-                opacity: !email || submitting ? 0.6 : 1,
-                transition: "background-color 0.15s",
+                cursor: !email || !password || submitting ? "not-allowed" : "pointer",
+                opacity: !email || !password || submitting ? 0.6 : 1,
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
               }}
-              onMouseEnter={e => { if (email && !submitting) e.currentTarget.style.backgroundColor = "#0A242C"; }}
-              onMouseLeave={e => { if (email && !submitting) e.currentTarget.style.backgroundColor = "#1E4D5A"; }}
+              onMouseEnter={e => { if (email && password && !submitting) e.currentTarget.style.backgroundColor = "#0A242C"; }}
+              onMouseLeave={e => { if (email && password && !submitting) e.currentTarget.style.backgroundColor = "#1E4D5A"; }}
             >
-              {submitting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending...</> : "Send sign-in link"}
+              {submitting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Signing in...</> : "Sign in"}
             </button>
+
+            <div style={{ borderTop: "1px solid #d8d6d0", paddingTop: "16px" }}>
+              <p style={{ fontSize: "11px", color: "#777777", marginBottom: "8px" }}>Forgotten your password?</p>
+              <button
+                type="button"
+                onClick={handleMagicLink}
+                disabled={submitting}
+                style={{ fontSize: "11px", color: "#1E4D5A", background: "none", border: "none", padding: 0, cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", textDecoration: "underline" }}
+              >
+                Send a magic link instead →
+              </button>
+            </div>
           </form>
         )}
 
