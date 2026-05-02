@@ -53,25 +53,29 @@ export default function Contact() {
 
         {/* Left — contact details + map, centred */}
         <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
-          <div style={{ width: "100%", maxWidth: "360px", padding: "0 36px" }}>
+          <div style={{ width: "100%", maxWidth: "520px", padding: "48px 64px" }}>
 
-            <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>Get in touch</p>
-            <h1 className="text-2xl mb-6" style={{ color: "#193c47", fontWeight: 400 }}>Contact us</h1>
+            <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>Get in touch</p>
+            <h1 className="text-2xl mb-6" style={{ color: "#1E4D5A", fontWeight: 400 }}>Contact us</h1>
 
             <div className="space-y-5 mb-8">
               <div>
-                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>Address</p>
-                <p className="text-sm" style={{ color: "#2e282a" }}>Bodega Wine Bar<br />Stockport, Manchester</p>
+                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>Address</p>
+                <p className="text-sm" style={{ color: "#0A242C" }}>Engine Room<br />Weir Mill<br />Stockport, SK3 0AG</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>Email</p>
-                <a href="mailto:hello@bodegawine.co.uk" className="text-sm" style={{ color: "#193c47", textDecoration: "none" }}>hello@bodegawine.co.uk</a>
+                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>Telephone</p>
+                <p className="text-sm" style={{ color: "#0A242C" }}>+44 (0) 000 000 0000</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>Opening hours</p>
-                <div className="text-sm space-y-0.5" style={{ color: "#2e282a" }}>
+                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>Email</p>
+                <a href="mailto:hello@bodegawine.co.uk" className="text-sm" style={{ color: "#1E4D5A", textDecoration: "none" }}>hello@bodegawine.co.uk</a>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>Opening hours</p>
+                <div className="text-sm space-y-0.5" style={{ color: "#0A242C" }}>
                   <p>Monday — Closed</p>
-                  <p>Tuesday – Sunday: 2pm – 9pm</p>
+                  <p>Tuesday – Sunday — 2pm to late</p>
                 </div>
               </div>
             </div>
@@ -94,7 +98,7 @@ export default function Contact() {
         </div>
 
         {/* Right — full height teal, form centred */}
-        <div className="flex flex-col justify-center items-center" style={{ backgroundColor: "#193c47", minHeight: "50vh" }}>
+        <div className="flex flex-col justify-center items-center" style={{ backgroundColor: "#1E4D5A", minHeight: "50vh" }}>
           <div style={{ width: "100%", maxWidth: "360px", padding: "48px 36px" }}>
 
             {sent ? (
@@ -137,7 +141,7 @@ export default function Contact() {
                     style={{
                       padding: "8px 20px",
                       backgroundColor: "#f3f2ee",
-                      color: "#193c47",
+                      color: "#1E4D5A",
                       border: "none",
                       fontFamily: "'Courier New', Courier, monospace",
                       fontSize: "11px",
