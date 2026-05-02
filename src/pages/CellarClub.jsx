@@ -232,19 +232,6 @@ export default function CellarClub() {
                 Fill out the form, pick your tier and then start storing. Wine needs to be dropped off at least a day before you plan to drink it here. Drop-offs are by appointment, between 2–6pm Tuesday to Thursday and between 2–4pm Friday to Sunday.
               </p>
 
-              <div className="grid grid-cols-3 gap-4 mb-8">
-                {[
-                  { title: "Climate-controlled storage", body: "Ideal temperature and humidity for long-term ageing." },
-                  { title: "Drink your own here", body: "Bring stored bottles to any table. Modest corkage applies." },
-                  { title: "Member perks", body: "Priority reservations, tastings and limited allocations." },
-                ].map(({ title, body }) => (
-                  <div key={title}>
-                    <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#1E4D5A" }}>{title}</p>
-                    <p className="text-xs leading-relaxed" style={{ color: "#777777", letterSpacing: "-0.02em" }}>{body}</p>
-                  </div>
-                ))}
-              </div>
-
               <div className="flex items-center justify-between pt-4" style={{ borderTop: "1px solid #d8d6d0" }}>
                 <a href="/login" style={{ fontSize: "11px", color: "#777777", textDecoration: "none", borderBottom: "1px solid #d8d6d0", paddingBottom: "1px", letterSpacing: "-0.02em" }}>
                   Already a member? Log in →
