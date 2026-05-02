@@ -97,7 +97,7 @@ export default function Layout() {
               <Link
                 to="/admin"
                 className="text-xs uppercase tracking-widest transition-colors duration-150"
-                style={{ color: "#777777" }}
+                style={{ color: "#0A242C" }}
                 onMouseEnter={e => e.target.style.color = "#0A242C"}
                 onMouseLeave={e => e.target.style.color = "#777777"}
               >
@@ -126,7 +126,7 @@ export default function Layout() {
           </nav>
 
           {/* Mobile hamburger */}
-          <button className="md:hidden p-1" style={{ color: "#777777" }} onClick={() => setMobileOpen((v) => !v)}>
+          <button className="md:hidden p-1" style={{ color: "#0A242C" }} onClick={() => setMobileOpen((v) => !v)}>
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
@@ -145,7 +145,7 @@ export default function Layout() {
               </Link>
             ))}
             {isTeam && (
-              <Link to="/admin" onClick={() => setMobileOpen(false)} className="block text-xs uppercase tracking-widest" style={{ color: "#777777" }}>
+              <Link to="/admin" onClick={() => setMobileOpen(false)} className="block text-xs uppercase tracking-widest" style={{ color: "#0A242C" }}>
                 Admin
               </Link>
             )}
@@ -182,7 +182,7 @@ export default function Layout() {
             <div className="flex flex-col justify-between" style={{ height: "100%" }}>
               <div>
                 <img src={LOGO_URL} alt="Bodega" className="h-6 w-auto mb-4" onError={(e) => { e.target.style.display = "none"; }} />
-                <p className="text-sm leading-relaxed" style={{ color: "#777777", letterSpacing: "-0.02em" }}>
+                <p className="text-sm leading-relaxed" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
                   A neighbourhood wine bar in the heart of Stockport.
                 </p>
               </div>
@@ -203,34 +203,35 @@ export default function Layout() {
             </div>
 
             <div>
-              <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#777777" }}>Find us</p>
-              <div className="text-sm space-y-1" style={{ color: "#777777", letterSpacing: "-0.02em" }}>
+              <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#0A242C" }}>Find us</p>
+              <div className="text-sm space-y-1" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
                 <p>Engine Room</p>
                 <p>Weir Mill</p>
                 <p>Stockport, SK3 0AG</p>
-                <p className="mt-2">
-                  <a href="mailto:hello@bodegawine.co.uk" style={{ color: "#777777" }}>hello@bodegawine.co.uk</a>
+                <p className="mt-3">+44 (0) 000 000 0000</p>
+                <p className="mt-1">
+                  <a href="mailto:hello@bodegawine.co.uk" style={{ color: "#0A242C" }}>hello@bodegawine.co.uk</a>
                 </p>
               </div>
             </div>
 
             <div>
-              <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#777777" }}>Opening hours</p>
-              <div className="text-sm space-y-1" style={{ color: "#777777", letterSpacing: "-0.02em" }}>
+              <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#0A242C" }}>Opening hours</p>
+              <div className="text-sm space-y-1" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
                 <p>Monday — Closed</p>
                 <p>Tuesday – Sunday — 2pm to late</p>
               </div>
             </div>
 
             <div>
-              <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#777777" }}>Quick links</p>
+              <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#0A242C" }}>Quick links</p>
               <div className="space-y-2">
                 {NAV.map(({ to, label }) => (
                   <Link
                     key={to}
                     to={to}
                     className="block text-sm transition-colors duration-150"
-                    style={{ color: "#777777", letterSpacing: "-0.02em" }}
+                    style={{ color: "#0A242C", letterSpacing: "-0.02em" }}
                     onMouseEnter={e => e.target.style.color = "#0A242C"}
                     onMouseLeave={e => e.target.style.color = "#777777"}
                   >
@@ -242,7 +243,7 @@ export default function Layout() {
           </div>
 
           <div style={{ borderTop: "1px solid #d8d6d0" }} className="pt-4 flex items-center justify-between flex-wrap gap-3">
-            <p className="text-xs" style={{ color: "#777777", letterSpacing: "-0.02em" }}>
+            <p className="text-xs" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
               © {new Date().getFullYear()} Bodega, Stockport. All rights reserved.
             </p>
             <div className="flex items-center gap-4">
@@ -251,7 +252,7 @@ export default function Layout() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs"
-                style={{ color: "#777777", textDecoration: "none", letterSpacing: "-0.02em" }}
+                style={{ color: "#0A242C", textDecoration: "none", letterSpacing: "-0.02em" }}
                 onMouseEnter={e => e.target.style.color = "#0A242C"}
                 onMouseLeave={e => e.target.style.color = "#777777"}
               >
@@ -261,12 +262,12 @@ export default function Layout() {
                 <button
                   onClick={logout}
                   className="text-xs"
-                  style={{ color: "#777777", background: "none", border: "none", cursor: "none", fontFamily: "'Courier New', Courier, monospace", padding: 0, letterSpacing: "-0.02em" }}
+                  style={{ color: "#0A242C", background: "none", border: "none", cursor: "none", fontFamily: "'Courier New', Courier, monospace", padding: 0, letterSpacing: "-0.02em" }}
                 >
                   Sign out
                 </button>
               ) : (
-                <Link to="/team-login" className="text-xs" style={{ color: "#777777", textDecoration: "none", letterSpacing: "-0.02em" }}>
+                <Link to="/team-login" className="text-xs" style={{ color: "#0A242C", textDecoration: "none", letterSpacing: "-0.02em" }}>
                   Team sign in
                 </Link>
               )}
