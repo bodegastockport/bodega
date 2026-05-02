@@ -73,10 +73,20 @@ export default function CellarMemberDetail() {
     { key: "name",             label: "Full name",        type: "text" },
     { key: "email",            label: "Email",            type: "email" },
     { key: "phone",            label: "Phone",            type: "text" },
+    { key: "birthday",         label: "Date of birth",    type: "date" },
+    { key: "address_line1",    label: "Address",          type: "text" },
+    { key: "postcode",         label: "Postcode",         type: "text" },
     { key: "membership_tier",  label: "Membership tier",  type: "text" },
     { key: "membership_start", label: "Membership start", type: "date" },
-    { key: "locker_number",    label: "Locker / bay",     type: "text" },
   ];
+
+  const formatValue = (key, val) => {
+    if (!val) return null;
+    if (key === "membership_start" || key === "birthday") {
+      try { return format(parseISO(val), "d MMM yyyy"); } catch { return val; }
+    }
+    return val;
+  };
 
   return (
     <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", minHeight: "100vh" }}>
@@ -91,7 +101,6 @@ export default function CellarMemberDetail() {
           <ArrowLeft className="h-3.5 w-3.5" /> Back to admin
         </Link>
 
-        {/* Header */}
         <div className="flex items-center gap-4 mb-8 flex-wrap">
           <div className="h-14 w-14 shrink-0 flex items-center justify-center" style={{ backgroundColor: "#d8d6d0" }}>
             <span style={{ fontSize: "22px", color: "#1E4D5A" }}>{member.name?.[0]?.toUpperCase()}</span>
@@ -103,7 +112,6 @@ export default function CellarMemberDetail() {
                 Active
               </span>
               {member.membership_tier && <span className="text-xs" style={{ color: "#777777" }}>· {member.membership_tier}</span>}
-              {member.locker_number && <span className="text-xs" style={{ color: "#777777" }}>· {member.locker_number}</span>}
               <span className="text-xs" style={{ color: "#777777" }}>· {bottleCount} bottles stored</span>
             </div>
           </div>
@@ -111,7 +119,6 @@ export default function CellarMemberDetail() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          {/* Member details */}
           <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
             <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777" }}>Member details</p>
             <div className="space-y-4">
@@ -144,10 +151,7 @@ export default function CellarMemberDetail() {
                   ) : (
                     <div className="flex items-center justify-between group">
                       <p className="text-sm" style={{ color: member[key] ? "#0A242C" : "#777777" }}>
-                        {member[key]
-                          ? (key === "membership_start" ? format(parseISO(member[key]), "d MMM yyyy") : member[key])
-                          : <span style={{ color: "#777777" }}>Not set</span>
-                        }
+                        {formatValue(key, member[key]) || <span style={{ color: "#777777" }}>Not set</span>}
                       </p>
                       <button
                         onClick={() => startEdit(key, member[key])}
@@ -161,7 +165,6 @@ export default function CellarMemberDetail() {
                 </div>
               ))}
 
-              {/* Notes */}
               <div>
                 <label style={labelStyle}>Notes</label>
                 {editingField === "notes" ? (
@@ -206,7 +209,6 @@ export default function CellarMemberDetail() {
             </div>
           </div>
 
-          {/* Bottle inventory */}
           <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
             <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777" }}>Bottle inventory</p>
             <MemberBottles member={member} onBottleCountChange={setBottleCount} />

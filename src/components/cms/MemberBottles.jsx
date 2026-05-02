@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import BottleQRModal from "./BottleQRModal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const BLANK = { wine_name: "", producer: "", vintage: "", cellar_location: "", type: "Red", quantity: 1, notes: "" };
+const BLANK = { wine_name: "", producer: "", vintage: "", cellar_location: "", type: "Red", notes: "" };
 const TYPES = ["Red", "White", "Rosé", "Sparkling", "Dessert", "Fortified", "Other"];
 
 const inputStyle = { backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", borderRadius: "6px", fontFamily: "'Courier New', Courier, monospace", fontSize: "13px", padding: "8px 11px", color: "#0A242C", width: "100%", outline: "none", transition: "border-color 0.15s" };
@@ -35,7 +35,16 @@ export default function MemberBottles({ member, onBottleCountChange }) {
     setStoredBottles(stored);
     setConsumedBottles(consumed);
     setLoading(false);
-    onBottleCountChange?.(stored.reduce((s, b) => s + (b.quantity || 1), 0));
+
+    // Update parent with live count
+    const count = stored.length;
+    onBottleCountChange?.(count);
+
+    // Update bottles_stored on cellar_members to keep vault bar in sync
+    await supabase
+      .from('cellar_members')
+      .update({ bottles_stored: count })
+      .eq('id', member.id);
   };
 
   useEffect(() => { load(); }, [member.id]);
@@ -43,11 +52,11 @@ export default function MemberBottles({ member, onBottleCountChange }) {
   const f = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
   const handleAdd = async () => {
-    if (!form.wine_name) return;
+    if (!form.wine_name || !form.cellar_location) return;
     setSaving(true);
     const { error } = await supabase
       .from('cellar_bottles')
-      .insert({ ...form, member_id: member.id, status: "stored" });
+      .insert({ ...form, member_id: member.id, status: "stored", quantity: 1 });
     if (!error) {
       setForm(BLANK);
       setAdding(false);
@@ -72,7 +81,7 @@ export default function MemberBottles({ member, onBottleCountChange }) {
 
   if (loading) return <div className="flex justify-center py-6"><Loader2 className="h-4 w-4 animate-spin" style={{ color: "#1E4D5A" }} /></div>;
 
-  const total = storedBottles.reduce((s, b) => s + (b.quantity || 1), 0);
+  const total = storedBottles.length;
 
   return (
     <div className="space-y-6" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
@@ -111,13 +120,9 @@ export default function MemberBottles({ member, onBottleCountChange }) {
                 <label style={labelStyle}>Vintage</label>
                 <input style={inputStyle} value={form.vintage} onChange={(e) => f("vintage", e.target.value)} placeholder="e.g. 2018" />
               </div>
-              <div>
-                <label style={labelStyle}>Cellar location</label>
+              <div className="col-span-2">
+                <label style={labelStyle}>Cellar location *</label>
                 <input style={inputStyle} value={form.cellar_location} onChange={(e) => f("cellar_location", e.target.value)} placeholder="e.g. A20" />
-              </div>
-              <div>
-                <label style={labelStyle}>Quantity</label>
-                <input type="number" min="1" style={inputStyle} value={form.quantity} onChange={(e) => f("quantity", Number(e.target.value))} />
               </div>
               <div className="col-span-2">
                 <label style={labelStyle}>Type</label>
@@ -134,8 +139,8 @@ export default function MemberBottles({ member, onBottleCountChange }) {
             <div className="flex gap-2 mt-3">
               <button
                 onClick={handleAdd}
-                disabled={saving || !form.wine_name}
-                style={{ padding: "6px 14px", backgroundColor: saving || !form.wine_name ? "#d8d6d0" : "#1E4D5A", color: saving || !form.wine_name ? "#777777" : "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: saving || !form.wine_name ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "5px" }}
+                disabled={saving || !form.wine_name || !form.cellar_location}
+                style={{ padding: "6px 14px", backgroundColor: saving || !form.wine_name || !form.cellar_location ? "#d8d6d0" : "#1E4D5A", color: saving || !form.wine_name || !form.cellar_location ? "#777777" : "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: saving || !form.wine_name || !form.cellar_location ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "5px" }}
               >
                 {saving && <Loader2 className="h-3 w-3 animate-spin" />} Save
               </button>
@@ -162,7 +167,6 @@ export default function MemberBottles({ member, onBottleCountChange }) {
                   {b.notes && <p className="text-xs mt-0.5" style={{ color: "#777777" }}>{b.notes}</p>}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs" style={{ color: "#0A242C", backgroundColor: "#d8d6d0", padding: "2px 7px" }}>×{b.quantity}</span>
                   <button onClick={() => setQrBottle(b)} style={{ background: "none", border: "none", cursor: "pointer", color: "#777777", padding: "2px" }} title="Generate QR label">
                     <QrCode className="h-3.5 w-3.5" />
                   </button>
@@ -195,7 +199,6 @@ export default function MemberBottles({ member, onBottleCountChange }) {
                     </p>
                   )}
                 </div>
-                <span className="text-xs shrink-0" style={{ color: "#aaa" }}>×{b.quantity}</span>
               </div>
             ))}
           </div>
