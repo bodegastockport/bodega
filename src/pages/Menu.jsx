@@ -53,7 +53,7 @@ export default function Menu() {
           {menuUrl ? (
             !pdfError ? (
               <iframe
-                src={menuUrl}
+                src={`${menuUrl}#toolbar=0&navpanes=0&scrollbar=0`}
                 title="Bodega Menu"
                 style={{ flex: 1, width: "100%", minHeight: "70vh", border: "1px solid #d8d6d0" }}
                 onError={() => setPdfError(true)}
@@ -105,7 +105,7 @@ export default function Menu() {
           {menuUrl ? (
             <div>
               <iframe
-                src={menuUrl}
+                src={`${menuUrl}#toolbar=0&navpanes=0&scrollbar=0`}
                 title="Bodega Menu"
                 style={{ width: "100%", height: "60vw", minHeight: "320px", border: "1px solid #d8d6d0", display: "block", marginBottom: "16px" }}
                 onError={() => setPdfError(true)}
