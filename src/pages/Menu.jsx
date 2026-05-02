@@ -2,6 +2,23 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 
+const PDFJS_CDN = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+const PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+function loadPdfJs() {
+  return new Promise((resolve, reject) => {
+    if (window.pdfjsLib) { resolve(window.pdfjsLib); return; }
+    const script = document.createElement("script");
+    script.src = PDFJS_CDN;
+    script.onload = () => {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+      resolve(window.pdfjsLib);
+    };
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
 export default function Menu() {
   const [menuUrl, setMenuUrl] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,15 +42,11 @@ export default function Menu() {
 
   useEffect(() => {
     if (!menuUrl) return;
-
     const render = async () => {
       setRendering(true);
       setRenderError(false);
       try {
-        // Lazy load pdfjs to avoid module-level crashes
-        const pdfjsLib = await import("pdfjs-dist");
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-
+        const pdfjsLib = await loadPdfJs();
         const pdf = await pdfjsLib.getDocument(menuUrl).promise;
         const page = await pdf.getPage(1);
 
@@ -45,10 +58,7 @@ export default function Menu() {
           const scaled = page.getViewport({ scale });
           canvas.width = scaled.width;
           canvas.height = scaled.height;
-          await page.render({
-            canvasContext: canvas.getContext("2d"),
-            viewport: scaled,
-          }).promise;
+          await page.render({ canvasContext: canvas.getContext("2d"), viewport: scaled }).promise;
         };
 
         await renderToCanvas(desktopCanvasRef.current);
@@ -59,7 +69,6 @@ export default function Menu() {
       }
       setRendering(false);
     };
-
     render();
   }, [menuUrl]);
 
@@ -90,29 +99,37 @@ export default function Menu() {
     </div>
   );
 
+  const PDFContent = ({ canvasRef }) => {
+    if (rendering) return (
+      <div className="flex items-center justify-center" style={{ flex: 1 }}>
+        <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#1E4D5A" }} />
+      </div>
+    );
+    if (renderError) return (
+      <div className="flex flex-col items-center justify-center gap-4" style={{ flex: 1, minHeight: "300px" }}>
+        <p className="text-xs" style={{ color: "#0A242C" }}>Unable to display PDF.</p>
+        <DownloadBtn />
+      </div>
+    );
+    return <canvas ref={canvasRef} style={{ width: "100%", display: "block" }} />;
+  };
+
   return (
     <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace" }}>
 
       {/* Desktop */}
       <div className="hidden lg:grid lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
         <div style={{ borderRight: "1px solid #d8d6d0", display: "flex", flexDirection: "column" }}>
-          {!menuUrl ? <NoMenu /> : rendering ? (
-            <div className="flex items-center justify-center" style={{ flex: 1 }}>
-              <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#1E4D5A" }} />
-            </div>
-          ) : renderError ? (
-            <div className="flex flex-col items-center justify-center gap-4" style={{ flex: 1 }}>
-              <p className="text-xs" style={{ color: "#0A242C" }}>Unable to render PDF inline.</p>
-              <DownloadBtn />
-            </div>
-          ) : (
+          {!menuUrl ? <NoMenu /> : (
             <>
               <div style={{ flex: 1, overflow: "hidden" }}>
-                <canvas ref={desktopCanvasRef} style={{ width: "100%", display: "block" }} />
+                <PDFContent canvasRef={desktopCanvasRef} />
               </div>
-              <div style={{ padding: "12px 16px", borderTop: "1px solid #d8d6d0", display: "flex", justifyContent: "flex-end" }}>
-                <DownloadBtn />
-              </div>
+              {!rendering && !renderError && (
+                <div style={{ padding: "12px 16px", borderTop: "1px solid #d8d6d0", display: "flex", justifyContent: "flex-end" }}>
+                  <DownloadBtn />
+                </div>
+              )}
             </>
           )}
         </div>
@@ -127,19 +144,10 @@ export default function Menu() {
           <img src="/images/menu.jpg" alt="Food at Bodega" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
         <div style={{ padding: "24px" }}>
-          {!menuUrl ? <NoMenu /> : rendering ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#1E4D5A" }} />
-            </div>
-          ) : renderError ? (
-            <div className="flex flex-col items-center gap-4 py-8">
-              <p className="text-xs" style={{ color: "#0A242C" }}>Unable to render PDF inline.</p>
-              <DownloadBtn />
-            </div>
-          ) : (
+          {!menuUrl ? <NoMenu /> : (
             <>
-              <canvas ref={mobileCanvasRef} style={{ width: "100%", display: "block", marginBottom: "16px" }} />
-              <DownloadBtn />
+              <PDFContent canvasRef={mobileCanvasRef} />
+              {!rendering && !renderError && <div style={{ marginTop: "16px" }}><DownloadBtn /></div>}
             </>
           )}
         </div>
