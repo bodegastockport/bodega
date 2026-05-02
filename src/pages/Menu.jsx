@@ -1,84 +1,138 @@
-import { Printer, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "@/lib/supabase";
+import { Loader2 } from "lucide-react";
+import * as pdfjsLib from "pdfjs-dist";
 
-export default function BottleQRModal({ bottle, member, onClose }) {
-  // QR code encodes the scan URL — when scanned on the bar tablet it opens
-  // the checkout page directly.
-  const scanUrl = `${window.location.origin}/scan/${bottle.id}`;
-  const encoded = encodeURIComponent(scanUrl);
-  const qrUrl   = `https://api.qrserver.com/v1/create-qr-code/?data=${encoded}&size=200x200&margin=10&bgcolor=f3f2ee&color=193c47`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
-  const handlePrint = () => {
-    const printWin = window.open("", "_blank", "width=400,height=580");
-    printWin.document.write(`
-      <!DOCTYPE html><html><head><title>Bottle Label – ${bottle.wine_name}</title>
-      <style>
-        body { font-family: 'Courier New', Courier, monospace; margin: 0; padding: 24px; text-align: center; background: #f3f2ee; color: #2e282a; }
-        .label { border: 1px solid #d8d6d0; border-radius: 6px; padding: 24px; display: inline-block; max-width: 300px; background: #eceae4; }
-        h1 { font-size: 14px; margin: 0 0 4px; font-weight: 400; }
-        p { font-size: 11px; margin: 3px 0; color: #777777; }
-        img { margin: 12px 0; }
-        .tag { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #777777; margin-bottom: 8px; }
-        .location { font-size: 11px; font-weight: bold; color: #193c47; margin: 6px 0; }
-      </style></head><body>
-      <div class="label">
-        <p class="tag">Bodega Wine Bar — Cellar Club</p>
-        <img src="${qrUrl}" width="160" height="160" />
-        <h1>${bottle.wine_name}</h1>
-        ${bottle.vintage   ? `<p>Vintage: ${bottle.vintage}</p>`  : ""}
-        ${bottle.type      ? `<p>Type: ${bottle.type}</p>`        : ""}
-        <p>Qty: ${bottle.quantity}</p>
-        ${bottle.section || bottle.position ? `<p class="location">${[bottle.section, bottle.position].filter(Boolean).join(" / ")}</p>` : ""}
-        ${member?.name          ? `<p>Member: ${member.name}</p>`        : ""}
-        ${member?.locker_number ? `<p>Bay: ${member.locker_number}</p>`  : ""}
-        ${bottle.notes     ? `<p>${bottle.notes}</p>`             : ""}
+export default function Menu() {
+  const [menuUrl, setMenuUrl] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [rendering, setRendering] = useState(false);
+  const desktopCanvasRef = useRef(null);
+  const mobileCanvasRef = useRef(null);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase.storage.from("menu").list("");
+      if (data && data.length > 0) {
+        const file = data.find(f => f.name.endsWith(".pdf")) || data[0];
+        const { data: urlData } = supabase.storage.from("menu").getPublicUrl(file.name);
+        setMenuUrl(urlData.publicUrl);
+      }
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  useEffect(() => {
+    if (!menuUrl) return;
+
+    const render = async () => {
+      setRendering(true);
+      try {
+        const pdf = await pdfjsLib.getDocument(menuUrl).promise;
+        const page = await pdf.getPage(1);
+
+        const renderToCanvas = async (canvas) => {
+          if (!canvas) return;
+          const containerWidth = canvas.parentElement?.clientWidth || 600;
+          const viewport = page.getViewport({ scale: 1 });
+          const scale = containerWidth / viewport.width;
+          const scaled = page.getViewport({ scale });
+          canvas.width = scaled.width;
+          canvas.height = scaled.height;
+          await page.render({
+            canvasContext: canvas.getContext("2d"),
+            viewport: scaled,
+          }).promise;
+        };
+
+        await renderToCanvas(desktopCanvasRef.current);
+        await renderToCanvas(mobileCanvasRef.current);
+      } catch (e) {
+        console.error("PDF render failed:", e);
+      }
+      setRendering(false);
+    };
+
+    render();
+  }, [menuUrl]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center" style={{ backgroundColor: "#f3f2ee", minHeight: "calc(100vh - 56px)" }}>
+        <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#1E4D5A" }} />
       </div>
-      <script>window.onload = () => { window.print(); window.close(); }</script>
-      </body></html>
-    `);
-    printWin.document.close();
-  };
+    );
+  }
+
+  const DownloadBtn = () => menuUrl ? (
+    <a
+      href={menuUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ display: "inline-block", padding: "7px 16px", backgroundColor: "#1E4D5A", color: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", textDecoration: "none" }}
+      onMouseEnter={e => e.currentTarget.style.backgroundColor = "#0A242C"}
+      onMouseLeave={e => e.currentTarget.style.backgroundColor = "#1E4D5A"}
+    >
+      Download menu ↓
+    </a>
+  ) : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(46,40,42,0.6)" }}>
-      <div style={{ backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", borderRadius: "6px", padding: "24px", width: "100%", maxWidth: "280px", fontFamily: "'Courier New', Courier, monospace" }}>
+    <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace" }}>
 
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-sm" style={{ color: "#2e282a" }}>Bottle QR code</p>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#777777" }}>
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", borderRadius: "4px", padding: "16px", textAlign: "center" }}>
-          <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#777777" }}>Bodega Cellar Club</p>
-          <img src={qrUrl} alt="QR code" style={{ width: "140px", height: "140px", margin: "0 auto", display: "block" }} />
-          <p className="text-sm mt-3" style={{ color: "#2e282a" }}>{bottle.wine_name}</p>
-          {bottle.vintage && <p className="text-xs mt-0.5" style={{ color: "#777777" }}>{bottle.vintage}</p>}
-          {bottle.type    && <p className="text-xs" style={{ color: "#777777" }}>{bottle.type}</p>}
-          <p className="text-xs" style={{ color: "#777777" }}>Qty: {bottle.quantity}</p>
-          {(bottle.section || bottle.position) && (
-            <p className="text-xs font-bold mt-1" style={{ color: "#193c47" }}>
-              {[bottle.section, bottle.position].filter(Boolean).join(" / ")}
-            </p>
+      {/* Desktop */}
+      <div className="hidden lg:grid lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
+        <div style={{ borderRight: "1px solid #d8d6d0", display: "flex", flexDirection: "column" }}>
+          {rendering ? (
+            <div className="flex items-center justify-center" style={{ flex: 1 }}>
+              <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#1E4D5A" }} />
+            </div>
+          ) : menuUrl ? (
+            <>
+              <div style={{ flex: 1, overflow: "hidden" }}>
+                <canvas ref={desktopCanvasRef} style={{ width: "100%", display: "block" }} />
+              </div>
+              <div style={{ padding: "12px 16px", borderTop: "1px solid #d8d6d0", display: "flex", justifyContent: "flex-end" }}>
+                <DownloadBtn />
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-center" style={{ flex: 1 }}>
+              <p className="text-xs" style={{ color: "#0A242C" }}>Menu coming soon.</p>
+            </div>
           )}
-          {member?.name && (
-            <p className="text-xs mt-2 pt-2" style={{ color: "#777777", borderTop: "1px solid #d8d6d0" }}>
-              {member.name}{member?.locker_number ? ` · ${member.locker_number}` : ""}
-            </p>
-          )}
-          <p className="text-xs mt-2" style={{ color: "#aaaaaa" }}>Scan to check out</p>
         </div>
-
-        <button
-          onClick={handlePrint}
-          style={{ marginTop: "16px", width: "100%", padding: "10px", backgroundColor: "#193c47", color: "#f3f2ee", border: "none", borderRadius: "6px", fontFamily: "'Courier New', Courier, monospace", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "background-color 0.15s" }}
-          onMouseEnter={e => e.currentTarget.style.backgroundColor = "#2d6272"}
-          onMouseLeave={e => e.currentTarget.style.backgroundColor = "#193c47"}
-        >
-          <Printer className="h-3.5 w-3.5" /> Print label
-        </button>
-
+        <div style={{ position: "relative" }}>
+          <img src="/images/menu.jpg" alt="Food at Bodega" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+        </div>
       </div>
+
+      {/* Mobile */}
+      <div className="lg:hidden flex flex-col">
+        <div style={{ position: "relative", height: "50vw", minHeight: "200px", flexShrink: 0 }}>
+          <img src="/images/menu.jpg" alt="Food at Bodega" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+        </div>
+        <div style={{ padding: "24px" }}>
+          {rendering ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#1E4D5A" }} />
+            </div>
+          ) : menuUrl ? (
+            <>
+              <canvas ref={mobileCanvasRef} style={{ width: "100%", display: "block", marginBottom: "16px" }} />
+              <DownloadBtn />
+            </>
+          ) : (
+            <div className="flex items-center justify-center" style={{ padding: "48px 24px", border: "1px solid #d8d6d0" }}>
+              <p className="text-xs" style={{ color: "#0A242C" }}>Menu coming soon.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
     </div>
   );
 }
