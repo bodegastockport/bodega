@@ -20,10 +20,10 @@ export default function MyCellar() {
       if (!user) { setNotFound(true); setLoading(false); return; }
 
       const { data: members } = await supabase
-        .from('cellar_members')
+        .from("cellar_members")
         .select()
-        .eq('email', user.email)
-        .eq('status', 'active');
+        .eq("email", user.email)
+        .eq("status", "active");
 
       if (!members?.length) { setNotFound(true); setLoading(false); return; }
 
@@ -31,12 +31,12 @@ export default function MyCellar() {
       setMember(m);
 
       const { data: bottles } = await supabase
-        .from('cellar_bottles')
+        .from("cellar_bottles")
         .select()
-        .eq('member_id', m.id);
+        .eq("member_id", m.id);
 
-      setStoredBottles((bottles || []).filter(b => b.status !== 'consumed'));
-      setConsumedBottles((bottles || []).filter(b => b.status === 'consumed'));
+      setStoredBottles((bottles || []).filter(b => b.status !== "consumed"));
+      setConsumedBottles((bottles || []).filter(b => b.status === "consumed"));
       setLoading(false);
     };
     load();
@@ -45,10 +45,9 @@ export default function MyCellar() {
   const handleCancel = async () => {
     setCancelling(true);
     const { error } = await supabase
-      .from('cellar_members')
-      .update({ status: 'inactive' })
-      .eq('id', member.id);
-
+      .from("cellar_members")
+      .update({ status: "inactive" })
+      .eq("id", member.id);
     if (!error) setCancelled(true);
     setCancelling(false);
   };
@@ -69,7 +68,7 @@ export default function MyCellar() {
     </div>
   );
 
-  const totalStored = storedBottles.reduce((s, b) => s + (b.quantity || 1), 0);
+  const totalStored = storedBottles.length;
 
   const TAB_STYLE = (active) => ({
     padding: "6px 16px",
@@ -100,15 +99,14 @@ export default function MyCellar() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             {[
               { label: "Bottles stored", value: totalStored },
-              { label: "Locker / bay", value: member.locker_number || "—" },
               { label: "Member since", value: member.membership_start ? format(parseISO(member.membership_start), "MMM yyyy") : "—" },
             ].map(({ label, value }) => (
               <div key={label} style={{ backgroundColor: "#f3f2ee", padding: "14px" }}>
                 <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>{label}</p>
-                <p className="text-sm capitalize" style={{ color: "#0A242C" }}>{value}</p>
+                <p className="text-sm" style={{ color: "#0A242C" }}>{value}</p>
               </div>
             ))}
           </div>
@@ -142,7 +140,6 @@ export default function MyCellar() {
                         {[b.producer, b.vintage, b.cellar_location].filter(Boolean).join(" · ")}
                       </p>
                     </div>
-                    <span className="text-xs shrink-0" style={{ color: "#0A242C", backgroundColor: "#d8d6d0", padding: "3px 8px" }}>×{b.quantity}</span>
                   </div>
                 ))}
               </div>
@@ -167,7 +164,6 @@ export default function MyCellar() {
                         {b.checked_out_at && ` · Consumed ${format(parseISO(b.checked_out_at), "d MMM yyyy")}`}
                       </p>
                     </div>
-                    <span className="text-xs shrink-0" style={{ color: "#777777" }}>×{b.quantity}</span>
                   </div>
                 ))}
               </div>
@@ -194,11 +190,10 @@ export default function MyCellar() {
                   {[
                     { label: "Tier", value: member.membership_tier || "—" },
                     { label: "Member since", value: member.membership_start ? format(parseISO(member.membership_start), "d MMMM yyyy") : "—" },
-                    { label: "Locker / bay", value: member.locker_number || "—" },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex justify-between" style={{ borderBottom: "1px solid #d8d6d0", paddingBottom: "12px" }}>
                       <p className="text-xs uppercase tracking-widest" style={{ color: "#777777" }}>{label}</p>
-                      <p className="text-xs capitalize" style={{ color: "#0A242C" }}>{value}</p>
+                      <p className="text-xs" style={{ color: "#0A242C" }}>{value}</p>
                     </div>
                   ))}
                 </div>
