@@ -9,47 +9,43 @@ const HERO_IMAGES = [
   "/images/hero4.jpg",
 ];
 
-const FADE_DURATION = 1000; // ms
-const SLIDE_INTERVAL = 5000; // ms between transitions
+const FADE_DURATION = 1500; // ms crossfade
+const SLIDE_INTERVAL = 6000; // ms between transitions
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [nextIndex, setNextIndex] = useState(null);
-  const [fading, setFading] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const next = (currentIndex + 1) % HERO_IMAGES.length;
-      setNextIndex(next);
-      setFading(true);
-      setTimeout(() => {
-        setCurrentIndex(next);
-        setNextIndex(null);
-        setFading(false);
-      }, FADE_DURATION);
+      setActiveIndex(i => (i + 1) % HERO_IMAGES.length);
     }, SLIDE_INTERVAL);
-
     return () => clearInterval(interval);
-  }, [currentIndex]);
+  }, []);
 
   const openModal = () => { setModalOpen(true); setConfirmed(null); };
   const closeModal = () => { setModalOpen(false); setConfirmed(null); };
 
-  const HeroImage = ({ src, opacity, zIndex }) => (
-    <img
-      src={src}
-      alt="Bodega"
-      style={{
-        position: "absolute", inset: 0,
-        width: "100%", height: "100%",
-        objectFit: "cover",
-        opacity,
-        zIndex,
-        transition: `opacity ${FADE_DURATION}ms ease-in-out`,
-      }}
-    />
+  // All images stacked — only the active one is fully opaque
+  const HeroStack = () => (
+    <>
+      {HERO_IMAGES.map((src, i) => (
+        <img
+          key={src}
+          src={src}
+          alt=""
+          style={{
+            position: "absolute", inset: 0,
+            width: "100%", height: "100%",
+            objectFit: "cover",
+            opacity: i === activeIndex ? 1 : 0,
+            transition: `opacity ${FADE_DURATION}ms ease-in-out`,
+            zIndex: i === activeIndex ? 2 : 1,
+          }}
+        />
+      ))}
+    </>
   );
 
   return (
@@ -57,12 +53,7 @@ export default function Home() {
       {/* Desktop: fixed left image + scrollable right panel */}
       <div className="hidden lg:block">
         <div style={{ position: "fixed", top: 0, left: 0, width: "50vw", height: "100vh", zIndex: 0, overflow: "hidden" }}>
-          {/* Current image */}
-          <HeroImage src={HERO_IMAGES[currentIndex]} opacity={1} zIndex={1} />
-          {/* Next image fading in on top */}
-          {nextIndex !== null && (
-            <HeroImage src={HERO_IMAGES[nextIndex]} opacity={fading ? 1 : 0} zIndex={2} />
-          )}
+          <HeroStack />
         </div>
 
         <div style={{ marginLeft: "50vw", width: "50vw", minHeight: "100vh", backgroundColor: "#f3f2ee", borderLeft: "1px solid #d8d6d0", display: "flex", flexDirection: "column" }}>
@@ -100,10 +91,7 @@ export default function Home() {
       {/* Mobile: stacked layout */}
       <div className="lg:hidden flex flex-col" style={{ backgroundColor: "#f3f2ee" }}>
         <div style={{ position: "relative", width: "100%", height: "50vh", flexShrink: 0, overflow: "hidden" }}>
-          <HeroImage src={HERO_IMAGES[currentIndex]} opacity={1} zIndex={1} />
-          {nextIndex !== null && (
-            <HeroImage src={HERO_IMAGES[nextIndex]} opacity={fading ? 1 : 0} zIndex={2} />
-          )}
+          <HeroStack />
         </div>
 
         <div style={{ padding: "32px 24px" }}>
