@@ -3,12 +3,12 @@ export default function About() {
     <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace" }}>
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
 
-        {/* Text — centred vertically and horizontally, left-aligned within, like homepage booking form */}
+        {/* Text — centred vertically and horizontally, left-aligned within */}
         <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
-          <div style={{ width: "100%", maxWidth: "400px", padding: "0 36px" }}>
-            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>Our story</p>
+          <div style={{ width: "100%", maxWidth: "520px", padding: "48px 64px" }}>
+            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#0A242C" }}>Our story</p>
             <h1 className="text-2xl mb-4 leading-snug" style={{ color: "#1E4D5A", fontWeight: 400 }}>
-              Born from a love of good wine
+              We just really like good wine.
             </h1>
             <p className="text-sm leading-relaxed mb-3" style={{ color: "#0A242C" }}>
               Bodega is a neighbourhood wine bar built for drinking, not overthinking.
@@ -16,7 +16,7 @@ export default function About() {
             <p className="text-sm leading-relaxed mb-3" style={{ color: "#0A242C" }}>
               Wine can get a bit much — too many rules, too much jargon, not enough fun. We're here to change that. Good bottles, no pressure, no fuss.
             </p>
-            <p className="text-xs uppercase tracking-widest mb-2 mt-6" style={{ color: "#777777" }}>Why 'Bodega'?</p>
+            <p className="text-xs uppercase tracking-widest mb-2 mt-6" style={{ color: "#0A242C" }}>Why 'Bodega'?</p>
             <p className="text-sm leading-relaxed mb-3" style={{ color: "#0A242C" }}>
               In Spain, a bodega might be a cellar, a winery, or a small bar. In parts of Latin America, it's your local shop.
             </p>
