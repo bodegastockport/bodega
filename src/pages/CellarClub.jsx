@@ -17,7 +17,7 @@ const TIERS = [
 
 const BLANK = {
   name: "", email: "", phone: "", dob: null, tier: "",
-  how_heard: "", marketing: false, agreed_terms: false,
+  address: "", how_heard: "", marketing: false, agreed_terms: false,
 };
 
 const overlayInput = {
@@ -96,6 +96,10 @@ const JoinForm = ({
       </div>
     </div>
     <div>
+      <label style={labelSt}>Address *</label>
+      <input style={inputSt} value={form.address} onChange={e => f("address", e.target.value)} required placeholder="123 Example Street, Manchester, M1 1AA" />
+    </div>
+    <div>
       <label style={labelSt}>Membership tier *</label>
       <select style={{ ...inputSt, appearance: "none", WebkitAppearance: "none" }} value={form.tier} onChange={e => f("tier", e.target.value)} required>
         <option value="" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Select a tier...</option>
@@ -129,13 +133,13 @@ const JoinForm = ({
     {error && <p style={{ fontSize: "11px", color: "#e88" }}>{error}</p>}
     <button
       type="submit"
-      disabled={submitting || !form.name || !form.email || !form.tier || !form.agreed_terms}
+      disabled={submitting || !form.name || !form.email || !form.tier || !form.address || !form.agreed_terms}
       style={{
         padding: "8px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee",
         border: "none", fontFamily: "'Courier New', Courier, monospace",
         fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em",
-        cursor: submitting || !form.name || !form.email || !form.tier || !form.agreed_terms ? "not-allowed" : "pointer",
-        opacity: submitting || !form.name || !form.email || !form.tier || !form.agreed_terms ? 0.5 : 1,
+        cursor: submitting || !form.name || !form.email || !form.tier || !form.address || !form.agreed_terms ? "not-allowed" : "pointer",
+        opacity: submitting || !form.name || !form.email || !form.tier || !form.address || !form.agreed_terms ? 0.5 : 1,
         display: "inline-flex", alignItems: "center", gap: "6px", width: "100%", justifyContent: "center",
       }}
     >
@@ -158,7 +162,7 @@ export default function CellarClub() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.tier || !form.agreed_terms) return;
+    if (!form.name || !form.email || !form.tier || !form.address || !form.agreed_terms) return;
     setSubmitting(true);
     setError(null);
 
@@ -169,6 +173,7 @@ export default function CellarClub() {
         email: form.email,
         phone: form.phone || null,
         birthday: form.dob ? format(form.dob, "yyyy-MM-dd") : null,
+        address: form.address,
         membership_tier: form.tier,
         how_did_you_hear: form.how_heard || null,
         marketing_opt_in: form.marketing,
@@ -209,20 +214,24 @@ export default function CellarClub() {
         <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
           <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
             <div style={{ width: "100%", maxWidth: "520px", padding: "48px 36px" }}>
-              <h1 className="text-2xl mb-4" style={{ color: "#1E4D5A", fontWeight: 400 }}>The Cellar Club</h1>
-              <p className="text-xs leading-relaxed mb-2" style={{ color: "#777777" }}>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+              <h1 className="text-2xl mb-4" style={{ color: "#1E4D5A", fontWeight: 400 }}>A wine storage concept like no other.</h1>
+
+              <p className="text-xs leading-relaxed mb-4" style={{ color: "#777777", letterSpacing: "-0.02em" }}>
+                Wine storage, done properly. A simple membership that lets you keep your bottles with us — in perfect conditions, ready when you are.
               </p>
-              <p className="text-xs leading-relaxed mb-6" style={{ color: "#777777" }}>
-                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+              <p className="text-xs leading-relaxed mb-4" style={{ color: "#777777", letterSpacing: "-0.02em" }}>
+                There's a temperature and humidity-controlled wine vault right here in Bodega. Members get their own space to store bottles as they should be — not too warm, not too cold, just right for ageing.
               </p>
+              <p className="text-xs leading-relaxed mb-6" style={{ color: "#777777", letterSpacing: "-0.02em" }}>
+                The best part? You can drink your own wine here whenever you like. Just pay a small corkage and we'll take care of the rest.
+              </p>
+
               <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>How it works</p>
-              <p className="text-xs leading-relaxed mb-2" style={{ color: "#777777" }}>
-                Beneath Bodega lies a temperature-controlled vault. As a member, you rent a dedicated space — keeping your wine at the perfect conditions for long-term ageing.
+              <p className="text-xs leading-relaxed mb-8" style={{ color: "#777777", letterSpacing: "-0.02em" }}>
+                Fill out the form, pick your tier and then start storing. Wine needs to be dropped off at least a day before you plan to drink it here. Drop-offs are by appointment, between 2–6pm Tuesday to Thursday and between 2–4pm Friday to Sunday.
               </p>
-              <p className="text-xs leading-relaxed mb-8" style={{ color: "#777777" }}>
-                Whenever you visit, simply let us know which bottles you'd like and we'll bring them up. A modest corkage fee applies.
-              </p>
+
               <div className="grid grid-cols-3 gap-4 mb-8">
                 {[
                   { title: "Climate-controlled storage", body: "Ideal temperature and humidity for long-term ageing." },
@@ -231,12 +240,13 @@ export default function CellarClub() {
                 ].map(({ title, body }) => (
                   <div key={title}>
                     <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#1E4D5A" }}>{title}</p>
-                    <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>{body}</p>
+                    <p className="text-xs leading-relaxed" style={{ color: "#777777", letterSpacing: "-0.02em" }}>{body}</p>
                   </div>
                 ))}
               </div>
+
               <div className="flex items-center justify-between pt-4" style={{ borderTop: "1px solid #d8d6d0" }}>
-                <a href="/login" style={{ fontSize: "11px", color: "#777777", textDecoration: "none", borderBottom: "1px solid #d8d6d0", paddingBottom: "1px" }}>
+                <a href="/login" style={{ fontSize: "11px", color: "#777777", textDecoration: "none", borderBottom: "1px solid #d8d6d0", paddingBottom: "1px", letterSpacing: "-0.02em" }}>
                   Already a member? Log in →
                 </a>
                 <button onClick={() => setView("pricing")} style={{ padding: "8px 24px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}>
@@ -255,7 +265,7 @@ export default function CellarClub() {
                   <div>
                     <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "rgba(243,242,238,0.6)" }}>Welcome</p>
                     <h2 className="text-xl mb-2" style={{ color: "#f3f2ee", fontWeight: 400 }}>Welcome to the Cellar Club, {form.name.split(" ")[0]}.</h2>
-                    <p className="text-xs leading-relaxed" style={{ color: "rgba(243,242,238,0.7)" }}>
+                    <p className="text-xs leading-relaxed" style={{ color: "rgba(243,242,238,0.7)", letterSpacing: "-0.02em" }}>
                       You're now a member. Log in to your account to manage your cellar.
                     </p>
                     <a href="/login" style={{ display: "inline-block", marginTop: "16px", padding: "8px 20px", backgroundColor: "rgba(243,242,238,0.15)", color: "#f3f2ee", border: "1px solid rgba(243,242,238,0.3)", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", textDecoration: "none" }}>
@@ -295,7 +305,7 @@ export default function CellarClub() {
                   <div key={tier.name} className="flex items-center justify-between py-4" style={{ borderBottom: "1px solid #d8d6d0" }}>
                     <div>
                       <p className="text-sm" style={{ color: "#0A242C" }}>{tier.name}</p>
-                      <p className="text-xs" style={{ color: "#aaa" }}>Up to {tier.bottles} bottles</p>
+                      <p className="text-xs" style={{ color: "#aaa", letterSpacing: "-0.02em" }}>Up to {tier.bottles} bottles</p>
                     </div>
                     <p className="text-sm" style={{ color: "#1E4D5A" }}>{tier.price}<span style={{ color: "#aaa", fontSize: "11px" }}>/mo</span></p>
                   </div>
@@ -309,7 +319,7 @@ export default function CellarClub() {
                   <div key={tier.name} className="flex items-center justify-between py-4" style={{ borderBottom: "1px solid #d8d6d0" }}>
                     <div>
                       <p className="text-sm" style={{ color: "#0A242C" }}>{tier.name}</p>
-                      <p className="text-xs" style={{ color: "#aaa" }}>Up to {tier.bottles} bottles</p>
+                      <p className="text-xs" style={{ color: "#aaa", letterSpacing: "-0.02em" }}>Up to {tier.bottles} bottles</p>
                     </div>
                     <p className="text-sm" style={{ color: "#1E4D5A" }}>{tier.price}<span style={{ color: "#aaa", fontSize: "11px" }}>/mo</span></p>
                   </div>
@@ -317,7 +327,7 @@ export default function CellarClub() {
               </div>
             </div>
           </div>
-          <p className="text-xs mt-6" style={{ color: "#aaa" }}>Prices increase annually in line with RPI on your membership anniversary date. 30 days notice always given.</p>
+          <p className="text-xs mt-6" style={{ color: "#aaa", letterSpacing: "-0.02em" }}>Prices increase annually in line with RPI on your membership anniversary date. 30 days notice always given.</p>
         </div>
       )}
 
@@ -330,7 +340,7 @@ export default function CellarClub() {
               <div>
                 <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "rgba(243,242,238,0.6)" }}>Welcome</p>
                 <h2 className="text-xl mb-2" style={{ color: "#f3f2ee", fontWeight: 400 }}>Welcome to the Cellar Club, {form.name.split(" ")[0]}.</h2>
-                <p className="text-xs leading-relaxed" style={{ color: "rgba(243,242,238,0.7)" }}>You're now a member. Log in to your account to manage your cellar.</p>
+                <p className="text-xs leading-relaxed" style={{ color: "rgba(243,242,238,0.7)", letterSpacing: "-0.02em" }}>You're now a member. Log in to your account to manage your cellar.</p>
                 <a href="/login" style={{ display: "inline-block", marginTop: "16px", padding: "8px 20px", backgroundColor: "rgba(243,242,238,0.15)", color: "#f3f2ee", border: "1px solid rgba(243,242,238,0.3)", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", textDecoration: "none" }}>
                   Log in to my account →
                 </a>
