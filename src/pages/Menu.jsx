@@ -1,14 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
-import * as pdfjsLib from "pdfjs-dist";
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 export default function Menu() {
   const [menuUrl, setMenuUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [rendering, setRendering] = useState(false);
+  const [renderError, setRenderError] = useState(false);
   const desktopCanvasRef = useRef(null);
   const mobileCanvasRef = useRef(null);
 
@@ -30,7 +28,12 @@ export default function Menu() {
 
     const render = async () => {
       setRendering(true);
+      setRenderError(false);
       try {
+        // Lazy load pdfjs to avoid module-level crashes
+        const pdfjsLib = await import("pdfjs-dist");
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
         const pdf = await pdfjsLib.getDocument(menuUrl).promise;
         const page = await pdf.getPage(1);
 
@@ -52,6 +55,7 @@ export default function Menu() {
         await renderToCanvas(mobileCanvasRef.current);
       } catch (e) {
         console.error("PDF render failed:", e);
+        setRenderError(true);
       }
       setRendering(false);
     };
@@ -76,9 +80,15 @@ export default function Menu() {
       onMouseEnter={e => e.currentTarget.style.backgroundColor = "#0A242C"}
       onMouseLeave={e => e.currentTarget.style.backgroundColor = "#1E4D5A"}
     >
-      Download menu ↓
+      View menu ↗
     </a>
   ) : null;
+
+  const NoMenu = () => (
+    <div className="flex items-center justify-center" style={{ flex: 1, minHeight: "300px" }}>
+      <p className="text-xs" style={{ color: "#0A242C" }}>Menu coming soon.</p>
+    </div>
+  );
 
   return (
     <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace" }}>
@@ -86,11 +96,16 @@ export default function Menu() {
       {/* Desktop */}
       <div className="hidden lg:grid lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
         <div style={{ borderRight: "1px solid #d8d6d0", display: "flex", flexDirection: "column" }}>
-          {rendering ? (
+          {!menuUrl ? <NoMenu /> : rendering ? (
             <div className="flex items-center justify-center" style={{ flex: 1 }}>
               <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#1E4D5A" }} />
             </div>
-          ) : menuUrl ? (
+          ) : renderError ? (
+            <div className="flex flex-col items-center justify-center gap-4" style={{ flex: 1 }}>
+              <p className="text-xs" style={{ color: "#0A242C" }}>Unable to render PDF inline.</p>
+              <DownloadBtn />
+            </div>
+          ) : (
             <>
               <div style={{ flex: 1, overflow: "hidden" }}>
                 <canvas ref={desktopCanvasRef} style={{ width: "100%", display: "block" }} />
@@ -99,10 +114,6 @@ export default function Menu() {
                 <DownloadBtn />
               </div>
             </>
-          ) : (
-            <div className="flex items-center justify-center" style={{ flex: 1 }}>
-              <p className="text-xs" style={{ color: "#0A242C" }}>Menu coming soon.</p>
-            </div>
           )}
         </div>
         <div style={{ position: "relative" }}>
@@ -116,23 +127,23 @@ export default function Menu() {
           <img src="/images/menu.jpg" alt="Food at Bodega" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
         <div style={{ padding: "24px" }}>
-          {rendering ? (
+          {!menuUrl ? <NoMenu /> : rendering ? (
             <div className="flex justify-center py-8">
               <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#1E4D5A" }} />
             </div>
-          ) : menuUrl ? (
+          ) : renderError ? (
+            <div className="flex flex-col items-center gap-4 py-8">
+              <p className="text-xs" style={{ color: "#0A242C" }}>Unable to render PDF inline.</p>
+              <DownloadBtn />
+            </div>
+          ) : (
             <>
               <canvas ref={mobileCanvasRef} style={{ width: "100%", display: "block", marginBottom: "16px" }} />
               <DownloadBtn />
             </>
-          ) : (
-            <div className="flex items-center justify-center" style={{ padding: "48px 24px", border: "1px solid #d8d6d0" }}>
-              <p className="text-xs" style={{ color: "#0A242C" }}>Menu coming soon.</p>
-            </div>
           )}
         </div>
       </div>
-
     </div>
   );
 }
