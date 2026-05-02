@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import BookingForm from "../components/BookingForm";
 import BookingConfirmation from "../components/BookingConfirmation";
 
@@ -9,51 +9,58 @@ const HERO_IMAGES = [
   "/images/hero4.jpg",
 ];
 
-const FADE_DURATION = 1500; // ms crossfade
-const SLIDE_INTERVAL = 6000; // ms between transitions
+const FADE_DURATION = 1500;
+const SLIDE_INTERVAL = 6000;
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [firstLoaded, setFirstLoaded] = useState(false);
+  const intervalRef = useRef(null);
 
+  // Start rotation only after first image has loaded
   useEffect(() => {
-    const interval = setInterval(() => {
+    if (!firstLoaded) return;
+    intervalRef.current = setInterval(() => {
       setActiveIndex(i => (i + 1) % HERO_IMAGES.length);
     }, SLIDE_INTERVAL);
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(intervalRef.current);
+  }, [firstLoaded]);
 
   const openModal = () => { setModalOpen(true); setConfirmed(null); };
   const closeModal = () => { setModalOpen(false); setConfirmed(null); };
 
-  // All images stacked — only the active one is fully opaque
-  const HeroStack = () => (
-    <>
-      {HERO_IMAGES.map((src, i) => (
-        <img
-          key={src}
-          src={src}
-          alt=""
-          style={{
-            position: "absolute", inset: 0,
-            width: "100%", height: "100%",
-            objectFit: "cover",
-            opacity: i === activeIndex ? 1 : 0,
-            transition: `opacity ${FADE_DURATION}ms ease-in-out`,
-            zIndex: i === activeIndex ? 2 : 1,
-          }}
-        />
-      ))}
-    </>
-  );
+  // Rendered inline (not as a sub-component) to prevent remount on state change
+  const heroImages = HERO_IMAGES.map((src, i) => (
+    <img
+      key={src}
+      src={src}
+      alt=""
+      onLoad={() => { if (i === 0) setFirstLoaded(true); }}
+      style={{
+        position: "absolute", inset: 0,
+        width: "100%", height: "100%",
+        objectFit: "cover",
+        opacity: i === activeIndex ? 1 : 0,
+        transition: firstLoaded ? `opacity ${FADE_DURATION}ms ease-in-out` : "none",
+        zIndex: i === activeIndex ? 2 : 1,
+        willChange: "opacity",
+      }}
+    />
+  ));
 
   return (
     <>
       {/* Desktop: fixed left image + scrollable right panel */}
       <div className="hidden lg:block">
-        <div style={{ position: "fixed", top: 0, left: 0, width: "50vw", height: "100vh", zIndex: 0, overflow: "hidden" }}>
-          <HeroStack />
+        <div style={{
+          position: "fixed", top: 0, left: 0,
+          width: "50vw", height: "100vh",
+          zIndex: 0, overflow: "hidden",
+          backgroundColor: "#0A242C",
+        }}>
+          {heroImages}
         </div>
 
         <div style={{ marginLeft: "50vw", width: "50vw", minHeight: "100vh", backgroundColor: "#f3f2ee", borderLeft: "1px solid #d8d6d0", display: "flex", flexDirection: "column" }}>
@@ -90,8 +97,12 @@ export default function Home() {
 
       {/* Mobile: stacked layout */}
       <div className="lg:hidden flex flex-col" style={{ backgroundColor: "#f3f2ee" }}>
-        <div style={{ position: "relative", width: "100%", height: "50vh", flexShrink: 0, overflow: "hidden" }}>
-          <HeroStack />
+        <div style={{
+          position: "relative", width: "100%", height: "50vh",
+          flexShrink: 0, overflow: "hidden",
+          backgroundColor: "#0A242C",
+        }}>
+          {heroImages}
         </div>
 
         <div style={{ padding: "32px 24px" }}>
