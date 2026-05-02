@@ -5,7 +5,7 @@ import BookingConfirmation from "../components/BookingConfirmation";
 const HERO_IMAGES = [
   "/images/hero.jpg",
   "/images/hero2.jpg",
-  "/images/hero3.jpeg",
+  "/images/hero3.jpg",
   "/images/hero4.jpg",
 ];
 
