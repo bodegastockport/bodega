@@ -132,7 +132,7 @@ export default function ComingSoon() {
               Stockport's newest wine bar is almost here
             </h2>
 
-            <p style={{ fontSize: "13px", lineHeight: 1.75, color: "rgba(243,242,238,0.75)", marginBottom: "36px" }}>
+            <p style={{ fontSize: "13px", lineHeight: 1.75, color: "rgba(243,242,238,0.75)", marginBottom: "36px", maxWidth: "480px", margin: "0 auto 36px" }}>
               A neighbourhood wine bar, private cellar club and bottle shop, opening at Weir Mill, Stockport this Summer.
             </p>
 
