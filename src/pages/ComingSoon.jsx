@@ -106,7 +106,7 @@ export default function ComingSoon() {
         {/* Logo bar */}
         <div style={{ width: "calc(100% - 48px)", margin: "0 24px", aspectRatio: "6/1", position: "relative" }}>
           <img
-            src="/bodega_logo_offwhite.svg"
+            src="/bodega-logo.svg"
             alt="Bodega"
             onError={(e) => {
               if (e.target.src.includes("bodega_logo_offwhite.svg")) {
