@@ -122,14 +122,14 @@ export default function ComingSoon() {
 
         {/* Main content */}
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
-          <div style={{ maxWidth: "520px", width: "100%", textAlign: "center" }}>
+          <div style={{ maxWidth: "720px", width: "100%", textAlign: "center" }}>
 
             <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.14em", color: "rgba(243,242,238,0.6)", marginBottom: "16px" }}>
               Opening July 2026 — Stockport
             </p>
 
             <h2 style={{ fontSize: "clamp(22px, 4vw, 34px)", fontWeight: 400, color: "#f3f2ee", lineHeight: 1.3, marginBottom: "18px", letterSpacing: "0.02em" }}>
-              Stockport's newest wine bar<br />is almost here
+              Stockport's newest wine bar is almost here
             </h2>
 
             <p style={{ fontSize: "13px", lineHeight: 1.75, color: "rgba(243,242,238,0.75)", marginBottom: "36px" }}>
