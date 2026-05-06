@@ -88,7 +88,7 @@ export default function ComingSoon() {
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, fontFamily: "'Courier New', Courier, monospace", overflow: "hidden" }}>
+    <div style={{ position: "fixed", inset: 0, fontFamily: "'Courier New', Courier, monospace", overflow: "hidden", cursor: "default" }}>
 
       {/* Full-page background image */}
       <img
@@ -98,7 +98,7 @@ export default function ComingSoon() {
       />
 
       {/* Dark overlay */}
-      <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10, 36, 44, 0.58)" }} />
+      <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10, 36, 44, 0.58)", pointerEvents: "none" }} />
 
       {/* Content */}
       <div style={{ position: "relative", zIndex: 10, height: "100%", display: "flex", flexDirection: "column" }}>
