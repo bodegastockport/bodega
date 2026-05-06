@@ -104,18 +104,11 @@ export default function ComingSoon() {
       <div style={{ position: "relative", zIndex: 10, height: "100%", display: "flex", flexDirection: "column" }}>
 
         {/* Logo bar */}
-        <div style={{ width: "calc(100% - 48px)", margin: "0 24px", aspectRatio: "6/1", position: "relative" }}>
+        <div style={{ width: "100%" }}>
           <img
             src="/images/bodega-logo.svg"
             alt="Bodega"
-            onError={(e) => {
-              if (e.target.src.includes("bodega_logo_offwhite.svg")) {
-                e.target.src = "/images/bodega-logo.svg";
-              } else {
-                e.target.style.display = "none";
-              }
-            }}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }}
+            style={{ width: "100%", display: "block" }}
           />
         </div>
 
