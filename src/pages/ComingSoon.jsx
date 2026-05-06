@@ -133,7 +133,7 @@ export default function ComingSoon() {
             </h2>
 
             <p style={{ fontSize: "13px", lineHeight: 1.75, color: "rgba(243,242,238,0.75)", marginBottom: "36px" }}>
-              Sign up for updates or to register your interest in the Cellar Club.
+              A neighbourhood wine bar, private cellar club and bottle shop, opening at Weir Mill, Stockport this Summer.
             </p>
 
             {done ? (
@@ -198,7 +198,7 @@ export default function ComingSoon() {
                 )}
 
                 <p style={{ marginTop: "12px", fontSize: "10px", color: "rgba(243,242,238,0.4)", letterSpacing: "0.04em" }}>
-                  Sign up to know what's on and receive special offers.
+                  Sign up for updates or to register your interest in the Cellar Club.
                 </p>
               </>
             )}
