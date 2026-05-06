@@ -122,7 +122,7 @@ export default function ComingSoon() {
 
         {/* Main content */}
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
-          <div style={{ maxWidth: "720px", width: "100%", textAlign: "center" }}>
+          <div style={{ width: "100%", textAlign: "center", padding: "0 40px" }}>
 
             <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.14em", color: "rgba(243,242,238,0.6)", marginBottom: "16px" }}>
               Opening July 2026 — Stockport
