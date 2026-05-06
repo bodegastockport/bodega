@@ -2,7 +2,6 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 
-// Social icons as inline SVGs — no external dependency needed
 const InstagramIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
@@ -67,9 +66,6 @@ export default function ComingSoon() {
     setSubmitting(true);
     setError(null);
 
-    // Calls the capture-mailing-list Edge Function which writes
-    // directly to the Bodega Mailing List Google Sheet.
-    // No data is stored in Supabase.
     const { error: fnError } = await supabase.functions.invoke("capture-mailing-list", {
       body: {
         email:  email.trim().toLowerCase(),
@@ -104,11 +100,11 @@ export default function ComingSoon() {
       <div style={{ position: "relative", zIndex: 10, height: "100%", display: "flex", flexDirection: "column" }}>
 
         {/* Logo bar */}
-        <div style={{ width: "100%" }}>
+        <div>
           <img
             src="/images/bodega-logo.svg"
             alt="Bodega"
-            style={{ width: "100%", display: "block" }}
+            style={{ width: "calc(100% - 48px)", display: "block", margin: "0 24px" }}
           />
         </div>
 
@@ -124,7 +120,7 @@ export default function ComingSoon() {
               Stockport's newest wine bar is almost here
             </h2>
 
-            <p style={{ fontSize: "13px", lineHeight: 1.75, color: "rgba(243,242,238,0.75)", marginBottom: "36px", maxWidth: "480px", margin: "0 auto 36px" }}>
+            <p style={{ fontSize: "13px", lineHeight: 1.75, color: "rgba(243,242,238,0.75)", maxWidth: "480px", margin: "0 auto 36px" }}>
               A neighbourhood wine bar, private cellar club and bottle shop, opening at Weir Mill, Stockport this Summer.
             </p>
 
