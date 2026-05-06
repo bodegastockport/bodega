@@ -88,7 +88,7 @@ export default function ComingSoon() {
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, fontFamily: "'Courier New', Courier, monospace", overflow: "hidden", cursor: "default" }}>
+    <div className="coming-soon-page" style={{ position: "fixed", inset: 0, fontFamily: "'Courier New', Courier, monospace", overflow: "hidden", cursor: "default" }}>
 
       {/* Full-page background image */}
       <img
