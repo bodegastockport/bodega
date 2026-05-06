@@ -45,7 +45,7 @@ const socialLinks = [
   },
   {
     label: "Facebook",
-    href: "https://www.facebook.com/people/Bodega-Stockport",
+    href: "https://www.facebook.com/people/Bodega-Stockport/61589380284909/",
     icon: <FacebookIcon />,
   },
   {
