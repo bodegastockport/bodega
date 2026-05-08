@@ -22,7 +22,7 @@ const BLANK = {
   address_line1: "", postcode: "", how_heard: "", marketing: false, agreed_terms: false,
 };
 
-const WAITLIST_BLANK = { name: "", email: "" };
+const WAITLIST_BLANK = { name: "", email: "", mobile: "", requested_tier: "" };
 
 const overlayInput = {
   backgroundColor: "rgba(243,242,238,0.12)",
@@ -61,7 +61,12 @@ const WaitlistForm = ({ inputSt, labelSt }) => {
 
     const { error: err } = await supabase
       .from("cellar_waitlist")
-      .insert({ name: form.name, email: form.email });
+      .insert({
+        name: form.name,
+        email: form.email,
+        mobile: form.mobile || null,
+        requested_tier: form.requested_tier || null,
+      });
 
     if (err) {
       setSubmitting(false);
@@ -87,13 +92,38 @@ const WaitlistForm = ({ inputSt, labelSt }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <div>
-        <label style={labelSt}>Full name *</label>
-        <input style={inputSt} value={form.name} onChange={e => f("name", e.target.value)} required placeholder="Jane Smith" />
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label style={labelSt}>Full name *</label>
+          <input style={inputSt} value={form.name} onChange={e => f("name", e.target.value)} required placeholder="Jane Smith" />
+        </div>
+        <div>
+          <label style={labelSt}>Email *</label>
+          <input type="email" style={inputSt} value={form.email} onChange={e => f("email", e.target.value)} required placeholder="jane@example.com" />
+        </div>
       </div>
-      <div>
-        <label style={labelSt}>Email *</label>
-        <input type="email" style={inputSt} value={form.email} onChange={e => f("email", e.target.value)} required placeholder="jane@example.com" />
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label style={labelSt}>Mobile</label>
+          <input type="tel" style={inputSt} value={form.mobile} onChange={e => f("mobile", e.target.value)} placeholder="+44..." />
+        </div>
+        <div>
+          <label style={labelSt}>Preferred tier</label>
+          <select style={{ ...inputSt, appearance: "none", WebkitAppearance: "none" }} value={form.requested_tier} onChange={e => f("requested_tier", e.target.value)}>
+            <option value="" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Select...</option>
+            <optgroup label="Individual" style={{ color: "#0A242C", backgroundColor: "#fff" }}>
+              <option value="Cellar 6" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Cellar 6 — £21.00/mo</option>
+              <option value="Cellar 12" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Cellar 12 — £33.50/mo</option>
+              <option value="Cellar 18" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Cellar 18 — £47.00/mo</option>
+            </optgroup>
+            <optgroup label="Corporate" style={{ color: "#0A242C", backgroundColor: "#fff" }}>
+              <option value="Corporate 6" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Corporate 6 — £31.50/mo</option>
+              <option value="Corporate 12" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Corporate 12 — £50.50/mo</option>
+              <option value="Corporate 18" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Corporate 18 — £70.50/mo</option>
+              <option value="Corporate 24" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Corporate 24 — £91.75/mo</option>
+            </optgroup>
+          </select>
+        </div>
       </div>
       {error && <p style={{ fontSize: "11px", color: "#e88" }}>{error}</p>}
       <button
