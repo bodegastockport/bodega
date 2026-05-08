@@ -292,7 +292,11 @@ export default function CellarClub() {
         "https://yzrjtjcqviudjbddvepq.supabase.co/functions/v1/create-stripe-checkout",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
           body: JSON.stringify({
             name: form.name,
             email: form.email,
