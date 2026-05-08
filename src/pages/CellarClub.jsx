@@ -394,11 +394,11 @@ export default function CellarClub() {
                 Fill out the form, pick your tier and then start storing. Wine needs to be dropped off at least a day before you plan to drink it here. Drop-offs are by appointment, between 2–6pm Tuesday to Thursday and between 2–4pm Friday to Sunday.
               </p>
 
-              <div className="flex items-center justify-between pt-4" style={{ borderTop: "1px solid #d8d6d0" }}>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4" style={{ borderTop: "1px solid #d8d6d0" }}>
                 <a href="/login" style={{ fontSize: "11px", color: "#0A242C", textDecoration: "none", borderBottom: "1px solid #d8d6d0", paddingBottom: "1px", letterSpacing: "-0.02em" }}>
                   Already a member? Log in →
                 </a>
-                <button onClick={() => setView("pricing")} style={{ padding: "8px 24px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}>
+                <button onClick={() => setView("pricing")} style={{ padding: "8px 24px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer", alignSelf: "flex-start" }}>
                   View pricing →
                 </button>
               </div>
@@ -426,16 +426,16 @@ export default function CellarClub() {
       )}
 
       {view === "pricing" && (
-        <div className="px-8 py-8" style={{ minHeight: "calc(100vh - 56px)" }}>
-          <div className="flex items-start justify-between mb-6">
+        <div className="px-6 py-8" style={{ minHeight: "calc(100vh - 56px)" }}>
+          <button onClick={() => setView("about")} style={{ fontSize: "11px", color: "#0A242C", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0, marginBottom: "16px", display: "block" }}>← Back</button>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
             <div>
-              <button onClick={() => setView("about")} style={{ fontSize: "11px", color: "#0A242C", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0, marginBottom: "8px", display: "block" }}>← Back</button>
               <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>Membership</p>
               <h1 className="text-2xl" style={{ color: "#1E4D5A", fontWeight: 400 }}>Pricing</h1>
             </div>
             {!isFull && (
-              <button onClick={() => setJoinOpen(true)} style={{ padding: "10px 28px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}>
-                Join the Cellar Club →
+              <button onClick={() => setJoinOpen(true)} style={{ padding: "10px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer", whiteSpace: "nowrap", alignSelf: "flex-start" }}>
+                Join →
               </button>
             )}
           </div>
@@ -447,9 +447,9 @@ export default function CellarClub() {
                   <div key={tier.name} className="flex items-center justify-between py-4" style={{ borderBottom: "1px solid #d8d6d0" }}>
                     <div>
                       <p className="text-sm" style={{ color: "#0A242C" }}>{tier.name}</p>
-                      <p className="text-xs" style={{ color: "#aaa", letterSpacing: "-0.02em" }}>Up to {tier.bottles} bottles</p>
+                      <p className="text-xs" style={{ color: "#0A242C", opacity: 0.5, letterSpacing: "-0.02em" }}>Up to {tier.bottles} bottles</p>
                     </div>
-                    <p className="text-sm" style={{ color: "#1E4D5A" }}>{tier.price}<span style={{ color: "#aaa", fontSize: "11px" }}>/mo</span></p>
+                    <p className="text-sm" style={{ color: "#1E4D5A" }}>{tier.price}<span style={{ color: "#0A242C", opacity: 0.5, fontSize: "11px" }}>/mo</span></p>
                   </div>
                 ))}
               </div>
@@ -461,9 +461,9 @@ export default function CellarClub() {
                   <div key={tier.name} className="flex items-center justify-between py-4" style={{ borderBottom: "1px solid #d8d6d0" }}>
                     <div>
                       <p className="text-sm" style={{ color: "#0A242C" }}>{tier.name}</p>
-                      <p className="text-xs" style={{ color: "#aaa", letterSpacing: "-0.02em" }}>Up to {tier.bottles} bottles</p>
+                      <p className="text-xs" style={{ color: "#0A242C", opacity: 0.5, letterSpacing: "-0.02em" }}>Up to {tier.bottles} bottles</p>
                     </div>
-                    <p className="text-sm" style={{ color: "#1E4D5A" }}>{tier.price}<span style={{ color: "#aaa", fontSize: "11px" }}>/mo</span></p>
+                    <p className="text-sm" style={{ color: "#1E4D5A" }}>{tier.price}<span style={{ color: "#0A242C", opacity: 0.5, fontSize: "11px" }}>/mo</span></p>
                   </div>
                 ))}
               </div>
@@ -477,7 +477,7 @@ export default function CellarClub() {
         <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,10,10,0.6)" }} onClick={() => setJoinOpen(false)} />
           <div style={{ position: "relative", backgroundColor: "#1E4D5A", width: "100%", maxWidth: "500px", maxHeight: "90vh", overflowY: "auto", padding: "36px", margin: "0 16px" }}>
-            <button onClick={() => setJoinOpen(false)} style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", cursor: "pointer", color: "rgba(243,242,238,0.5)", fontFamily: "'Courier New', Courier, monospace", fontSize: "18px", lineHeight: 1 }}>×</button>
+            <button onClick={() => setJoinOpen(false)} style={{ position: "absolute", top: "12px", right: "12px", background: "none", border: "none", cursor: "pointer", color: "rgba(243,242,238,0.7)", fontFamily: "'Courier New', Courier, monospace", fontSize: "24px", lineHeight: 1, padding: "8px", minWidth: "44px", minHeight: "44px", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
             <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.6)" }}>Join the Cellar Club</p>
             <h2 className="text-xl mb-4" style={{ color: "#f3f2ee", fontWeight: 400 }}>Start your membership</h2>
             <JoinForm {...joinFormProps} />
