@@ -1,4 +1,84 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import { Loader2 } from "lucide-react";
+
+const inputStyle = {
+  backgroundColor: "#f3f2ee",
+  border: "1px solid #d8d6d0",
+  fontFamily: "'Courier New', Courier, monospace",
+  fontSize: "13px",
+  padding: "9px 12px",
+  color: "#0A242C",
+  width: "100%",
+  outline: "none",
+};
+
+const labelStyle = {
+  display: "block",
+  fontSize: "10px",
+  textTransform: "uppercase",
+  letterSpacing: "0.08em",
+  color: "#777777",
+  marginBottom: "5px",
+  fontFamily: "'Courier New', Courier, monospace",
+};
+
 export default function CellarClubSuccess() {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleSetPassword = async (e) => {
+    e.preventDefault();
+    if (!email || !password || !confirm) return;
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
+    if (password !== confirm) {
+      setError("Passwords don't match.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+
+    // Set password via Edge Function using service role
+    const res = await fetch(
+      "https://yzrjtjcqviudjbddvepq.supabase.co/functions/v1/set-member-password",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      setSubmitting(false);
+      setError("Could not set password. Make sure you're using the email address you signed up with.");
+      return;
+    }
+
+    // Sign them in immediately
+    const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (signInErr) {
+      setSubmitting(false);
+      setError("Password set but couldn't sign in automatically. Please log in manually.");
+      return;
+    }
+
+    navigate("/my-cellar");
+  };
+
   return (
     <div
       style={{
@@ -11,108 +91,83 @@ export default function CellarClubSuccess() {
         padding: "48px 24px",
       }}
     >
-      <div style={{ maxWidth: "480px", width: "100%" }}>
-        <p
-          className="text-xs uppercase tracking-widest mb-3"
-          style={{ color: "#1E4D5A" }}
-        >
+      <div style={{ maxWidth: "400px", width: "100%" }}>
+        <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#1E4D5A" }}>
           Cellar Club
         </p>
-        <h1
-          className="text-3xl mb-6"
-          style={{ color: "#0A242C", fontWeight: 400, lineHeight: 1.2 }}
-        >
+        <h1 className="text-3xl mb-3" style={{ color: "#0A242C", fontWeight: 400, lineHeight: 1.2 }}>
           You're in.
         </h1>
-        <p
-          className="text-xs leading-relaxed mb-4"
-          style={{ color: "#0A242C", letterSpacing: "-0.02em" }}
-        >
-          Your membership is confirmed and your subscription is active.
-        </p>
-        <p
-          className="text-xs leading-relaxed mb-8"
-          style={{ color: "#0A242C", letterSpacing: "-0.02em" }}
-        >
-          We've sent a welcome email to the address you provided. Use the link
-          in that email to log in and access your member account, where you can
-          manage your bottles and membership details.
+        <p className="text-xs leading-relaxed mb-8" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
+          Your membership is confirmed. Set a password to access your member account.
         </p>
 
-        <div
-          style={{
-            borderTop: "1px solid #d8d6d0",
-            paddingTop: "24px",
-            marginBottom: "24px",
-          }}
-        >
-          <p
-            className="text-xs uppercase tracking-widest mb-3"
-            style={{ color: "#0A242C" }}
-          >
-            What happens next
-          </p>
-          <div className="space-y-3">
-            {[
-              "Check your email for your welcome message and login link.",
-              "Log in to your member account to see your membership details.",
-              "Get in touch to arrange your first bottle drop-off — appointments between 2–6pm Tue–Thu and 2–4pm Fri–Sun.",
-            ].map((step, i) => (
-              <div key={i} className="flex gap-3">
-                <span
-                  style={{
-                    fontSize: "10px",
-                    color: "#1E4D5A",
-                    minWidth: "16px",
-                    paddingTop: "1px",
-                  }}
-                >
-                  {i + 1}.
-                </span>
-                <p
-                  className="text-xs leading-relaxed"
-                  style={{ color: "#0A242C", letterSpacing: "-0.02em" }}
-                >
-                  {step}
-                </p>
-              </div>
-            ))}
+        <form onSubmit={handleSetPassword} className="space-y-4">
+          <div>
+            <label style={labelStyle}>Email address</label>
+            <input
+              type="email"
+              required
+              style={inputStyle}
+              placeholder="The email you signed up with"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+            />
           </div>
-        </div>
+          <div>
+            <label style={labelStyle}>Choose a password</label>
+            <input
+              type="password"
+              required
+              style={inputStyle}
+              placeholder="At least 8 characters"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Confirm password</label>
+            <input
+              type="password"
+              required
+              style={inputStyle}
+              placeholder="Repeat your password"
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+            />
+          </div>
 
-        <div className="flex gap-3">
-          <a
-            href="/login"
+          {error && <p style={{ fontSize: "12px", color: "#c0392b" }}>{error}</p>}
+
+          <button
+            type="submit"
+            disabled={submitting || !email || !password || !confirm}
             style={{
-              padding: "8px 20px",
+              width: "100%",
+              padding: "10px 24px",
               backgroundColor: "#1E4D5A",
               color: "#f3f2ee",
-              textDecoration: "none",
+              border: "none",
               fontFamily: "'Courier New', Courier, monospace",
               fontSize: "11px",
               textTransform: "uppercase",
               letterSpacing: "0.08em",
+              cursor: submitting || !email || !password || !confirm ? "not-allowed" : "pointer",
+              opacity: submitting || !email || !password || !confirm ? 0.6 : 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
             }}
           >
-            Log in to my account →
-          </a>
-          <a
-            href="/"
-            style={{
-              padding: "8px 20px",
-              backgroundColor: "transparent",
-              color: "#0A242C",
-              textDecoration: "none",
-              fontFamily: "'Courier New', Courier, monospace",
-              fontSize: "11px",
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              border: "1px solid #d8d6d0",
-            }}
-          >
-            Back to Bodega
-          </a>
-        </div>
+            {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            Set password and go to my account →
+          </button>
+        </form>
+
+        <p style={{ marginTop: "24px", fontSize: "11px", color: "#777777" }}>
+          <a href="/" style={{ color: "#777777", textDecoration: "none" }}>← Back to Bodega</a>
+        </p>
       </div>
     </div>
   );
