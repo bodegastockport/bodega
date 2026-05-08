@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format, subYears } from "date-fns";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+const CAPACITY = 50;
 
 const TIERS = [
   { name: "Cellar 6",     bottles: 6,  price: "£21.00", type: "Individual" },
@@ -19,6 +21,8 @@ const BLANK = {
   name: "", email: "", phone: "", dob: null, tier: "",
   address_line1: "", postcode: "", how_heard: "", marketing: false, agreed_terms: false,
 };
+
+const WAITLIST_BLANK = { name: "", email: "" };
 
 const overlayInput = {
   backgroundColor: "rgba(243,242,238,0.12)",
@@ -39,6 +43,76 @@ const overlayLabel = {
   color: "rgba(243,242,238,0.55)",
   marginBottom: "3px",
   fontFamily: "'Courier New', Courier, monospace",
+};
+
+const WaitlistForm = ({ inputSt, labelSt }) => {
+  const [form, setForm] = useState(WAITLIST_BLANK);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState(null);
+
+  const f = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.name || !form.email) return;
+    setSubmitting(true);
+    setError(null);
+
+    const { error: err } = await supabase
+      .from("cellar_waitlist")
+      .insert({ name: form.name, email: form.email });
+
+    if (err) {
+      setSubmitting(false);
+      setError("Something went wrong. Please try again.");
+      return;
+    }
+
+    setSubmitting(false);
+    setSubmitted(true);
+  };
+
+  if (submitted) {
+    return (
+      <div>
+        <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "rgba(243,242,238,0.6)" }}>You're on the list</p>
+        <h2 className="text-xl mb-2" style={{ color: "#f3f2ee", fontWeight: 400 }}>We'll be in touch, {form.name.split(" ")[0]}.</h2>
+        <p className="text-xs leading-relaxed" style={{ color: "rgba(243,242,238,0.7)", letterSpacing: "-0.02em" }}>
+          As soon as a space becomes available, you'll be the first to know.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div>
+        <label style={labelSt}>Full name *</label>
+        <input style={inputSt} value={form.name} onChange={e => f("name", e.target.value)} required placeholder="Jane Smith" />
+      </div>
+      <div>
+        <label style={labelSt}>Email *</label>
+        <input type="email" style={inputSt} value={form.email} onChange={e => f("email", e.target.value)} required placeholder="jane@example.com" />
+      </div>
+      {error && <p style={{ fontSize: "11px", color: "#e88" }}>{error}</p>}
+      <button
+        type="submit"
+        disabled={submitting || !form.name || !form.email}
+        style={{
+          padding: "8px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee",
+          border: "none", fontFamily: "'Courier New', Courier, monospace",
+          fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em",
+          cursor: submitting || !form.name || !form.email ? "not-allowed" : "pointer",
+          opacity: submitting || !form.name || !form.email ? 0.5 : 1,
+          display: "inline-flex", alignItems: "center", gap: "6px", width: "100%", justifyContent: "center",
+        }}
+      >
+        {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+        Join the waitlist →
+      </button>
+    </form>
+  );
 };
 
 const JoinForm = ({
@@ -101,7 +175,7 @@ const JoinForm = ({
     </div>
     <div>
       <label style={labelSt}>Postcode *</label>
-      <input style={{...inputSt, textTransform: "uppercase"}} value={form.postcode} onChange={e => f("postcode", e.target.value.toUpperCase())} required placeholder="M1 1AA" />
+      <input style={{ ...inputSt, textTransform: "uppercase" }} value={form.postcode} onChange={e => f("postcode", e.target.value.toUpperCase())} required placeholder="M1 1AA" />
     </div>
     <div>
       <label style={labelSt}>Membership tier *</label>
@@ -148,7 +222,7 @@ const JoinForm = ({
       }}
     >
       {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-      Start membership →
+      Continue to payment →
     </button>
   </form>
 );
@@ -159,10 +233,23 @@ export default function CellarClub() {
   const [form, setForm] = useState(BLANK);
   const [dobOpen, setDobOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
+  const [isFull, setIsFull] = useState(false);
+  const [capacityLoading, setCapacityLoading] = useState(true);
 
   const f = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+
+  useEffect(() => {
+    const checkCapacity = async () => {
+      const { count } = await supabase
+        .from("cellar_members")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "active");
+      setIsFull((count || 0) >= CAPACITY);
+      setCapacityLoading(false);
+    };
+    checkCapacity();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -170,29 +257,40 @@ export default function CellarClub() {
     setSubmitting(true);
     setError(null);
 
-    const { error: memberErr } = await supabase
-      .from('cellar_members')
-      .insert({
-        name: form.name,
-        email: form.email,
-        phone: form.phone || null,
-        birthday: form.dob ? format(form.dob, "yyyy-MM-dd") : null,
-        address_line1: form.address_line1,
-        postcode: form.postcode,
-        membership_tier: form.tier,
-        how_did_you_hear: form.how_heard || null,
-        marketing_opt_in: form.marketing,
-        status: "active",
-        membership_start: new Date().toISOString().split('T')[0],
-      });
+    try {
+      const res = await fetch(
+        "https://yzrjtjcqviudjbddvepq.supabase.co/functions/v1/create-stripe-checkout",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: form.name,
+            email: form.email,
+            phone: form.phone || "",
+            dob: form.dob ? format(form.dob, "yyyy-MM-dd") : "",
+            tier: form.tier,
+            address_line1: form.address_line1,
+            postcode: form.postcode,
+            how_heard: form.how_heard || "",
+            marketing: form.marketing,
+            agreed_terms: form.agreed_terms,
+          }),
+        }
+      );
 
-    if (memberErr) {
-      setSubmitting(false);
+      const data = await res.json();
+
+      if (!res.ok || !data.url) {
+        setError("Something went wrong. Please try again.");
+        setSubmitting(false);
+        return;
+      }
+
+      window.location.href = data.url;
+    } catch {
       setError("Something went wrong. Please try again.");
-      return;
+      setSubmitting(false);
     }
-    setSubmitting(false);
-    setSubmitted(true);
   };
 
   const individualTiers = TIERS.filter(t => t.type === "Individual");
@@ -210,6 +308,31 @@ export default function CellarClub() {
     corporateTiers,
     error,
     submitting,
+  };
+
+  const rightPanelContent = () => {
+    if (capacityLoading) return null;
+
+    if (isFull) {
+      return (
+        <>
+          <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.6)" }}>Cellar Club</p>
+          <h2 className="text-lg mb-2" style={{ color: "#f3f2ee", fontWeight: 400 }}>We're currently full.</h2>
+          <p className="text-xs leading-relaxed mb-4" style={{ color: "rgba(243,242,238,0.7)", letterSpacing: "-0.02em" }}>
+            All 50 spaces are taken. Join the waitlist and we'll contact you as soon as one becomes available.
+          </p>
+          <WaitlistForm inputSt={overlayInput} labelSt={overlayLabel} />
+        </>
+      );
+    }
+
+    return (
+      <>
+        <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.6)" }}>Join the Cellar Club</p>
+        <h2 className="text-lg mb-4" style={{ color: "#f3f2ee", fontWeight: 400 }}>Start your membership</h2>
+        <JoinForm {...joinFormProps} />
+      </>
+    );
   };
 
   return (
@@ -253,24 +376,7 @@ export default function CellarClub() {
             <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,10,10,0.6)" }} />
             <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
               <div style={{ width: "100%", maxWidth: "340px" }}>
-                {submitted ? (
-                  <div>
-                    <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "rgba(243,242,238,0.6)" }}>Welcome</p>
-                    <h2 className="text-xl mb-2" style={{ color: "#f3f2ee", fontWeight: 400 }}>Welcome to the Cellar Club, {form.name.split(" ")[0]}.</h2>
-                    <p className="text-xs leading-relaxed" style={{ color: "rgba(243,242,238,0.7)", letterSpacing: "-0.02em" }}>
-                      You're now a member. Log in to your account to manage your cellar.
-                    </p>
-                    <a href="/login" style={{ display: "inline-block", marginTop: "16px", padding: "8px 20px", backgroundColor: "rgba(243,242,238,0.15)", color: "#f3f2ee", border: "1px solid rgba(243,242,238,0.3)", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", textDecoration: "none" }}>
-                      Log in to my account →
-                    </a>
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.6)" }}>Join the Cellar Club</p>
-                    <h2 className="text-lg mb-4" style={{ color: "#f3f2ee", fontWeight: 400 }}>Start your membership</h2>
-                    <JoinForm {...joinFormProps} />
-                  </>
-                )}
+                {rightPanelContent()}
               </div>
             </div>
           </div>
@@ -285,9 +391,11 @@ export default function CellarClub() {
               <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>Membership</p>
               <h1 className="text-2xl" style={{ color: "#1E4D5A", fontWeight: 400 }}>Pricing</h1>
             </div>
-            <button onClick={() => setJoinOpen(true)} style={{ padding: "10px 28px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}>
-              Join the Cellar Club →
-            </button>
+            {!isFull && (
+              <button onClick={() => setJoinOpen(true)} style={{ padding: "10px 28px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}>
+                Join the Cellar Club →
+              </button>
+            )}
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div>
@@ -323,27 +431,14 @@ export default function CellarClub() {
         </div>
       )}
 
-      {joinOpen && (
+      {joinOpen && !isFull && (
         <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,10,10,0.6)" }} onClick={() => setJoinOpen(false)} />
           <div style={{ position: "relative", backgroundColor: "#1E4D5A", width: "100%", maxWidth: "500px", maxHeight: "90vh", overflowY: "auto", padding: "36px", margin: "0 16px" }}>
             <button onClick={() => setJoinOpen(false)} style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", cursor: "pointer", color: "rgba(243,242,238,0.5)", fontFamily: "'Courier New', Courier, monospace", fontSize: "18px", lineHeight: 1 }}>×</button>
-            {submitted ? (
-              <div>
-                <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "rgba(243,242,238,0.6)" }}>Welcome</p>
-                <h2 className="text-xl mb-2" style={{ color: "#f3f2ee", fontWeight: 400 }}>Welcome to the Cellar Club, {form.name.split(" ")[0]}.</h2>
-                <p className="text-xs leading-relaxed" style={{ color: "rgba(243,242,238,0.7)", letterSpacing: "-0.02em" }}>You're now a member. Log in to your account to manage your cellar.</p>
-                <a href="/login" style={{ display: "inline-block", marginTop: "16px", padding: "8px 20px", backgroundColor: "rgba(243,242,238,0.15)", color: "#f3f2ee", border: "1px solid rgba(243,242,238,0.3)", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", textDecoration: "none" }}>
-                  Log in to my account →
-                </a>
-              </div>
-            ) : (
-              <>
-                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.6)" }}>Join the Cellar Club</p>
-                <h2 className="text-xl mb-4" style={{ color: "#f3f2ee", fontWeight: 400 }}>Start your membership</h2>
-                <JoinForm {...joinFormProps} />
-              </>
-            )}
+            <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.6)" }}>Join the Cellar Club</p>
+            <h2 className="text-xl mb-4" style={{ color: "#f3f2ee", fontWeight: 400 }}>Start your membership</h2>
+            <JoinForm {...joinFormProps} />
           </div>
         </div>
       )}
