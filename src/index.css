@@ -65,3 +65,8 @@
 [data-radix-popper-content-wrapper] {
   z-index: 9999 !important;
 }
+
+[data-radix-popper-content-wrapper],
+[data-radix-popper-content-wrapper] * {
+  cursor: default !important;
+}
