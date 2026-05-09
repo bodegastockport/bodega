@@ -32,26 +32,10 @@ const GoogleIcon = () => (
 );
 
 const socialLinks = [
-  {
-    label: "Instagram",
-    href: "https://www.instagram.com/bodega_stockport/",
-    icon: <InstagramIcon />,
-  },
-  {
-    label: "TikTok",
-    href: "https://www.tiktok.com/@bodgea_stockport",
-    icon: <TikTokIcon />,
-  },
-  {
-    label: "Facebook",
-    href: "https://www.facebook.com/people/Bodega-Stockport/61589380284909/",
-    icon: <FacebookIcon />,
-  },
-  {
-    label: "Google",
-    href: "https://share.google/FSAX760ymCwOEEG4c",
-    icon: <GoogleIcon />,
-  },
+  { label: "Instagram", href: "https://www.instagram.com/bodega_stockport/", icon: <InstagramIcon /> },
+  { label: "TikTok", href: "https://www.tiktok.com/@bodgea_stockport", icon: <TikTokIcon /> },
+  { label: "Facebook", href: "https://www.facebook.com/people/Bodega-Stockport/61589380284909/", icon: <FacebookIcon /> },
+  { label: "Google", href: "https://share.google/X1JWnEC68dFBvxR3k", icon: <GoogleIcon /> },
 ];
 
 export default function ComingSoon() {
@@ -86,20 +70,16 @@ export default function ComingSoon() {
   return (
     <div className="coming-soon-page" style={{ position: "fixed", inset: 0, fontFamily: "'Courier New', Courier, monospace", overflow: "hidden", cursor: "default" }}>
 
-      {/* Full-page background image */}
       <img
         src="/images/coming-soon.jpg"
         alt="Bodega wine bar"
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
       />
 
-      {/* Dark overlay */}
       <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10, 36, 44, 0.58)", pointerEvents: "none" }} />
 
-      {/* Content */}
       <div style={{ position: "relative", zIndex: 10, height: "100%", display: "flex", flexDirection: "column" }}>
 
-        {/* Logo bar */}
         <div>
           <img
             src="/images/bodega-logo.svg"
@@ -108,7 +88,6 @@ export default function ComingSoon() {
           />
         </div>
 
-        {/* Main content */}
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
           <div style={{ width: "100%", textAlign: "center", padding: "0 40px" }}>
 
@@ -191,7 +170,6 @@ export default function ComingSoon() {
               </>
             )}
 
-            {/* Social links */}
             <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginTop: "40px" }}>
               {socialLinks.map(({ label, href, icon }) => (
                 <a
