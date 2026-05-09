@@ -145,6 +145,11 @@ const WaitlistForm = ({ inputSt, labelSt }) => {
   );
 };
 
+const isOver18 = (dob) => {
+  if (!dob) return false;
+  return dob <= subYears(new Date(), 18);
+};
+
 const JoinForm = ({
   inputSt,
   labelSt,
@@ -157,105 +162,112 @@ const JoinForm = ({
   corporateTiers,
   error,
   submitting,
-}) => (
-  <form onSubmit={handleSubmit} className="space-y-3">
-    <div className="grid grid-cols-2 gap-2">
-      <div>
-        <label style={labelSt}>Full name *</label>
-        <input style={inputSt} value={form.name} onChange={e => f("name", e.target.value)} required placeholder="Jane Smith" />
+}) => {
+  const formValid = form.name && form.email && form.phone && form.dob && isOver18(form.dob) && form.tier && form.address_line1 && form.postcode && form.agreed_terms;
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label style={labelSt}>Full name *</label>
+          <input style={inputSt} value={form.name} onChange={e => f("name", e.target.value)} required placeholder="Jane Smith" />
+        </div>
+        <div>
+          <label style={labelSt}>Email *</label>
+          <input type="email" style={inputSt} value={form.email} onChange={e => f("email", e.target.value)} required placeholder="jane@example.com" />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label style={labelSt}>Mobile *</label>
+          <input type="tel" style={inputSt} value={form.phone} onChange={e => f("phone", e.target.value)} required placeholder="+44..." />
+        </div>
+        <div>
+          <label style={labelSt}>Date of birth *</label>
+          <Popover open={dobOpen} onOpenChange={setDobOpen}>
+            <PopoverTrigger asChild>
+              <button type="button" style={{ ...inputSt, textAlign: "left", cursor: "pointer", display: "block" }}>
+                <span style={{ opacity: form.dob ? 1 : 0.5 }}>
+                  {form.dob ? format(form.dob, "dd/MM/yyyy") : "DD/MM/YYYY"}
+                </span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={form.dob}
+                onSelect={(d) => { f("dob", d); setDobOpen(false); }}
+                defaultMonth={subYears(new Date(), 30)}
+                captionLayout="dropdown"
+                fromYear={1920}
+                toYear={new Date().getFullYear() - 18}
+                disabled={(date) => date > subYears(new Date(), 18)}
+              />
+            </PopoverContent>
+          </Popover>
+          {form.dob && !isOver18(form.dob) && (
+            <p style={{ fontSize: "10px", color: "#e88", marginTop: "3px" }}>You must be 18 or over to join.</p>
+          )}
+        </div>
       </div>
       <div>
-        <label style={labelSt}>Email *</label>
-        <input type="email" style={inputSt} value={form.email} onChange={e => f("email", e.target.value)} required placeholder="jane@example.com" />
-      </div>
-    </div>
-    <div className="grid grid-cols-2 gap-2">
-      <div>
-        <label style={labelSt}>Mobile</label>
-        <input type="tel" style={inputSt} value={form.phone} onChange={e => f("phone", e.target.value)} placeholder="+44..." />
+        <label style={labelSt}>Address *</label>
+        <input style={inputSt} value={form.address_line1} onChange={e => f("address_line1", e.target.value)} required placeholder="123 Example Street, Manchester" />
       </div>
       <div>
-        <label style={labelSt}>Date of birth</label>
-        <Popover open={dobOpen} onOpenChange={setDobOpen}>
-          <PopoverTrigger asChild>
-            <button type="button" style={{ ...inputSt, textAlign: "left", cursor: "pointer", display: "block" }}>
-              <span style={{ opacity: form.dob ? 1 : 0.5 }}>
-                {form.dob ? format(form.dob, "dd/MM/yyyy") : "DD/MM/YYYY"}
-              </span>
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={form.dob}
-              onSelect={(d) => { f("dob", d); setDobOpen(false); }}
-              defaultMonth={subYears(new Date(), 30)}
-              captionLayout="dropdown"
-              fromYear={1920}
-              toYear={new Date().getFullYear() - 18}
-              disabled={(date) => date > subYears(new Date(), 18)}
-            />
-          </PopoverContent>
-        </Popover>
+        <label style={labelSt}>Postcode *</label>
+        <input style={{ ...inputSt, textTransform: "uppercase" }} value={form.postcode} onChange={e => f("postcode", e.target.value.toUpperCase())} required placeholder="M1 1AA" />
       </div>
-    </div>
-    <div>
-      <label style={labelSt}>Address *</label>
-      <input style={inputSt} value={form.address_line1} onChange={e => f("address_line1", e.target.value)} required placeholder="123 Example Street, Manchester" />
-    </div>
-    <div>
-      <label style={labelSt}>Postcode *</label>
-      <input style={{ ...inputSt, textTransform: "uppercase" }} value={form.postcode} onChange={e => f("postcode", e.target.value.toUpperCase())} required placeholder="M1 1AA" />
-    </div>
-    <div>
-      <label style={labelSt}>Membership tier *</label>
-      <select style={{ ...inputSt, appearance: "none", WebkitAppearance: "none" }} value={form.tier} onChange={e => f("tier", e.target.value)} required>
-        <option value="" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Select a tier...</option>
-        <optgroup label="Individual" style={{ color: "#0A242C", backgroundColor: "#fff" }}>
-          {individualTiers.map(t => <option key={t.name} value={t.name} style={{ color: "#0A242C", backgroundColor: "#fff" }}>{t.name} — {t.price}/month</option>)}
-        </optgroup>
-        <optgroup label="Corporate" style={{ color: "#0A242C", backgroundColor: "#fff" }}>
-          {corporateTiers.map(t => <option key={t.name} value={t.name} style={{ color: "#0A242C", backgroundColor: "#fff" }}>{t.name} — {t.price}/month</option>)}
-        </optgroup>
-      </select>
-    </div>
-    <div>
-      <label style={labelSt}>How did you hear about us?</label>
-      <input style={inputSt} value={form.how_heard} onChange={e => f("how_heard", e.target.value)} placeholder="Instagram, word of mouth..." />
-    </div>
-    <div className="flex items-start gap-2">
-      <input type="checkbox" id="marketing" checked={form.marketing} onChange={e => f("marketing", e.target.checked)} style={{ marginTop: "2px", accentColor: "#1E4D5A" }} />
-      <label htmlFor="marketing" style={{ ...labelSt, textTransform: "none", letterSpacing: 0, lineHeight: "1.5", cursor: "pointer" }}>
-        I'm happy to receive updates about events and Cellar Club news.
-      </label>
-    </div>
-    <div className="flex items-start gap-2">
-      <input type="checkbox" id="terms" checked={form.agreed_terms} onChange={e => f("agreed_terms", e.target.checked)} style={{ marginTop: "2px", accentColor: "#1E4D5A" }} required />
-      <label htmlFor="terms" style={{ ...labelSt, textTransform: "none", letterSpacing: 0, lineHeight: "1.5", cursor: "pointer" }}>
-        I agree to the{" "}
-        <a href="/cellar-club/terms" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(243,242,238,0.8)", textDecoration: "underline" }}>
-          Cellar Club terms and conditions
-        </a>.
-      </label>
-    </div>
-    {error && <p style={{ fontSize: "11px", color: "#e88" }}>{error}</p>}
-    <button
-      type="submit"
-      disabled={submitting || !form.name || !form.email || !form.tier || !form.address_line1 || !form.postcode || !form.agreed_terms}
-      style={{
-        padding: "8px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee",
-        border: "none", fontFamily: "'Courier New', Courier, monospace",
-        fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em",
-        cursor: submitting || !form.name || !form.email || !form.tier || !form.address_line1 || !form.postcode || !form.agreed_terms ? "not-allowed" : "pointer",
-        opacity: submitting || !form.name || !form.email || !form.tier || !form.address_line1 || !form.postcode || !form.agreed_terms ? 0.5 : 1,
-        display: "inline-flex", alignItems: "center", gap: "6px", width: "100%", justifyContent: "center",
-      }}
-    >
-      {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-      Continue to payment →
-    </button>
-  </form>
-);
+      <div>
+        <label style={labelSt}>Membership tier *</label>
+        <select style={{ ...inputSt, appearance: "none", WebkitAppearance: "none" }} value={form.tier} onChange={e => f("tier", e.target.value)} required>
+          <option value="" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Select a tier...</option>
+          <optgroup label="Individual" style={{ color: "#0A242C", backgroundColor: "#fff" }}>
+            {individualTiers.map(t => <option key={t.name} value={t.name} style={{ color: "#0A242C", backgroundColor: "#fff" }}>{t.name} — {t.price}/month</option>)}
+          </optgroup>
+          <optgroup label="Corporate" style={{ color: "#0A242C", backgroundColor: "#fff" }}>
+            {corporateTiers.map(t => <option key={t.name} value={t.name} style={{ color: "#0A242C", backgroundColor: "#fff" }}>{t.name} — {t.price}/month</option>)}
+          </optgroup>
+        </select>
+      </div>
+      <div>
+        <label style={labelSt}>How did you hear about us?</label>
+        <input style={inputSt} value={form.how_heard} onChange={e => f("how_heard", e.target.value)} placeholder="Instagram, word of mouth..." />
+      </div>
+      <div className="flex items-start gap-2">
+        <input type="checkbox" id="marketing" checked={form.marketing} onChange={e => f("marketing", e.target.checked)} style={{ marginTop: "2px", accentColor: "#1E4D5A" }} />
+        <label htmlFor="marketing" style={{ ...labelSt, textTransform: "none", letterSpacing: 0, lineHeight: "1.5", cursor: "pointer" }}>
+          I'm happy to receive updates about events and Cellar Club news.
+        </label>
+      </div>
+      <div className="flex items-start gap-2">
+        <input type="checkbox" id="terms" checked={form.agreed_terms} onChange={e => f("agreed_terms", e.target.checked)} style={{ marginTop: "2px", accentColor: "#1E4D5A" }} required />
+        <label htmlFor="terms" style={{ ...labelSt, textTransform: "none", letterSpacing: 0, lineHeight: "1.5", cursor: "pointer" }}>
+          I agree to the{" "}
+          <a href="/cellar-club/terms" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(243,242,238,0.8)", textDecoration: "underline" }}>
+            Cellar Club terms and conditions
+          </a>.
+        </label>
+      </div>
+      {error && <p style={{ fontSize: "11px", color: "#e88" }}>{error}</p>}
+      <button
+        type="submit"
+        disabled={submitting || !formValid}
+        style={{
+          padding: "8px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee",
+          border: "none", fontFamily: "'Courier New', Courier, monospace",
+          fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em",
+          cursor: submitting || !formValid ? "not-allowed" : "pointer",
+          opacity: submitting || !formValid ? 0.5 : 1,
+          display: "inline-flex", alignItems: "center", gap: "6px", width: "100%", justifyContent: "center",
+        }}
+      >
+        {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+        Continue to payment →
+      </button>
+    </form>
+  );
+};
 
 export default function CellarClub() {
   const [view, setView] = useState("about");
@@ -283,7 +295,7 @@ export default function CellarClub() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.tier || !form.address_line1 || !form.postcode || !form.agreed_terms) return;
+    if (!form.name || !form.email || !form.phone || !form.dob || !isOver18(form.dob) || !form.tier || !form.address_line1 || !form.postcode || !form.agreed_terms) return;
     setSubmitting(true);
     setError(null);
 
@@ -300,7 +312,7 @@ export default function CellarClub() {
           body: JSON.stringify({
             name: form.name,
             email: form.email,
-            phone: form.phone || "",
+            phone: form.phone,
             dob: form.dob ? format(form.dob, "yyyy-MM-dd") : "",
             tier: form.tier,
             address_line1: form.address_line1,

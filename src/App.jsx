@@ -22,8 +22,11 @@ import CellarMemberDetail from "./pages/CellarMemberDetail";
 import MyCellar from "./pages/MyCellar";
 import CellarClub from "./pages/CellarClub";
 import CellarClubTerms from "./pages/CellarClubTerms";
+import CellarClubSuccess from "./pages/CellarClubSuccess";
 import ScanBottle from "./pages/ScanBottle";
 import ComingSoon from "./pages/ComingSoon";
+
+const BYPASS_PATHS = ["/cellar-club/success", "/cellar-club/terms", "/login", "/my-cellar", "/scan"];
 
 const Spinner = () => (
   <div className="fixed inset-0 flex items-center justify-center" style={{ backgroundColor: "#f3f2ee" }}>
@@ -51,7 +54,9 @@ const AppRoutes = () => {
   }, []);
 
   if (isLoadingAuth || checkingPreview) return <Spinner />;
-  if (!previewEnabled) return <ComingSoon />;
+
+  const isBypass = BYPASS_PATHS.some(p => window.location.pathname.startsWith(p));
+  if (!previewEnabled && !isBypass) return <ComingSoon />;
 
   return (
     <Routes>
@@ -62,6 +67,7 @@ const AppRoutes = () => {
         <Route path="/menu" element={<Menu />} />
         <Route path="/cellar-club" element={<CellarClub />} />
         <Route path="/cellar-club/terms" element={<CellarClubTerms />} />
+        <Route path="/cellar-club/success" element={<CellarClubSuccess />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
