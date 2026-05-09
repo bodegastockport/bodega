@@ -426,13 +426,13 @@ export default function CellarClub() {
       {view === "pricing" && (
         <div className="px-6 py-8" style={{ minHeight: "calc(100vh - 56px)" }}>
           <button onClick={() => setView("about")} style={{ fontSize: "11px", color: "#0A242C", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0, marginBottom: "16px", display: "block" }}>← Back</button>
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
+          <div className="flex items-start justify-between gap-4 mb-8">
             <div>
               <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>Membership</p>
               <h1 className="text-2xl" style={{ color: "#1E4D5A", fontWeight: 400 }}>Pricing</h1>
             </div>
             {!isFull && (
-              <button onClick={() => setJoinOpen(true)} style={{ padding: "10px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer", whiteSpace: "nowrap", alignSelf: "flex-start" }}>
+              <button onClick={() => setJoinOpen(true)} style={{ padding: "10px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
                 Join →
               </button>
             )}
