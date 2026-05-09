@@ -29,6 +29,8 @@ const EVENT_TYPES = [
   { title: "Private tasting", desc: "Join one of our tastings, or book a private one for your group." },
 ];
 
+const PER_PAGE = 9;
+
 export default function Events() {
   const [events, setEvents] = useState([]);
   const [form, setForm] = useState({ name: "", email: "", phone: "", event_type: "", date: "", guests: "", message: "" });
@@ -37,6 +39,7 @@ export default function Events() {
   const [error, setError] = useState(null);
   const [focused, setFocused] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -89,6 +92,12 @@ export default function Events() {
     borderColor: focused === field ? "#1E4D5A" : "#d8d6d0",
   });
 
+  const totalPages = Math.ceil(events.length / PER_PAGE);
+  const visibleEvents = events.slice(page * PER_PAGE, page * PER_PAGE + PER_PAGE);
+
+  const handlePrev = () => setPage((p) => Math.max(0, p - 1));
+  const handleNext = () => setPage((p) => Math.min(totalPages - 1, p + 1));
+
   return (
     <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace" }}>
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
@@ -100,31 +109,55 @@ export default function Events() {
           {events.length === 0 ? (
             <p className="text-xs" style={{ color: "#0A242C" }}>No upcoming events at the moment. Check back soon.</p>
           ) : (
-            <div className="grid grid-cols-2 gap-4">
-              {events.map((event) => (
-                <div key={event.id} style={{ overflow: "hidden", borderBottom: "1px solid #d8d6d0", paddingBottom: "16px" }}>
-                  {event.image_url && (
-                    <div style={{ aspectRatio: "3 / 2", overflow: "hidden", marginBottom: "12px" }}>
-                      <img
-                        src={event.image_url}
-                        alt={event.title}
-                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                      />
-                    </div>
-                  )}
-                  <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>
-                    {new Date(event.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
-                  </p>
-                  <p className="text-sm mb-1" style={{ color: "#1E4D5A", fontWeight: 400 }}>{event.title}</p>
-                  <p className="text-xs leading-relaxed mb-3" style={{ color: "#0A242C" }}>{event.description}</p>
+            <>
+              <div className="grid grid-cols-3 gap-4">
+                {visibleEvents.map((event) => (
+                  <div key={event.id} style={{ overflow: "hidden", borderBottom: "1px solid #d8d6d0", paddingBottom: "16px" }}>
+                    {event.image_url && (
+                      <div style={{ aspectRatio: "4 / 5", overflow: "hidden", marginBottom: "12px" }}>
+                        <img
+                          src={event.image_url}
+                          alt={event.title}
+                          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                        />
+                      </div>
+                    )}
+                    <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>
+                      {new Date(event.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                    </p>
+                    <p className="text-sm mb-1" style={{ color: "#1E4D5A", fontWeight: 400 }}>{event.title}</p>
+                    <p className="text-xs leading-relaxed mb-3" style={{ color: "#0A242C" }}>{event.description}</p>
+                    <button
+                      style={{ fontSize: "11px", color: "#1E4D5A", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0, borderBottom: "1px solid #1E4D5A", paddingBottom: "1px" }}
+                    >
+                      Book a place →
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div style={{ display: "flex", alignItems: "center", gap: "20px", marginTop: "32px" }}>
                   <button
-                    style={{ fontSize: "11px", color: "#1E4D5A", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0, borderBottom: "1px solid #1E4D5A", paddingBottom: "1px" }}
+                    onClick={handlePrev}
+                    disabled={page === 0}
+                    style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: page === 0 ? "default" : "pointer", fontFamily: "'Courier New', Courier, monospace", color: "#1E4D5A", opacity: page === 0 ? 0.3 : 1, padding: 0 }}
                   >
-                    Book a place →
+                    ← Prev
+                  </button>
+                  <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#0A242C" }}>
+                    {page + 1} / {totalPages}
+                  </p>
+                  <button
+                    onClick={handleNext}
+                    disabled={page === totalPages - 1}
+                    style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: page === totalPages - 1 ? "default" : "pointer", fontFamily: "'Courier New', Courier, monospace", color: "#1E4D5A", opacity: page === totalPages - 1 ? 0.3 : 1, padding: 0 }}
+                  >
+                    Next →
                   </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
 
