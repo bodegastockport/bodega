@@ -53,13 +53,15 @@
   }
 }
 
-/* Disable custom cursor on coming soon page */
 .coming-soon-page,
 .coming-soon-page * {
   cursor: default !important;
 }
 
-/* Custom cursor — hide all browser defaults */
 *, *::before, *::after {
   cursor: none !important;
+}
+
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
 }
