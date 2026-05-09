@@ -102,7 +102,7 @@ export default function Events() {
     <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace" }}>
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
 
-        <div className="flex flex-col px-8 py-8" style={{ borderRight: "1px solid #d8d6d0" }}>
+        <div className="flex flex-col" style={{ borderRight: "1px solid #d8d6d0", padding: "32px" }}>
           <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>Upcoming</p>
           <h1 className="text-2xl mb-6" style={{ color: "#1E4D5A", fontWeight: 400 }}>What's On</h1>
 
@@ -110,11 +110,11 @@ export default function Events() {
             <p className="text-xs" style={{ color: "#0A242C" }}>No upcoming events at the moment. Check back soon.</p>
           ) : (
             <>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px 16px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "24px" }}>
                 {visibleEvents.map((event) => (
-                  <div key={event.id} style={{ overflow: "hidden", borderBottom: "1px solid #d8d6d0", paddingBottom: "14px" }}>
+                  <div key={event.id} style={{ borderBottom: "1px solid #d8d6d0", paddingBottom: "16px" }}>
                     {event.image_url && (
-                      <div style={{ aspectRatio: "4 / 5", overflow: "hidden", marginBottom: "10px", maxHeight: "240px" }}>
+                      <div style={{ aspectRatio: "4 / 5", overflow: "hidden", marginBottom: "12px" }}>
                         <img
                           src={event.image_url}
                           alt={event.title}
