@@ -110,11 +110,11 @@ export default function Events() {
             <p className="text-xs" style={{ color: "#0A242C" }}>No upcoming events at the moment. Check back soon.</p>
           ) : (
             <>
-              <div className="grid grid-cols-3 gap-4">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "32px 24px" }}>
                 {visibleEvents.map((event) => (
-                  <div key={event.id} style={{ overflow: "hidden", borderBottom: "1px solid #d8d6d0", paddingBottom: "16px" }}>
+                  <div key={event.id} style={{ overflow: "hidden", borderBottom: "1px solid #d8d6d0", paddingBottom: "14px" }}>
                     {event.image_url && (
-                      <div style={{ aspectRatio: "4 / 5", overflow: "hidden", marginBottom: "12px" }}>
+                      <div style={{ aspectRatio: "4 / 5", overflow: "hidden", marginBottom: "10px", maxHeight: "180px" }}>
                         <img
                           src={event.image_url}
                           alt={event.title}
@@ -122,13 +122,13 @@ export default function Events() {
                         />
                       </div>
                     )}
-                    <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>
+                    <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C", fontSize: "9px" }}>
                       {new Date(event.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                     </p>
-                    <p className="text-sm mb-1" style={{ color: "#1E4D5A", fontWeight: 400 }}>{event.title}</p>
-                    <p className="text-xs leading-relaxed mb-3" style={{ color: "#0A242C" }}>{event.description}</p>
+                    <p style={{ fontSize: "12px", marginBottom: "4px", color: "#1E4D5A", fontWeight: 400 }}>{event.title}</p>
+                    <p style={{ fontSize: "11px", lineHeight: "1.5", marginBottom: "10px", color: "#0A242C" }}>{event.description}</p>
                     <button
-                      style={{ fontSize: "11px", color: "#1E4D5A", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0, borderBottom: "1px solid #1E4D5A", paddingBottom: "1px" }}
+                      style={{ fontSize: "10px", color: "#1E4D5A", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0, borderBottom: "1px solid #1E4D5A", paddingBottom: "1px" }}
                     >
                       Book a place →
                     </button>
