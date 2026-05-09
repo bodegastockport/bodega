@@ -423,7 +423,7 @@ export default function CellarClub() {
             </div>
           </div>
 
-          <div className="hidden lg:block" style={{ position: "relative", minHeight: "50vh" }}>
+          <div style={{ position: "relative", minHeight: "50vh" }}>
             <img src="/images/cellar-club.jpg" alt="Wine vault" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
             <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,10,10,0.6)" }} />
             <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
