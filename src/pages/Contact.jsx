@@ -51,7 +51,6 @@ export default function Contact() {
     <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace" }}>
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
 
-        {/* Left — contact details + map, centred */}
         <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
           <div style={{ width: "100%", maxWidth: "520px", padding: "48px 64px" }}>
 
@@ -80,7 +79,6 @@ export default function Contact() {
               </div>
             </div>
 
-            {/* Map */}
             <div style={{ overflow: "hidden", aspectRatio: "4 / 3" }}>
               <iframe
                 title="Bodega Wine Bar Location"
@@ -90,14 +88,13 @@ export default function Contact() {
                 loading="lazy"
                 allowFullScreen
                 referrerPolicy="no-referrer-when-downgrade"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2378.3413092342607!2d-2.1689382230294676!3d53.408721870054286!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x487bb379f80925f5%3A0xc246e163d889de2c!2sWear%20Mill%2C%20Chestergate%2C%20Stockport%20SK3%200AG!5e0!3m2!1sen!2suk!4v1777044758773!5m2!1sen!2suk"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d151927.59308463306!2d-2.3701670120673004!3d53.48867683235631!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x487bb389eaee63c3%3A0x13328c94a4e9b595!2sBodega%20Wine!5e0!3m2!1sen!2suk!4v1778341405304!5m2!1sen!2suk"
               />
             </div>
 
           </div>
         </div>
 
-        {/* Right — full height teal, form centred */}
         <div className="flex flex-col justify-center items-center" style={{ backgroundColor: "#1E4D5A", minHeight: "50vh" }}>
           <div style={{ width: "100%", maxWidth: "360px", padding: "48px 36px" }}>
 
