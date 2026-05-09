@@ -110,11 +110,11 @@ export default function Events() {
             <p className="text-xs" style={{ color: "#0A242C" }}>No upcoming events at the moment. Check back soon.</p>
           ) : (
             <>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "32px 24px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px 16px" }}>
                 {visibleEvents.map((event) => (
                   <div key={event.id} style={{ overflow: "hidden", borderBottom: "1px solid #d8d6d0", paddingBottom: "14px" }}>
                     {event.image_url && (
-                      <div style={{ aspectRatio: "4 / 5", overflow: "hidden", marginBottom: "10px", maxHeight: "180px" }}>
+                      <div style={{ aspectRatio: "4 / 5", overflow: "hidden", marginBottom: "10px", maxHeight: "240px" }}>
                         <img
                           src={event.image_url}
                           alt={event.title}
@@ -122,7 +122,7 @@ export default function Events() {
                         />
                       </div>
                     )}
-                    <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C", fontSize: "9px" }}>
+                    <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px", color: "#0A242C" }}>
                       {new Date(event.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                     </p>
                     <p style={{ fontSize: "12px", marginBottom: "4px", color: "#1E4D5A", fontWeight: 400 }}>{event.title}</p>
