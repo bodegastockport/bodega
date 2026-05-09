@@ -156,13 +156,12 @@ const JoinForm = ({
   form,
   f,
   handleSubmit,
-  dobOpen,
-  setDobOpen,
   individualTiers,
   corporateTiers,
   error,
   submitting,
 }) => {
+  const [dobOpen, setDobOpen] = useState(false);
   const formValid = form.name && form.email && form.phone && form.dob && isOver18(form.dob) && form.tier && form.address_line1 && form.postcode && form.agreed_terms;
 
   return (
@@ -273,7 +272,6 @@ export default function CellarClub() {
   const [view, setView] = useState("about");
   const [joinOpen, setJoinOpen] = useState(false);
   const [form, setForm] = useState(BLANK);
-  const [dobOpen, setDobOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [isFull, setIsFull] = useState(false);
@@ -348,8 +346,6 @@ export default function CellarClub() {
     form,
     f,
     handleSubmit,
-    dobOpen,
-    setDobOpen,
     individualTiers,
     corporateTiers,
     error,
@@ -423,7 +419,7 @@ export default function CellarClub() {
             </div>
           </div>
 
-          <div style={{ position: "relative", minHeight: "50vh" }}>
+          <div className="hidden lg:block" style={{ position: "relative", minHeight: "50vh" }}>
             <img src="/images/cellar-club.jpg" alt="Wine vault" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
             <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,10,10,0.6)" }} />
             <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
