@@ -11,6 +11,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import TeamLogin from "./pages/TeamLogin";
+import ResetPassword from "./pages/ResetPassword";
 import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
@@ -26,7 +27,7 @@ import CellarClubSuccess from "./pages/CellarClubSuccess";
 import ScanBottle from "./pages/ScanBottle";
 import ComingSoon from "./pages/ComingSoon";
 
-const BYPASS_PATHS = ["/cellar-club/success", "/cellar-club/terms", "/login", "/my-cellar", "/scan"];
+const BYPASS_PATHS = ["/cellar-club/success", "/cellar-club/terms", "/login", "/my-cellar", "/scan", "/reset-password"];
 
 const Spinner = () => (
   <div className="fixed inset-0 flex items-center justify-center" style={{ backgroundColor: "#f3f2ee" }}>
@@ -72,6 +73,7 @@ const AppRoutes = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
         <Route path="/team-login" element={<TeamLogin />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/my-cellar" element={<MyCellar />} />
         <Route path="/scan/:id" element={<ScanBottle />} />
 

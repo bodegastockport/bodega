@@ -58,7 +58,7 @@ export default function TeamLogin() {
 
     const { error: err } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/admin` },
+      options: { emailRedirectTo: `${window.location.origin}/reset-password` },
     });
 
     setSubmitting(false);
@@ -82,7 +82,7 @@ export default function TeamLogin() {
           <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
             <p className="text-sm mb-2" style={{ color: "#0A242C" }}>Check your email</p>
             <p className="text-xs leading-relaxed" style={{ color: "#0A242C" }}>
-              We've sent a sign-in link to <strong>{email}</strong>. Click the link to access the admin panel.
+              We've sent a link to <strong>{email}</strong>. Click it to set a new password.
             </p>
             <button
               onClick={() => { setMagicSent(false); setEmail(""); setPassword(""); }}
@@ -150,7 +150,7 @@ export default function TeamLogin() {
                 disabled={submitting}
                 style={{ fontSize: "11px", color: "#1E4D5A", background: "none", border: "none", padding: 0, cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", textDecoration: "underline" }}
               >
-                Send a magic link instead →
+                Send a reset link →
               </button>
             </div>
           </form>
