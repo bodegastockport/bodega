@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 
 const inputStyle = { backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", borderRadius: "6px", fontFamily: "'Courier New', Courier, monospace", fontSize: "13px", padding: "9px 12px", color: "#2e282a", width: "100%", outline: "none", transition: "border-color 0.15s" };
 const labelStyle = { display: "block", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#777777", marginBottom: "5px", fontFamily: "'Courier New', Courier, monospace" };
-const BLANK = { title: "", date: "", description: "", image_url: "", published: true };
+const BLANK = { title: "", date: "", time: "", price: "", description: "", image_url: "", published: true };
 
 export default function EventsManager() {
   const [events, setEvents] = useState([]);
@@ -29,7 +29,7 @@ export default function EventsManager() {
   useEffect(() => { load(); }, []);
 
   const openNew = () => { setForm(BLANK); setEditing("new"); };
-  const openEdit = (ev) => { setForm({ title: ev.title, date: ev.date, description: ev.description, image_url: ev.image_url || "", published: ev.published ?? true }); setEditing(ev); };
+  const openEdit = (ev) => { setForm({ title: ev.title, date: ev.date, time: ev.time || "", price: ev.price || "", description: ev.description, image_url: ev.image_url || "", published: ev.published ?? true }); setEditing(ev); };
   const close = () => setEditing(null);
 
   const handleImageUpload = async (e) => {
@@ -97,6 +97,14 @@ export default function EventsManager() {
               <label style={labelStyle}>Date</label>
               <input type="date" style={inputStyle} value={form.date} onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))} />
             </div>
+            <div>
+              <label style={labelStyle}>Time</label>
+              <input style={inputStyle} value={form.time} onChange={(e) => setForm((p) => ({ ...p, time: e.target.value }))} placeholder="e.g. 7:00pm" />
+            </div>
+            <div>
+              <label style={labelStyle}>Price</label>
+              <input style={inputStyle} value={form.price} onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))} placeholder="e.g. Free, £15 per person" />
+            </div>
           </div>
           <div className="mb-4">
             <label style={labelStyle}>Description</label>
@@ -144,7 +152,11 @@ export default function EventsManager() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="text-sm" style={{ color: "#2e282a" }}>{ev.title}</p>
-                    <p className="text-xs mt-0.5" style={{ color: "#777777" }}>{format(parseISO(ev.date), "EEE d MMM yyyy")}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "#777777" }}>
+                      {format(parseISO(ev.date), "EEE d MMM yyyy")}
+                      {ev.time && ` · ${ev.time}`}
+                      {ev.price && ` · ${ev.price}`}
+                    </p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {!ev.published && <span style={{ fontSize: "10px", backgroundColor: "#eceae4", color: "#777777", border: "1px solid #d8d6d0", padding: "2px 8px", borderRadius: "3px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Draft</span>}
