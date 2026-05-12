@@ -3,30 +3,7 @@ import { Loader2, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
 
-const getOptimisedImageUrl = (url, width = 400, quality = 75) => {
-  if (!url) return "";
-
-  if (url.includes("/render/image/public/")) {
-    const [base] = url.split("?");
-    return `${base}?width=${width}&quality=${quality}`;
-  }
-
-  if (url.includes("/object/public/")) {
-    return `${url.replace("/object/public/", "/render/image/public/")}?width=${width}&quality=${quality}`;
-  }
-
-  return url;
-};
-
-const useOriginalIfOptimisedFails = (event, originalUrl) => {
-  if (!originalUrl) return;
-
-  const image = event.currentTarget;
-
-  if (image.src !== originalUrl) {
-    image.src = originalUrl;
-  }
-};
+const toThumb = (url) => url.replace("/object/public/", "/render/image/public/") + "?width=400&quality=75";
 
 const inputStyle = {
   backgroundColor: "#f3f2ee",
@@ -141,18 +118,18 @@ export default function Events() {
                     {event.image_url && (
                       <div style={{ aspectRatio: "4 / 5", overflow: "hidden", marginBottom: "12px" }}>
                         <img
-                          src={getOptimisedImageUrl(event.image_url, 400, 75)}
+                          src={toThumb(event.image_url)}
                           alt={event.title}
                           width="400"
                           height="500"
                           loading="lazy"
                           decoding="async"
                           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                          onError={(eventObject) => useOriginalIfOptimisedFails(eventObject, event.image_url)}
                         />
                       </div>
                     )}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", marginBottom: "6px", width: "100%" }}>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", alignItems: "center", columnGap: "12px", marginBottom: "6px", width: "100%" }}>
                       <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#0A242C", margin: 0, minWidth: 0 }}>
                         {new Date(event.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                         {event.time && <span> · {event.time}</span>}
@@ -164,6 +141,7 @@ export default function Events() {
                         </p>
                       )}
                     </div>
+
                     <p style={{ fontSize: "12px", marginBottom: "4px", color: "#1E4D5A", fontWeight: 400 }}>{event.title}</p>
                     <p style={{ fontSize: "11px", lineHeight: "1.5", marginBottom: "10px", color: "#0A242C" }}>{event.description}</p>
                     <button
