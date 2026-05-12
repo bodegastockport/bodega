@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Loader2, ZoomIn } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 function ImageLightbox({ url, label, onClose }) {
@@ -17,42 +17,6 @@ function ImageLightbox({ url, label, onClose }) {
         style={{ maxWidth: "90vw", maxHeight: "80vh", objectFit: "contain", cursor: "default" }}
       />
       <p className="text-xs mt-4" style={{ color: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", opacity: 0.4 }}>Click anywhere to close</p>
-    </div>
-  );
-}
-
-function BottleThumbnails({ bottle, onOpen }) {
-  if (!bottle.image_front_url && !bottle.image_back_url) return null;
-  return (
-    <div className="flex gap-1.5 mt-1.5">
-      {bottle.image_front_url && (
-        <div
-          onClick={() => onOpen(bottle.image_front_url, "Front label")}
-          style={{ width: "36px", height: "48px", cursor: "pointer", overflow: "hidden", border: "1px solid #d8d6d0", position: "relative", flexShrink: 0 }}
-          title="View front label"
-        >
-          <img src={bottle.image_front_url} alt="Front" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          <div
-            style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,36,44,0)", transition: "background-color 0.15s", display: "flex", alignItems: "center", justifyContent: "center" }}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0.3)"}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0)"}
-          />
-        </div>
-      )}
-      {bottle.image_back_url && (
-        <div
-          onClick={() => onOpen(bottle.image_back_url, "Back label")}
-          style={{ width: "36px", height: "48px", cursor: "pointer", overflow: "hidden", border: "1px solid #d8d6d0", position: "relative", flexShrink: 0 }}
-          title="View back label"
-        >
-          <img src={bottle.image_back_url} alt="Back" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          <div
-            style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,36,44,0)", transition: "background-color 0.15s", display: "flex", alignItems: "center", justifyContent: "center" }}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0.3)"}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0)"}
-          />
-        </div>
-      )}
     </div>
   );
 }
@@ -185,15 +149,49 @@ export default function MyCellar() {
             {storedBottles.length === 0 ? (
               <p className="text-sm text-center py-12" style={{ color: "#777777" }}>No bottles stored yet.</p>
             ) : (
-              <div style={{ borderTop: "1px solid #d8d6d0" }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {storedBottles.map((b) => (
-                  <div key={b.id} className="flex items-start justify-between py-3 gap-3" style={{ borderBottom: "1px solid #d8d6d0" }}>
+                  <div key={b.id} style={{ backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", padding: "16px", display: "flex", gap: "14px", alignItems: "flex-start" }}>
+                    {(b.image_front_url || b.image_back_url) && (
+                      <div className="flex gap-2 shrink-0">
+                        {b.image_front_url && (
+                          <div
+                            onClick={() => setLightbox({ url: b.image_front_url, label: "Front label" })}
+                            style={{ width: "56px", height: "80px", cursor: "pointer", overflow: "hidden", border: "1px solid #d8d6d0", position: "relative" }}
+                            title="View front label"
+                          >
+                            <img src={b.image_front_url} alt="Front" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            <div
+                              style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,36,44,0)", transition: "background-color 0.15s" }}
+                              onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0.25)"}
+                              onMouseLeave={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0)"}
+                            />
+                          </div>
+                        )}
+                        {b.image_back_url && (
+                          <div
+                            onClick={() => setLightbox({ url: b.image_back_url, label: "Back label" })}
+                            style={{ width: "56px", height: "80px", cursor: "pointer", overflow: "hidden", border: "1px solid #d8d6d0", position: "relative" }}
+                            title="View back label"
+                          >
+                            <img src={b.image_back_url} alt="Back" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            <div
+                              style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,36,44,0)", transition: "background-color 0.15s" }}
+                              onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0.25)"}
+                              onMouseLeave={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0)"}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm" style={{ color: "#0A242C" }}>{b.wine_name}</p>
-                      <p className="text-xs mt-0.5" style={{ color: "#777777" }}>
-                        {[b.producer, b.vintage, b.cellar_location].filter(Boolean).join(" · ")}
-                      </p>
-                      <BottleThumbnails bottle={b} onOpen={(url, label) => setLightbox({ url, label })} />
+                      <p className="text-sm mb-1" style={{ color: "#0A242C" }}>{b.wine_name}</p>
+                      {b.producer && <p className="text-xs" style={{ color: "#777777" }}>{b.producer}</p>}
+                      <div className="flex gap-2 flex-wrap mt-1">
+                        {b.vintage && <span className="text-xs" style={{ color: "#777777" }}>{b.vintage}</span>}
+                        {b.type && <span className="text-xs" style={{ color: "#777777" }}>· {b.type}</span>}
+                      </div>
+                      {b.notes && <p className="text-xs mt-2" style={{ color: "#777777", fontStyle: "italic" }}>{b.notes}</p>}
                     </div>
                   </div>
                 ))}
@@ -243,6 +241,8 @@ export default function MyCellar() {
                   {[
                     { label: "Tier", value: member.membership_tier || "—" },
                     { label: "Member since", value: member.membership_start ? format(parseISO(member.membership_start), "d MMMM yyyy") : "—" },
+                    { label: "Email", value: member.email || "—" },
+                    { label: "Phone", value: member.phone || "—" },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex justify-between" style={{ borderBottom: "1px solid #d8d6d0", paddingBottom: "12px" }}>
                       <p className="text-xs uppercase tracking-widest" style={{ color: "#777777" }}>{label}</p>
