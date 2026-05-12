@@ -71,9 +71,14 @@ export default function ComingSoon() {
     <div className="coming-soon-page" style={{ position: "fixed", inset: 0, fontFamily: "'Courier New', Courier, monospace", overflow: "hidden", cursor: "default" }}>
 
       <img
-        src="/images/coming-soon.jpg"
+        src="/images/coming-soon.webp"
         alt="Bodega wine bar"
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+        width="1920"
+        height="1280"
+        loading="eager"
+        fetchPriority="high"
+        decoding="async"
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
       />
 
       <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10, 36, 44, 0.58)", pointerEvents: "none" }} />

@@ -117,7 +117,6 @@ export default function Menu() {
   return (
     <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace" }}>
 
-      {/* Desktop */}
       <div className="hidden lg:grid lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
         <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
           <div style={{ width: "100%", maxWidth: "520px", padding: "48px 64px" }}>
@@ -133,14 +132,31 @@ export default function Menu() {
           </div>
         </div>
         <div style={{ position: "relative" }}>
-          <img src="/images/menu.jpg" alt="Food at Bodega" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          <img
+            src="/images/menu.webp"
+            alt="Food at Bodega"
+            width="1600"
+            height="2000"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          />
         </div>
       </div>
 
-      {/* Mobile */}
       <div className="lg:hidden flex flex-col">
         <div style={{ position: "relative", height: "50vw", minHeight: "200px", flexShrink: 0 }}>
-          <img src="/images/menu.jpg" alt="Food at Bodega" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          <img
+            src="/images/menu.webp"
+            alt="Food at Bodega"
+            width="1600"
+            height="2000"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          />
         </div>
         <div style={{ padding: "32px 24px" }}>
           <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#0A242C" }}>What we pour</p>

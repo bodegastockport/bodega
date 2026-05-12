@@ -3,7 +3,6 @@ export default function About() {
     <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace" }}>
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
 
-        {/* Text — centred vertically and horizontally, left-aligned within */}
         <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
           <div style={{ width: "100%", maxWidth: "520px", padding: "48px 64px" }}>
             <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#0A242C" }}>Our story</p>
@@ -29,12 +28,16 @@ export default function About() {
           </div>
         </div>
 
-        {/* Image — full height, flush to nav and right edge */}
         <div style={{ position: "relative", minHeight: "50vh" }}>
           <img
-            src="/images/about.jpg"
+            src="/images/about.webp"
             alt="Inside Bodega wine bar"
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+            width="1600"
+            height="2000"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           />
         </div>
 

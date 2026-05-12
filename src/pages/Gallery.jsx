@@ -45,8 +45,13 @@ export default function Gallery() {
                 <img
                   src={photo.url}
                   alt={photo.caption || ""}
+                  width="400"
+                  height="600"
+                  loading={i < 4 ? "eager" : "lazy"}
+                  fetchPriority={i < 2 ? "high" : "auto"}
+                  decoding="async"
                   className="w-full object-cover"
-                  style={{ display: "block" }}
+                  style={{ display: "block", width: "100%", height: "auto" }}
                 />
               </button>
             ))}
@@ -90,7 +95,9 @@ export default function Gallery() {
                 src={photos[lightbox].url}
                 alt={photos[lightbox].caption || ""}
                 className="max-h-[80vh] max-w-full object-contain"
-                style={{ borderRadius: "6px" }}
+                loading="eager"
+                decoding="async"
+                style={{ borderRadius: "6px", display: "block" }}
               />
             </motion.div>
             <button

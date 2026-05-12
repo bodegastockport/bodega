@@ -235,13 +235,13 @@ const JoinForm = ({
       </div>
       <div className="flex items-start gap-2">
         <input type="checkbox" id="marketing" checked={form.marketing} onChange={e => f("marketing", e.target.checked)} style={{ marginTop: "2px", accentColor: "#f3f2ee" }} />
-        <label htmlFor="marketing" style={{ ...labelSt, textTransform: "none", letterSpacing: 0, lineHeight: "1.5", cursor: "pointer" }}>
+        <label htmlFor="marketing" style={{ ...overlayLabel, textTransform: "none", letterSpacing: 0, lineHeight: "1.5", cursor: "pointer" }}>
           I'm happy to receive updates about events and Cellar Club news.
         </label>
       </div>
       <div className="flex items-start gap-2">
         <input type="checkbox" id="terms" checked={form.agreed_terms} onChange={e => f("agreed_terms", e.target.checked)} style={{ marginTop: "2px", accentColor: "#f3f2ee" }} required />
-        <label htmlFor="terms" style={{ ...labelSt, textTransform: "none", letterSpacing: 0, lineHeight: "1.5", cursor: "pointer" }}>
+        <label htmlFor="terms" style={{ ...overlayLabel, textTransform: "none", letterSpacing: 0, lineHeight: "1.5", cursor: "pointer" }}>
           I agree to the{" "}
           <a href="/cellar-club/terms" target="_blank" rel="noopener noreferrer" style={{ color: "#f3f2ee", textDecoration: "underline" }}>
             Cellar Club terms and conditions
@@ -447,7 +447,16 @@ export default function CellarClub() {
           </div>
 
           <div className="hidden lg:block" style={{ position: "relative", minHeight: "50vh" }}>
-            <img src="/images/cellar-club.jpg" alt="Wine vault" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+            <img
+              src="/images/cellar-club.webp"
+              alt="Wine vault"
+              width="1600"
+              height="2000"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
             <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,10,10,0.6)" }} />
             <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
               <div style={{ width: "100%", maxWidth: "340px" }}>
