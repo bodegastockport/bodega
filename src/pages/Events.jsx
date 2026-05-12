@@ -152,16 +152,18 @@ export default function Events() {
                         />
                       </div>
                     )}
-                    <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px", color: "#0A242C" }}>
-                      {new Date(event.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
-                    </p>
-                    {(event.time || event.price) && (
-                      <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px", color: "#777777" }}>
-                        {event.time && <span>{event.time}</span>}
-                        {event.time && event.price && <span> · </span>}
-                        {event.price && <span>{event.price}</span>}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", marginBottom: "6px", width: "100%" }}>
+                      <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#0A242C", margin: 0, minWidth: 0 }}>
+                        {new Date(event.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                        {event.time && <span> · {event.time}</span>}
                       </p>
-                    )}
+
+                      {event.price && (
+                        <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#777777", textAlign: "right", whiteSpace: "nowrap", margin: 0 }}>
+                          {event.price}
+                        </p>
+                      )}
+                    </div>
                     <p style={{ fontSize: "12px", marginBottom: "4px", color: "#1E4D5A", fontWeight: 400 }}>{event.title}</p>
                     <p style={{ fontSize: "11px", lineHeight: "1.5", marginBottom: "10px", color: "#0A242C" }}>{event.description}</p>
                     <button
