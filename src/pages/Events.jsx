@@ -3,7 +3,30 @@ import { Loader2, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
 
-const toThumb = (url) => url.replace("/object/public/", "/render/image/public/") + "?width=400&quality=75";
+const getOptimisedImageUrl = (url, width = 400, quality = 75) => {
+  if (!url) return "";
+
+  if (url.includes("/render/image/public/")) {
+    const [base] = url.split("?");
+    return `${base}?width=${width}&quality=${quality}`;
+  }
+
+  if (url.includes("/object/public/")) {
+    return `${url.replace("/object/public/", "/render/image/public/")}?width=${width}&quality=${quality}`;
+  }
+
+  return url;
+};
+
+const useOriginalIfOptimisedFails = (event, originalUrl) => {
+  if (!originalUrl) return;
+
+  const image = event.currentTarget;
+
+  if (image.src !== originalUrl) {
+    image.src = originalUrl;
+  }
+};
 
 const inputStyle = {
   backgroundColor: "#f3f2ee",
@@ -50,10 +73,8 @@ export default function Events() {
         .select("*")
         .eq("published", true)
         .order("date", { ascending: true });
-
       setEvents(data || []);
     };
-
     loadEvents();
   }, []);
 
@@ -63,10 +84,7 @@ export default function Events() {
     } else {
       document.body.style.overflow = "";
     }
-
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [modalOpen]);
 
   const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
@@ -74,34 +92,23 @@ export default function Events() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!isValid) return;
-
     setSubmitting(true);
     setError(null);
-
     const { error: err } = await supabase
       .from("hire_enquiries")
       .insert({ ...form, status: "new" });
-
     setSubmitting(false);
-
-    if (err) {
-      setError("Something went wrong. Please try again.");
-      return;
-    }
-
+    if (err) { setError("Something went wrong. Please try again."); return; }
     setSent(true);
   };
 
   const handleClose = () => {
     setModalOpen(false);
-
     if (sent) {
       setSent(false);
       setForm({ name: "", email: "", phone: "", event_type: "", date: "", guests: "", message: "" });
     }
-
     setError(null);
   };
 
@@ -134,21 +141,20 @@ export default function Events() {
                     {event.image_url && (
                       <div style={{ aspectRatio: "4 / 5", overflow: "hidden", marginBottom: "12px" }}>
                         <img
-                          src={toThumb(event.image_url)}
+                          src={getOptimisedImageUrl(event.image_url, 400, 75)}
                           alt={event.title}
                           width="400"
                           height="500"
                           loading="lazy"
                           decoding="async"
                           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                          onError={(eventObject) => useOriginalIfOptimisedFails(eventObject, event.image_url)}
                         />
                       </div>
                     )}
-
                     <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px", color: "#0A242C" }}>
                       {new Date(event.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                     </p>
-
                     {(event.time || event.price) && (
                       <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px", color: "#777777" }}>
                         {event.time && <span>{event.time}</span>}
@@ -156,29 +162,10 @@ export default function Events() {
                         {event.price && <span>{event.price}</span>}
                       </p>
                     )}
-
-                    <p style={{ fontSize: "12px", marginBottom: "4px", color: "#1E4D5A", fontWeight: 400 }}>
-                      {event.title}
-                    </p>
-
-                    <p style={{ fontSize: "11px", lineHeight: "1.5", marginBottom: "10px", color: "#0A242C" }}>
-                      {event.description}
-                    </p>
-
+                    <p style={{ fontSize: "12px", marginBottom: "4px", color: "#1E4D5A", fontWeight: 400 }}>{event.title}</p>
+                    <p style={{ fontSize: "11px", lineHeight: "1.5", marginBottom: "10px", color: "#0A242C" }}>{event.description}</p>
                     <button
-                      style={{
-                        fontSize: "10px",
-                        color: "#1E4D5A",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.08em",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        fontFamily: "'Courier New', Courier, monospace",
-                        padding: 0,
-                        borderBottom: "1px solid #1E4D5A",
-                        paddingBottom: "1px",
-                      }}
+                      style={{ fontSize: "10px", color: "#1E4D5A", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0, borderBottom: "1px solid #1E4D5A", paddingBottom: "1px" }}
                     >
                       Book a place →
                     </button>
@@ -195,11 +182,9 @@ export default function Events() {
                   >
                     ← Prev
                   </button>
-
                   <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#0A242C" }}>
                     {page + 1} / {totalPages}
                   </p>
-
                   <button
                     onClick={handleNext}
                     disabled={page === totalPages - 1}
@@ -245,7 +230,6 @@ export default function Events() {
           <p className="text-xs leading-relaxed mb-6" style={{ color: "#0A242C" }}>
             From intimate tastings to full venue hire, Bodega is the perfect backdrop for memorable occasions.
           </p>
-
           <div className="space-y-4 mb-8">
             {EVENT_TYPES.map(({ title, desc }) => (
               <div key={title}>
@@ -254,7 +238,6 @@ export default function Events() {
               </div>
             ))}
           </div>
-
           <button
             onClick={() => setModalOpen(true)}
             style={{ padding: "10px 24px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer", alignSelf: "flex-start" }}
@@ -277,7 +260,6 @@ export default function Events() {
                 <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#f3f2ee", opacity: 0.6 }}>Private events</p>
                 <h2 className="text-xl" style={{ color: "#f3f2ee", fontWeight: 400 }}>Private hire enquiry</h2>
               </div>
-
               <button
                 onClick={handleClose}
                 style={{ background: "none", border: "none", cursor: "pointer", color: "#f3f2ee", opacity: 0.7, padding: "4px", marginTop: "2px" }}
@@ -291,7 +273,6 @@ export default function Events() {
                 <div>
                   <p className="text-sm mb-2" style={{ color: "#f3f2ee" }}>Enquiry received</p>
                   <p className="text-xs mb-6" style={{ color: "#f3f2ee", opacity: 0.8 }}>Thanks, {form.name}. We'll be in touch very soon.</p>
-
                   <button
                     onClick={handleClose}
                     style={{ padding: "8px 20px", backgroundColor: "transparent", color: "#f3f2ee", border: "1px solid rgba(243,242,238,0.4)", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}
@@ -302,7 +283,6 @@ export default function Events() {
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-3">
                   <p className="text-xs mb-4" style={{ color: "#f3f2ee", opacity: 0.75 }}>Tell us what you've got in mind and we'll get back to you.</p>
-
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label style={{ ...labelStyle, color: "#f3f2ee", opacity: 0.7 }}>Your name</label>
@@ -315,7 +295,6 @@ export default function Events() {
                         onBlur={() => setFocused(null)}
                       />
                     </div>
-
                     <div>
                       <label style={{ ...labelStyle, color: "#f3f2ee", opacity: 0.7 }}>Email</label>
                       <input
@@ -328,7 +307,6 @@ export default function Events() {
                         onBlur={() => setFocused(null)}
                       />
                     </div>
-
                     <div>
                       <label style={{ ...labelStyle, color: "#f3f2ee", opacity: 0.7 }}>Phone</label>
                       <input
@@ -340,7 +318,6 @@ export default function Events() {
                         onBlur={() => setFocused(null)}
                       />
                     </div>
-
                     <div>
                       <label style={{ ...labelStyle, color: "#f3f2ee", opacity: 0.7 }}>Event type</label>
                       <Select value={form.event_type} onValueChange={v => update("event_type", v)}>
@@ -353,7 +330,6 @@ export default function Events() {
                         </SelectContent>
                       </Select>
                     </div>
-
                     <div>
                       <label style={{ ...labelStyle, color: "#f3f2ee", opacity: 0.7 }}>Preferred date</label>
                       <input
@@ -365,7 +341,6 @@ export default function Events() {
                         onBlur={() => setFocused(null)}
                       />
                     </div>
-
                     <div>
                       <label style={{ ...labelStyle, color: "#f3f2ee", opacity: 0.7 }}>Approx. guests</label>
                       <input
@@ -380,7 +355,6 @@ export default function Events() {
                       />
                     </div>
                   </div>
-
                   <div>
                     <label style={{ ...labelStyle, color: "#f3f2ee", opacity: 0.7 }}>Tell us more</label>
                     <textarea
@@ -392,9 +366,7 @@ export default function Events() {
                       onBlur={() => setFocused(null)}
                     />
                   </div>
-
                   {error && <p style={{ fontSize: "12px", color: "#f3f2ee", opacity: 0.8 }}>{error}</p>}
-
                   <button
                     type="submit"
                     disabled={!isValid || submitting}

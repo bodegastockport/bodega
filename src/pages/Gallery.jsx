@@ -3,7 +3,30 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
-const toThumb = (url) => url.replace("/object/public/", "/render/image/public/") + "?width=400&quality=75";
+const getOptimisedImageUrl = (url, width = 400, quality = 75) => {
+  if (!url) return "";
+
+  if (url.includes("/render/image/public/")) {
+    const [base] = url.split("?");
+    return `${base}?width=${width}&quality=${quality}`;
+  }
+
+  if (url.includes("/object/public/")) {
+    return `${url.replace("/object/public/", "/render/image/public/")}?width=${width}&quality=${quality}`;
+  }
+
+  return url;
+};
+
+const useOriginalIfOptimisedFails = (event, originalUrl) => {
+  if (!originalUrl) return;
+
+  const image = event.currentTarget;
+
+  if (image.src !== originalUrl) {
+    image.src = originalUrl;
+  }
+};
 
 export default function Gallery() {
   const [photos, setPhotos] = useState([]);
@@ -45,7 +68,7 @@ export default function Gallery() {
                 style={{ borderRadius: "6px" }}
               >
                 <img
-                  src={toThumb(photo.url)}
+                  src={getOptimisedImageUrl(photo.url, 400, 75)}
                   alt={photo.caption || ""}
                   width="400"
                   height="600"
@@ -54,6 +77,7 @@ export default function Gallery() {
                   decoding="async"
                   className="w-full object-cover"
                   style={{ display: "block", width: "100%", height: "auto" }}
+                  onError={(event) => useOriginalIfOptimisedFails(event, photo.url)}
                 />
               </button>
             ))}
