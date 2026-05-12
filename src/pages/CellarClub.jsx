@@ -25,8 +25,8 @@ const BLANK = {
 const WAITLIST_BLANK = { name: "", email: "", mobile: "", requested_tier: "" };
 
 const overlayInput = {
-  backgroundColor: "rgba(243,242,238,0.12)",
-  border: "1px solid rgba(243,242,238,0.25)",
+  backgroundColor: "rgba(243,242,238,0.18)",
+  border: "1px solid rgba(243,242,238,0.45)",
   fontFamily: "'Courier New', Courier, monospace",
   fontSize: "12px",
   padding: "7px 10px",
@@ -40,7 +40,7 @@ const overlayLabel = {
   fontSize: "10px",
   textTransform: "uppercase",
   letterSpacing: "0.08em",
-  color: "rgba(243,242,238,0.55)",
+  color: "#f3f2ee",
   marginBottom: "3px",
   fontFamily: "'Courier New', Courier, monospace",
 };
@@ -81,9 +81,9 @@ const WaitlistForm = ({ inputSt, labelSt }) => {
   if (submitted) {
     return (
       <div>
-        <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "rgba(243,242,238,0.6)" }}>You're on the list</p>
+        <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#f3f2ee" }}>You're on the list</p>
         <h2 className="text-xl mb-2" style={{ color: "#f3f2ee", fontWeight: 400 }}>We'll be in touch, {form.name.split(" ")[0]}.</h2>
-        <p className="text-xs leading-relaxed" style={{ color: "rgba(243,242,238,0.7)", letterSpacing: "-0.02em" }}>
+        <p className="text-xs leading-relaxed" style={{ color: "#f3f2ee", letterSpacing: "-0.02em" }}>
           As soon as a space becomes available, you'll be the first to know.
         </p>
       </div>
@@ -130,7 +130,7 @@ const WaitlistForm = ({ inputSt, labelSt }) => {
         type="submit"
         disabled={submitting || !form.name || !form.email}
         style={{
-          padding: "8px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee",
+          padding: "8px 20px", backgroundColor: "#0A242C", color: "#f3f2ee",
           border: "none", fontFamily: "'Courier New', Courier, monospace",
           fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em",
           cursor: submitting || !form.name || !form.email ? "not-allowed" : "pointer",
@@ -186,7 +186,7 @@ const JoinForm = ({
           <Popover open={dobOpen} onOpenChange={setDobOpen}>
             <PopoverTrigger asChild>
               <button type="button" style={{ ...inputSt, textAlign: "left", cursor: "pointer", display: "block" }}>
-                <span style={{ opacity: form.dob ? 1 : 0.5 }}>
+                <span style={{ opacity: form.dob ? 1 : 0.6 }}>
                   {form.dob ? format(form.dob, "dd/MM/yyyy") : "DD/MM/YYYY"}
                 </span>
               </button>
@@ -234,16 +234,16 @@ const JoinForm = ({
         <input style={inputSt} value={form.how_heard} onChange={e => f("how_heard", e.target.value)} placeholder="Instagram, word of mouth..." />
       </div>
       <div className="flex items-start gap-2">
-        <input type="checkbox" id="marketing" checked={form.marketing} onChange={e => f("marketing", e.target.checked)} style={{ marginTop: "2px", accentColor: "#1E4D5A" }} />
+        <input type="checkbox" id="marketing" checked={form.marketing} onChange={e => f("marketing", e.target.checked)} style={{ marginTop: "2px", accentColor: "#f3f2ee" }} />
         <label htmlFor="marketing" style={{ ...labelSt, textTransform: "none", letterSpacing: 0, lineHeight: "1.5", cursor: "pointer" }}>
           I'm happy to receive updates about events and Cellar Club news.
         </label>
       </div>
       <div className="flex items-start gap-2">
-        <input type="checkbox" id="terms" checked={form.agreed_terms} onChange={e => f("agreed_terms", e.target.checked)} style={{ marginTop: "2px", accentColor: "#1E4D5A" }} required />
+        <input type="checkbox" id="terms" checked={form.agreed_terms} onChange={e => f("agreed_terms", e.target.checked)} style={{ marginTop: "2px", accentColor: "#f3f2ee" }} required />
         <label htmlFor="terms" style={{ ...labelSt, textTransform: "none", letterSpacing: 0, lineHeight: "1.5", cursor: "pointer" }}>
           I agree to the{" "}
-          <a href="/cellar-club/terms" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(243,242,238,0.8)", textDecoration: "underline" }}>
+          <a href="/cellar-club/terms" target="_blank" rel="noopener noreferrer" style={{ color: "#f3f2ee", textDecoration: "underline" }}>
             Cellar Club terms and conditions
           </a>.
         </label>
@@ -253,7 +253,7 @@ const JoinForm = ({
         type="submit"
         disabled={submitting || !formValid}
         style={{
-          padding: "8px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee",
+          padding: "8px 20px", backgroundColor: "#0A242C", color: "#f3f2ee",
           border: "none", fontFamily: "'Courier New', Courier, monospace",
           fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em",
           cursor: submitting || !formValid ? "not-allowed" : "pointer",
@@ -370,9 +370,9 @@ export default function CellarClub() {
     if (isFull) {
       return (
         <>
-          <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.6)" }}>Cellar Club</p>
+          <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#f3f2ee" }}>Cellar Club</p>
           <h2 className="text-lg mb-2" style={{ color: "#f3f2ee", fontWeight: 400 }}>We're currently full.</h2>
-          <p className="text-xs leading-relaxed mb-4" style={{ color: "rgba(243,242,238,0.7)", letterSpacing: "-0.02em" }}>
+          <p className="text-xs leading-relaxed mb-4" style={{ color: "#f3f2ee", letterSpacing: "-0.02em" }}>
             All 50 spaces are taken. Join the waitlist and we'll contact you as soon as one becomes available.
           </p>
           <WaitlistForm inputSt={overlayInput} labelSt={overlayLabel} />
@@ -382,7 +382,7 @@ export default function CellarClub() {
 
     return (
       <>
-        <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.6)" }}>Join the Cellar Club</p>
+        <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#f3f2ee" }}>Join the Cellar Club</p>
         <h2 className="text-lg mb-4" style={{ color: "#f3f2ee", fontWeight: 400 }}>Start your membership</h2>
         <JoinForm {...joinFormProps} />
       </>
@@ -536,7 +536,7 @@ export default function CellarClub() {
           <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,10,10,0.6)" }} onClick={() => setJoinOpen(false)} />
           <div style={{ position: "relative", backgroundColor: "#1E4D5A", width: "100%", maxWidth: "500px", maxHeight: "90vh", overflowY: "auto", padding: "36px", margin: "0 16px" }}>
             <button onClick={() => setJoinOpen(false)} style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", cursor: "pointer", color: "rgba(243,242,238,0.5)", fontFamily: "'Courier New', Courier, monospace", fontSize: "18px", lineHeight: 1 }}>×</button>
-            <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.6)" }}>Join the Cellar Club</p>
+            <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#f3f2ee" }}>Join the Cellar Club</p>
             <h2 className="text-xl mb-4" style={{ color: "#f3f2ee", fontWeight: 400 }}>Start your membership</h2>
             <JoinForm {...joinFormProps} />
           </div>
