@@ -149,49 +149,48 @@ export default function MyCellar() {
             {storedBottles.length === 0 ? (
               <p className="text-sm text-center py-12" style={{ color: "#777777" }}>No bottles stored yet.</p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
                 {storedBottles.map((b) => (
-                  <div key={b.id} style={{ backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", padding: "16px", display: "flex", gap: "14px", alignItems: "flex-start" }}>
-                    {(b.image_front_url || b.image_back_url) && (
-                      <div className="flex gap-2 shrink-0">
-                        {b.image_front_url && (
+                  <div key={b.id} style={{ backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", overflow: "hidden" }}>
+                    <div
+                      onClick={() => b.image_front_url && setLightbox({ url: b.image_front_url, label: b.wine_name })}
+                      style={{ position: "relative", paddingBottom: "125%", backgroundColor: "#eceae4", cursor: b.image_front_url ? "pointer" : "default", overflow: "hidden" }}
+                    >
+                      {b.image_front_url ? (
+                        <>
+                          <img
+                            src={b.image_front_url}
+                            alt={b.wine_name}
+                            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                          />
                           <div
-                            onClick={() => setLightbox({ url: b.image_front_url, label: "Front label" })}
-                            style={{ width: "56px", height: "80px", cursor: "pointer", overflow: "hidden", border: "1px solid #d8d6d0", position: "relative" }}
-                            title="View front label"
-                          >
-                            <img src={b.image_front_url} alt="Front" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                            <div
-                              style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,36,44,0)", transition: "background-color 0.15s" }}
-                              onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0.25)"}
-                              onMouseLeave={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0)"}
-                            />
-                          </div>
-                        )}
-                        {b.image_back_url && (
-                          <div
-                            onClick={() => setLightbox({ url: b.image_back_url, label: "Back label" })}
-                            style={{ width: "56px", height: "80px", cursor: "pointer", overflow: "hidden", border: "1px solid #d8d6d0", position: "relative" }}
-                            title="View back label"
-                          >
-                            <img src={b.image_back_url} alt="Back" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                            <div
-                              style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,36,44,0)", transition: "background-color 0.15s" }}
-                              onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0.25)"}
-                              onMouseLeave={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0)"}
-                            />
-                          </div>
-                        )}
+                            style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,36,44,0)", transition: "background-color 0.2s" }}
+                            onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0.2)"}
+                            onMouseLeave={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0)"}
+                          />
+                        </>
+                      ) : (
+                        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <p style={{ fontSize: "10px", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em" }}>No image</p>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ padding: "12px" }}>
+                      <p className="text-xs mb-1" style={{ color: "#0A242C", fontWeight: 500 }}>{b.wine_name}</p>
+                      {b.producer && <p style={{ fontSize: "10px", color: "#777777", marginBottom: "4px" }}>{b.producer}</p>}
+                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                        {b.vintage && <span style={{ fontSize: "10px", color: "#777777" }}>{b.vintage}</span>}
+                        {b.type && <span style={{ fontSize: "10px", color: "#777777" }}>· {b.type}</span>}
                       </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm mb-1" style={{ color: "#0A242C" }}>{b.wine_name}</p>
-                      {b.producer && <p className="text-xs" style={{ color: "#777777" }}>{b.producer}</p>}
-                      <div className="flex gap-2 flex-wrap mt-1">
-                        {b.vintage && <span className="text-xs" style={{ color: "#777777" }}>{b.vintage}</span>}
-                        {b.type && <span className="text-xs" style={{ color: "#777777" }}>· {b.type}</span>}
-                      </div>
-                      {b.notes && <p className="text-xs mt-2" style={{ color: "#777777", fontStyle: "italic" }}>{b.notes}</p>}
+                      {b.notes && <p style={{ fontSize: "10px", color: "#777777", marginTop: "6px", fontStyle: "italic" }}>{b.notes}</p>}
+                      {b.image_back_url && (
+                        <button
+                          onClick={() => setLightbox({ url: b.image_back_url, label: "Back label — " + b.wine_name })}
+                          style={{ marginTop: "8px", fontSize: "10px", color: "#1E4D5A", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", textTransform: "uppercase", letterSpacing: "0.06em", padding: 0, textDecoration: "underline" }}
+                        >
+                          View back label
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
