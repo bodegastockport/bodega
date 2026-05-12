@@ -3,6 +3,8 @@ import { Loader2, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
 
+const toThumb = (url) => url.replace("/object/public/", "/render/image/public/") + "?width=400&quality=75";
+
 const inputStyle = {
   backgroundColor: "#f3f2ee",
   border: "1px solid #d8d6d0",
@@ -116,8 +118,12 @@ export default function Events() {
                     {event.image_url && (
                       <div style={{ aspectRatio: "4 / 5", overflow: "hidden", marginBottom: "12px" }}>
                         <img
-                          src={event.image_url}
+                          src={toThumb(event.image_url)}
                           alt={event.title}
+                          width="400"
+                          height="500"
+                          loading="lazy"
+                          decoding="async"
                           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                         />
                       </div>

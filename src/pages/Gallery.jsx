@@ -3,6 +3,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
+const toThumb = (url) => url.replace("/object/public/", "/render/image/public/") + "?width=400&quality=75";
+
 export default function Gallery() {
   const [photos, setPhotos] = useState([]);
   const [lightbox, setLightbox] = useState(null);
@@ -43,7 +45,7 @@ export default function Gallery() {
                 style={{ borderRadius: "6px" }}
               >
                 <img
-                  src={photo.url}
+                  src={toThumb(photo.url)}
                   alt={photo.caption || ""}
                   width="400"
                   height="600"
