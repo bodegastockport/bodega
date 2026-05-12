@@ -1,7 +1,61 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Loader2 } from "lucide-react";
+import { Loader2, ZoomIn } from "lucide-react";
 import { format, parseISO } from "date-fns";
+
+function ImageLightbox({ url, label, onClose }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: "fixed", inset: 0, backgroundColor: "rgba(10,36,44,0.92)", zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px", cursor: "pointer" }}
+    >
+      <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", opacity: 0.6 }}>{label}</p>
+      <img
+        src={url}
+        alt={label}
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: "90vw", maxHeight: "80vh", objectFit: "contain", cursor: "default" }}
+      />
+      <p className="text-xs mt-4" style={{ color: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", opacity: 0.4 }}>Click anywhere to close</p>
+    </div>
+  );
+}
+
+function BottleThumbnails({ bottle, onOpen }) {
+  if (!bottle.image_front_url && !bottle.image_back_url) return null;
+  return (
+    <div className="flex gap-1.5 mt-1.5">
+      {bottle.image_front_url && (
+        <div
+          onClick={() => onOpen(bottle.image_front_url, "Front label")}
+          style={{ width: "36px", height: "48px", cursor: "pointer", overflow: "hidden", border: "1px solid #d8d6d0", position: "relative", flexShrink: 0 }}
+          title="View front label"
+        >
+          <img src={bottle.image_front_url} alt="Front" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <div
+            style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,36,44,0)", transition: "background-color 0.15s", display: "flex", alignItems: "center", justifyContent: "center" }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0.3)"}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0)"}
+          />
+        </div>
+      )}
+      {bottle.image_back_url && (
+        <div
+          onClick={() => onOpen(bottle.image_back_url, "Back label")}
+          style={{ width: "36px", height: "48px", cursor: "pointer", overflow: "hidden", border: "1px solid #d8d6d0", position: "relative", flexShrink: 0 }}
+          title="View back label"
+        >
+          <img src={bottle.image_back_url} alt="Back" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <div
+            style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,36,44,0)", transition: "background-color 0.15s", display: "flex", alignItems: "center", justifyContent: "center" }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0.3)"}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0)"}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function MyCellar() {
   const [member, setMember] = useState(null);
@@ -13,6 +67,7 @@ export default function MyCellar() {
   const [cancelling, setCancelling] = useState(false);
   const [cancelled, setCancelled] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [lightbox, setLightbox] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -85,9 +140,10 @@ export default function MyCellar() {
 
   return (
     <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", minHeight: "100vh" }}>
+      {lightbox && <ImageLightbox url={lightbox.url} label={lightbox.label} onClose={() => setLightbox(null)} />}
+
       <div className="max-w-[1100px] mx-auto px-6 py-10 sm:py-14">
 
-        {/* Hero panel */}
         <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "32px", marginBottom: "24px" }}>
           <div className="flex items-center gap-4 mb-6">
             <div className="h-12 w-12 shrink-0 flex items-center justify-center" style={{ backgroundColor: "#d8d6d0" }}>
@@ -112,7 +168,6 @@ export default function MyCellar() {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="flex gap-0 mb-6" style={{ border: "1px solid #d8d6d0", overflow: "hidden", width: "fit-content" }}>
           {[["inventory", "My bottles"], ["history", "History"], ["membership", "Membership"]].map(([key, label]) => (
             <button key={key} onClick={() => setActiveTab(key)}
@@ -122,7 +177,6 @@ export default function MyCellar() {
           ))}
         </div>
 
-        {/* Inventory tab */}
         {activeTab === "inventory" && (
           <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
             <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777" }}>
@@ -133,12 +187,13 @@ export default function MyCellar() {
             ) : (
               <div style={{ borderTop: "1px solid #d8d6d0" }}>
                 {storedBottles.map((b) => (
-                  <div key={b.id} className="flex items-center justify-between py-3 gap-3" style={{ borderBottom: "1px solid #d8d6d0" }}>
-                    <div>
+                  <div key={b.id} className="flex items-start justify-between py-3 gap-3" style={{ borderBottom: "1px solid #d8d6d0" }}>
+                    <div className="flex-1 min-w-0">
                       <p className="text-sm" style={{ color: "#0A242C" }}>{b.wine_name}</p>
                       <p className="text-xs mt-0.5" style={{ color: "#777777" }}>
                         {[b.producer, b.vintage, b.cellar_location].filter(Boolean).join(" · ")}
                       </p>
+                      <BottleThumbnails bottle={b} onOpen={(url, label) => setLightbox({ url, label })} />
                     </div>
                   </div>
                 ))}
@@ -147,7 +202,6 @@ export default function MyCellar() {
           </div>
         )}
 
-        {/* History tab */}
         {activeTab === "history" && (
           <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
             <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777" }}>Consumption history</p>
@@ -156,8 +210,8 @@ export default function MyCellar() {
             ) : (
               <div style={{ borderTop: "1px solid #d8d6d0" }}>
                 {consumedBottles.map((b) => (
-                  <div key={b.id} className="flex items-center justify-between py-3 gap-3" style={{ borderBottom: "1px solid #d8d6d0" }}>
-                    <div>
+                  <div key={b.id} className="flex items-start justify-between py-3 gap-3" style={{ borderBottom: "1px solid #d8d6d0" }}>
+                    <div className="flex-1 min-w-0">
                       <p className="text-sm" style={{ color: "#0A242C" }}>{b.wine_name}</p>
                       <p className="text-xs mt-0.5" style={{ color: "#777777" }}>
                         {[b.producer, b.vintage].filter(Boolean).join(" · ")}
@@ -171,7 +225,6 @@ export default function MyCellar() {
           </div>
         )}
 
-        {/* Membership tab */}
         {activeTab === "membership" && (
           <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
             <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777" }}>Membership details</p>
