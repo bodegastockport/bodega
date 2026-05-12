@@ -155,10 +155,10 @@ export default function MemberBottles({ member, onBottleCountChange }) {
     const ext = file.name.split('.').pop();
     const path = `bottles/${bottleId}/${side}.${ext}`;
     const { error } = await supabase.storage
-      .from('cellar-assets')
+      .from('cellar-bottles')
       .upload(path, file, { upsert: true });
     if (error) throw error;
-    const { data } = supabase.storage.from('cellar-assets').getPublicUrl(path);
+    const { data } = supabase.storage.from('cellar-bottles').getPublicUrl(path);
     return data.publicUrl;
   };
 
