@@ -61,10 +61,25 @@ export default function ResetPassword() {
 
     const { error: err } = await supabase.auth.updateUser({ password });
 
+    if (err) {
+      setSubmitting(false);
+      setError("Something went wrong. Please try again or request a new link.");
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const role = user?.user_metadata?.role;
+
     setSubmitting(false);
-    if (err) { setError("Something went wrong. Please try again or request a new link."); return; }
     setDone(true);
-    setTimeout(() => navigate("/admin"), 2500);
+
+    setTimeout(() => {
+      if (role === "admin" || role === "team") {
+        navigate("/admin");
+      } else {
+        navigate("/my-cellar");
+      }
+    }, 2500);
   };
 
   const isValid = password && confirm && password === confirm && password.length >= 8;
@@ -105,7 +120,7 @@ export default function ResetPassword() {
           <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
             <p style={{ fontSize: "13px", color: "#0A242C", marginBottom: "6px" }}>Password updated</p>
             <p style={{ fontSize: "12px", color: "#0A242C", lineHeight: "1.6" }}>
-              Taking you to the admin panel now.
+              Taking you to your account now.
             </p>
           </div>
         ) : (
