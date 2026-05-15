@@ -58,7 +58,7 @@ export default function Login() {
     setError(null);
 
     const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: "https://bodegawine.co.uk/reset-password",
     });
 
     setSubmitting(false);
@@ -73,7 +73,7 @@ export default function Login() {
 
     const { error: err } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/my-cellar` },
+      options: { emailRedirectTo: "https://bodegawine.co.uk/my-cellar" },
     });
 
     setSubmitting(false);
