@@ -11,12 +11,16 @@ export default function Home() {
 
   return (
     <>
-      {/* Desktop: fixed left image + scrollable right panel */}
       <div className="hidden lg:block">
         <div style={{ position: "fixed", top: 0, left: 0, width: "50vw", height: "100vh", zIndex: 0 }}>
           <img
-            src="/images/hero.jpg"
+            src="/images/hero.webp"
             alt="Wine at Bodega"
+            width="1600"
+            height="2000"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
           />
         </div>
@@ -53,12 +57,16 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Mobile: stacked layout */}
       <div className="lg:hidden flex flex-col" style={{ backgroundColor: "#f3f2ee" }}>
         <div style={{ position: "relative", width: "100%", height: "50vh", flexShrink: 0 }}>
           <img
-            src="/images/hero.jpg"
+            src="/images/hero.webp"
             alt="Wine at Bodega"
+            width="1600"
+            height="2000"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
           />
         </div>
@@ -87,7 +95,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Booking modal */}
       {modalOpen && (
         <div
           style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(10,36,44,0.6)" }}
