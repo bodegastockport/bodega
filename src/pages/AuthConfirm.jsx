@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 export default function AuthConfirm() {
-  const navigate = useNavigate();
-  const [params, setParams] = useState("");
+  const [confirmationUrl, setConfirmationUrl] = useState("");
 
   useEffect(() => {
-    setParams(window.location.hash);
+    const params = new URLSearchParams(window.location.search);
+    const url = params.get("confirmation_url");
+    if (url) setConfirmationUrl(decodeURIComponent(url));
   }, []);
 
   const handleContinue = () => {
-    navigate("/reset-password" + params);
+    if (confirmationUrl) {
+      window.location.href = confirmationUrl;
+    }
   };
 
   return (
@@ -27,17 +29,19 @@ export default function AuthConfirm() {
 
         <button
           onClick={handleContinue}
+          disabled={!confirmationUrl}
           style={{
             width: "100%", padding: "10px 24px",
             backgroundColor: "#1E4D5A", color: "#f3f2ee",
             border: "none", borderRadius: "0px",
             fontFamily: "'Courier New', Courier, monospace",
             fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em",
-            cursor: "pointer",
+            cursor: !confirmationUrl ? "not-allowed" : "pointer",
+            opacity: !confirmationUrl ? 0.6 : 1,
             display: "flex", alignItems: "center", justifyContent: "center",
           }}
-          onMouseEnter={e => e.currentTarget.style.backgroundColor = "#0A242C"}
-          onMouseLeave={e => e.currentTarget.style.backgroundColor = "#1E4D5A"}
+          onMouseEnter={e => { if (confirmationUrl) e.currentTarget.style.backgroundColor = "#0A242C"; }}
+          onMouseLeave={e => { if (confirmationUrl) e.currentTarget.style.backgroundColor = "#1E4D5A"; }}
         >
           Set my password →
         </button>
