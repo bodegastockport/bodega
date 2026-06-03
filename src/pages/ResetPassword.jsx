@@ -34,19 +34,12 @@ export default function ResetPassword() {
   const [error, setError] = useState(null);
   const [done, setDone] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
-  const [sessionReady, setSessionReady] = useState(false);
   const [invalidLink, setInvalidLink] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
-
-      console.log("reset password session", data.session, error);
-
-      if (data.session) {
-        setSessionReady(true);
-        return;
-      }
+      const { data } = await supabase.auth.getSession();
+      if (data.session) return;
 
       const hasRecoveryHash =
         window.location.hash.includes("type=recovery") ||
@@ -60,21 +53,7 @@ export default function ResetPassword() {
       }
     };
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("auth event", event, session);
-
-      if ((event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") && session) {
-        setSessionReady(true);
-      }
-    });
-
     checkSession();
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
   const handleSubmit = async (e) => {
@@ -152,11 +131,6 @@ export default function ResetPassword() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!sessionReady && !invalidLink && (
-              <p style={{ fontSize: "12px", color: "#777777", lineHeight: "1.6" }}>
-                Preparing your password reset link...
-              </p>
-            )}
             <div>
               <label style={labelStyle}>New password</label>
               <input
@@ -189,24 +163,22 @@ export default function ResetPassword() {
 
             <button
               type="submit"
-              disabled={!isValid || submitting || !sessionReady}
+              disabled={!isValid || submitting}
               style={{
                 width: "100%", padding: "10px 24px",
                 backgroundColor: "#1E4D5A", color: "#f3f2ee",
                 border: "none", borderRadius: "0px",
                 fontFamily: "'Courier New', Courier, monospace",
                 fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em",
-                cursor: !isValid || submitting || !sessionReady ? "not-allowed" : "pointer",
-                opacity: !isValid || submitting || !sessionReady ? 0.6 : 1,
+                cursor: !isValid || submitting ? "not-allowed" : "pointer",
+                opacity: !isValid || submitting ? 0.6 : 1,
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
               }}
-              onMouseEnter={e => { if (isValid && !submitting && sessionReady) e.currentTarget.style.backgroundColor = "#0A242C"; }}
-              onMouseLeave={e => { if (isValid && !submitting && sessionReady) e.currentTarget.style.backgroundColor = "#1E4D5A"; }}
+              onMouseEnter={e => { if (isValid && !submitting) e.currentTarget.style.backgroundColor = "#0A242C"; }}
+              onMouseLeave={e => { if (isValid && !submitting) e.currentTarget.style.backgroundColor = "#1E4D5A"; }}
             >
               {submitting ? (
                 <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Updating...</>
-              ) : !sessionReady ? (
-                "Preparing link..."
               ) : (
                 "Set password"
               )}
