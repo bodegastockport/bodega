@@ -1,9 +1,9 @@
 import { Printer, X } from "lucide-react";
 
-export default function BottleQRModal({ bottle, member, onClose }) {
+export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
   const scanUrl = `${window.location.origin}/scan/${bottle.id}`;
   const encoded = encodeURIComponent(scanUrl);
-  const qrUrl   = `https://api.qrserver.com/v1/create-qr-code/?data=${encoded}&size=200x200&margin=10&bgcolor=f3f2ee&color=1E4D5A`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encoded}&size=200x200&margin=10&bgcolor=f3f2ee&color=1E4D5A`;
 
   const handlePrint = () => {
     const printWin = window.open("", "_blank", "width=400,height=580");
@@ -22,11 +22,11 @@ export default function BottleQRModal({ bottle, member, onClose }) {
         <p class="tag">Bodega Wine Bar — Cellar Club</p>
         <img src="${qrUrl}" width="160" height="160" />
         <h1>${bottle.wine_name}</h1>
-        ${bottle.vintage        ? `<p>Vintage: ${bottle.vintage}</p>`             : ""}
-        ${bottle.type           ? `<p>Type: ${bottle.type}</p>`                   : ""}
-        ${bottle.cellar_location ? `<p class="location">Location: ${bottle.cellar_location}</p>` : ""}
-        ${member?.name          ? `<p>Member: ${member.name}</p>`                 : ""}
-        ${bottle.notes          ? `<p>${bottle.notes}</p>`                        : ""}
+        ${bottle.vintage ? `<p>Vintage: ${bottle.vintage}</p>` : ""}
+        ${bottle.type ? `<p>Type: ${bottle.type}</p>` : ""}
+        ${slotLabel ? `<p class="location">Vault slot: ${slotLabel}</p>` : ""}
+        ${member?.name ? `<p>Member: ${member.name}</p>` : ""}
+        ${bottle.notes ? `<p>${bottle.notes}</p>` : ""}
       </div>
       <script>window.onload = () => { window.print(); window.close(); }</script>
       </body></html>
@@ -50,10 +50,10 @@ export default function BottleQRModal({ bottle, member, onClose }) {
           <img src={qrUrl} alt="QR code" style={{ width: "140px", height: "140px", margin: "0 auto", display: "block" }} />
           <p className="text-sm mt-3" style={{ color: "#0A242C" }}>{bottle.wine_name}</p>
           {bottle.vintage && <p className="text-xs mt-0.5" style={{ color: "#777777" }}>{bottle.vintage}</p>}
-          {bottle.type    && <p className="text-xs" style={{ color: "#777777" }}>{bottle.type}</p>}
-          {bottle.cellar_location && (
+          {bottle.type && <p className="text-xs" style={{ color: "#777777" }}>{bottle.type}</p>}
+          {slotLabel && (
             <p className="text-xs font-bold mt-2" style={{ color: "#1E4D5A" }}>
-              Location: {bottle.cellar_location}
+              Vault slot: {slotLabel}
             </p>
           )}
           {member?.name && (
@@ -72,7 +72,6 @@ export default function BottleQRModal({ bottle, member, onClose }) {
         >
           <Printer className="h-3.5 w-3.5" /> Print label
         </button>
-
       </div>
     </div>
   );
