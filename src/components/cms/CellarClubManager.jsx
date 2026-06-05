@@ -8,7 +8,7 @@ const inputStyle = { backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", bo
 const labelStyle = { display: "block", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#777777", marginBottom: "5px", fontFamily: "'Courier New', Courier, monospace" };
 
 const BLANK = { name: "", email: "", phone: "", membership_start: "", notes: "", status: "active", membership_tier: "" };
-const VAULT_CAPACITY = 1152;
+const VAULT_CAPACITY = 780;
 
 export default function CellarClubManager() {
   const [members, setMembers] = useState([]);
@@ -18,21 +18,27 @@ export default function CellarClubManager() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [totalBottles, setTotalBottles] = useState(0);
+  const [assignedSlots, setAssignedSlots] = useState(0);
 
   const load = async () => {
     const { data } = await supabase
-      .from('cellar_members')
+      .from("cellar_members")
       .select()
-      .eq('status', 'active')
-      .order('created_at', { ascending: false });
+      .eq("status", "active")
+      .order("created_at", { ascending: false });
     setMembers(data || []);
 
-    // Calculate vault total live from bottles
-    const { count } = await supabase
-      .from('cellar_bottles')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'stored');
-    setTotalBottles(count || 0);
+    const { count: bottleCount } = await supabase
+      .from("cellar_bottles")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "stored");
+    setTotalBottles(bottleCount || 0);
+
+    const { count: slotCount } = await supabase
+      .from("vault_slots")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "assigned");
+    setAssignedSlots(slotCount || 0);
 
     setLoading(false);
   };
@@ -51,10 +57,10 @@ export default function CellarClubManager() {
     if (!form.name || !form.email) return;
     setSaving(true);
     if (editing === "new") {
-      const { error } = await supabase.from('cellar_members').insert(form);
+      const { error } = await supabase.from("cellar_members").insert(form);
       if (error) { toast.error("Failed to add member"); setSaving(false); return; }
     } else {
-      const { error } = await supabase.from('cellar_members').update(form).eq('id', editing.id);
+      const { error } = await supabase.from("cellar_members").update(form).eq("id", editing.id);
       if (error) { toast.error("Failed to update member"); setSaving(false); return; }
     }
     await load();
@@ -64,11 +70,39 @@ export default function CellarClubManager() {
   };
 
   const handleDeactivate = async (id) => {
-    const { error } = await supabase.from('cellar_members').update({ status: 'inactive' }).eq('id', id);
-    if (!error) {
-      setMembers((p) => p.filter((m) => m.id !== id));
-      toast.success("Member deactivated");
+    const { data: storedBottles } = await supabase
+      .from("cellar_bottles")
+      .select("id")
+      .eq("member_id", id)
+      .eq("status", "stored");
+
+    const bottleCount = storedBottles?.length || 0;
+
+    const { error: memberErr } = await supabase
+      .from("cellar_members")
+      .update({ status: "inactive" })
+      .eq("id", id);
+
+    if (memberErr) { toast.error("Failed to deactivate member"); return; }
+
+    if (bottleCount === 0) {
+      await supabase
+        .from("vault_slots")
+        .update({ status: "available", member_id: null, updated_at: new Date().toISOString() })
+        .eq("member_id", id)
+        .eq("status", "assigned");
+      toast.success("Member deactivated — vault slots released");
+    } else {
+      await supabase
+        .from("vault_slots")
+        .update({ status: "pending_release", updated_at: new Date().toISOString() })
+        .eq("member_id", id)
+        .eq("status", "assigned");
+      toast.success(`Member deactivated — ${bottleCount} bottle${bottleCount !== 1 ? "s" : ""} still in vault, slots marked pending release`);
     }
+
+    setMembers((p) => p.filter((m) => m.id !== id));
+    await load();
   };
 
   const filtered = members.filter(m => {
@@ -84,7 +118,7 @@ export default function CellarClubManager() {
 
       <div className="flex items-center justify-between">
         <p className="text-xs" style={{ color: "#777777" }}>
-          {members.length} active members · {totalBottles} / {VAULT_CAPACITY} bottles stored
+          {members.length} active members · {totalBottles} bottles stored · {assignedSlots} / {VAULT_CAPACITY} slots assigned
         </p>
         <button
           onClick={openNew}
@@ -99,10 +133,10 @@ export default function CellarClubManager() {
       <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "16px" }}>
         <div className="flex justify-between text-xs mb-2" style={{ color: "#777777" }}>
           <span>Vault capacity</span>
-          <span>{totalBottles} / {VAULT_CAPACITY} bottles</span>
+          <span>{assignedSlots} / {VAULT_CAPACITY} slots assigned</span>
         </div>
         <div style={{ height: "4px", backgroundColor: "#d8d6d0", overflow: "hidden" }}>
-          <div style={{ height: "100%", backgroundColor: "#1E4D5A", width: `${Math.min((totalBottles / VAULT_CAPACITY) * 100, 100)}%`, transition: "width 0.3s" }} />
+          <div style={{ height: "100%", backgroundColor: "#1E4D5A", width: `${Math.min((assignedSlots / VAULT_CAPACITY) * 100, 100)}%`, transition: "width 0.3s" }} />
         </div>
       </div>
 
