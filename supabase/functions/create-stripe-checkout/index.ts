@@ -1,4 +1,4 @@
-import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+import Stripe from "https://esm.sh/stripe@11.2.0?target=denonext";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,13 +6,13 @@ const corsHeaders = {
 };
 
 const PRICE_IDS: Record<string, string> = {
-  "Cellar 6":      "price_1TUq5Z6zpi5C7YnTcOr6xOU2",
-  "Cellar 12":     "price_1TUq5a6zpi5C7YnTBmIVcAO7",
-  "Cellar 18":     "price_1TUq5Z6zpi5C7YnTmY2UrAXB",
-  "Corporate 6":   "price_1TUq5Y6zpi5C7YnThI7Xd3mA",
-  "Corporate 12":  "price_1TUq5Z6zpi5C7YnTmrGYas0G",
-  "Corporate 18":  "price_1TUq5Z6zpi5C7YnTjU77emKW",
-  "Corporate 24":  "price_1TUq5d6zpi5C7YnTcNuBkyTU",
+  "Cellar 6":     "price_1TUq5Z6zpi5C7YnTcOr6xOU2",
+  "Cellar 12":    "price_1TUq5a6zpi5C7YnTBmIVcAO7",
+  "Cellar 18":    "price_1TUq5Z6zpi5C7YnTmY2UrAXB",
+  "Corporate 6":  "price_1TUq5Y6zpi5C7YnThI7Xd3mA",
+  "Corporate 12": "price_1TUq5Z6zpi5C7YnTmrGYas0G",
+  "Corporate 18": "price_1TUq5Z6zpi5C7YnTjU77emKW",
+  "Corporate 24": "price_1TUq5d6zpi5C7YnTcNuBkyTU",
 };
 
 Deno.serve(async (req) => {
@@ -23,6 +23,7 @@ Deno.serve(async (req) => {
   try {
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
       apiVersion: "2024-04-10",
+      httpClient: Stripe.createFetchHttpClient(),
     });
 
     const body = await req.json();
@@ -50,12 +51,14 @@ Deno.serve(async (req) => {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: "https://bodegawine.co.uk/cellar-club/success?session_id={CHECKOUT_SESSION_ID}",
       cancel_url: "https://bodegawine.co.uk/cellar-club",
+      allow_promotion_codes: true,
       metadata: {
         name,
         email,
         phone: phone || "",
         dob: dob || "",
         tier,
+        price_id: priceId,
         address_line1,
         postcode,
         how_heard: how_heard || "",

@@ -64,7 +64,7 @@ export default function Contact() {
               </div>
               <div>
                 <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>Telephone</p>
-                <p className="text-sm" style={{ color: "#0A242C" }}>+44 (0) 000 000 0000</p>
+                <p className="text-sm" style={{ color: "#0A242C" }}>0161 826 0168</p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>Email</p>

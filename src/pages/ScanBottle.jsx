@@ -123,7 +123,7 @@ export default function ScanBottle() {
     );
   }
 
-  // ── Success — MUST come before consumed check
+ 
   if (done) {
     return (
       <div style={pageStyle}>
@@ -137,7 +137,7 @@ export default function ScanBottle() {
     );
   }
 
-  // ── Already consumed
+
   if (bottle?.status === "consumed" || bottle?.status === "checked_out") {
     return (
       <div style={pageStyle}>
@@ -155,7 +155,7 @@ export default function ScanBottle() {
     );
   }
 
-  // ── Main scan view
+
   return (
     <div style={pageStyle}>
       <div style={cardStyle}>

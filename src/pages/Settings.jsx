@@ -198,7 +198,7 @@ export default function Settings() {
           </button>
         </div>
 
-        {/* Tables */}
+        
         <section className="mb-10">
           <div className="flex items-center justify-between mb-5" style={{ borderBottom: "1px solid #d8d6d0", paddingBottom: "10px" }}>
             <p className="text-xs uppercase tracking-widest" style={{ color: "#777777" }}>Tables</p>
@@ -262,7 +262,7 @@ export default function Settings() {
           )}
         </section>
 
-        {/* Table date overrides */}
+        
         <section className="mb-10">
           <div className="flex items-center justify-between mb-5" style={{ borderBottom: "1px solid #d8d6d0", paddingBottom: "10px" }}>
             <div>
@@ -315,7 +315,7 @@ export default function Settings() {
           )}
         </section>
 
-        {/* Booking config */}
+        
         <section className="mb-10">
           <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777", borderBottom: "1px solid #d8d6d0", paddingBottom: "10px" }}>Booking config</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -332,7 +332,7 @@ export default function Settings() {
           </div>
         </section>
 
-        {/* Opening hours */}
+     
         <section className="mb-10">
           <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777", borderBottom: "1px solid #d8d6d0", paddingBottom: "10px" }}>Opening hours</p>
           <div className="space-y-2">
@@ -357,7 +357,7 @@ export default function Settings() {
           </div>
         </section>
 
-        {/* Closed dates */}
+     
         <section className="mb-10">
           <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777", borderBottom: "1px solid #d8d6d0", paddingBottom: "10px" }}>Closed dates</p>
           <p className="text-xs mb-4" style={{ color: "#777777" }}>Block out entire days — holidays, private events, etc.</p>

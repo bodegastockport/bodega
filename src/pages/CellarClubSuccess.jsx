@@ -49,7 +49,6 @@ export default function CellarClubSuccess() {
     setSubmitting(true);
     setError(null);
 
-    // Set password via Edge Function using service role
     const res = await fetch(
       "https://yzrjtjcqviudjbddvepq.supabase.co/functions/v1/set-member-password",
       {
