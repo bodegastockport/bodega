@@ -6,11 +6,15 @@ import { toast } from "sonner";
 import BottleQRModal from "./BottleQRModal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const BLANK = { wine_name: "", producer: "", vintage: "", cellar_location: "", type: "Red", notes: "" };
+const BLANK = { wine_name: "", producer: "", vintage: "", slot_id: "", type: "Red", notes: "" };
 const TYPES = ["Red", "White", "Rosé", "Sparkling", "Dessert", "Fortified", "Other"];
 
 const inputStyle = { backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", borderRadius: "6px", fontFamily: "'Courier New', Courier, monospace", fontSize: "13px", padding: "8px 11px", color: "#0A242C", width: "100%", outline: "none", transition: "border-color 0.15s" };
 const labelStyle = { display: "block", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#777777", marginBottom: "4px", fontFamily: "'Courier New', Courier, monospace" };
+
+function slotLabel(slot) {
+  return `${slot.row_label}-${String(slot.column_number).padStart(2, "0")}`;
+}
 
 function ImageLightbox({ url, label, onClose }) {
   return (
@@ -96,6 +100,7 @@ function BottleThumbnails({ bottle, onOpen }) {
 export default function MemberBottles({ member, onBottleCountChange }) {
   const [storedBottles, setStoredBottles] = useState([]);
   const [consumedBottles, setConsumedBottles] = useState([]);
+  const [assignedSlots, setAssignedSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState(BLANK);
@@ -105,6 +110,7 @@ export default function MemberBottles({ member, onBottleCountChange }) {
   const [backPreview, setBackPreview] = useState(null);
   const [saving, setSaving] = useState(false);
   const [qrBottle, setQrBottle] = useState(null);
+  const [qrSlotLabel, setQrSlotLabel] = useState("");
   const [lightbox, setLightbox] = useState(null);
   const [photoBottleId, setPhotoBottleId] = useState(null);
   const [replaceFront, setReplaceFront] = useState(null);
@@ -114,27 +120,37 @@ export default function MemberBottles({ member, onBottleCountChange }) {
   const [replaceSaving, setReplaceSaving] = useState(false);
 
   const load = async () => {
-    const { data } = await supabase
-      .from('cellar_bottles')
-      .select()
-      .eq('member_id', member.id)
-      .order('created_at', { ascending: false });
+    const [{ data: bottleData }, { data: slotData }] = await Promise.all([
+      supabase
+        .from("cellar_bottles")
+        .select()
+        .eq("member_id", member.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("vault_slots")
+        .select("id, row_label, column_number, status")
+        .eq("member_id", member.id)
+        .eq("status", "assigned")
+        .order("row_label", { ascending: true })
+        .order("column_number", { ascending: true }),
+    ]);
 
-    const all = data || [];
-    const stored = all.filter(b => b.status === 'stored');
-    const consumed = all.filter(b => b.status === 'consumed' || b.status === 'checked_out');
+    const all = bottleData || [];
+    const stored = all.filter(b => b.status === "stored");
+    const consumed = all.filter(b => b.status === "consumed" || b.status === "checked_out");
 
     setStoredBottles(stored);
     setConsumedBottles(consumed);
+    setAssignedSlots(slotData || []);
     setLoading(false);
 
     const count = stored.length;
     onBottleCountChange?.(count);
 
     await supabase
-      .from('cellar_members')
+      .from("cellar_members")
       .update({ bottles_stored: count })
-      .eq('id', member.id);
+      .eq("id", member.id);
   };
 
   useEffect(() => { load(); }, [member.id]);
@@ -152,22 +168,31 @@ export default function MemberBottles({ member, onBottleCountChange }) {
   };
 
   const uploadImage = async (file, bottleId, side) => {
-    const ext = file.name.split('.').pop();
+    const ext = file.name.split(".").pop();
     const path = `bottles/${bottleId}/${side}.${ext}`;
     const { error } = await supabase.storage
-      .from('cellar-bottles')
+      .from("cellar-bottles")
       .upload(path, file, { upsert: true });
     if (error) throw error;
-    const { data } = supabase.storage.from('cellar-bottles').getPublicUrl(path);
+    const { data } = supabase.storage.from("cellar-bottles").getPublicUrl(path);
     return data.publicUrl;
   };
 
+  const availableSlots = assignedSlots.filter(
+    (slot) => !storedBottles.some((b) => b.slot_id === slot.id)
+  );
+
+  const getSlotLabelById = (slotId) => {
+    const slot = assignedSlots.find((s) => s.id === slotId);
+    return slot ? slotLabel(slot) : "";
+  };
+
   const handleAdd = async () => {
-    if (!form.wine_name || !form.cellar_location || !frontFile || !backFile) return;
+    if (!form.wine_name || !form.slot_id || !frontFile || !backFile) return;
     setSaving(true);
 
     const { data: inserted, error: insertError } = await supabase
-      .from('cellar_bottles')
+      .from("cellar_bottles")
       .insert({ ...form, member_id: member.id, status: "stored", quantity: 1 })
       .select()
       .single();
@@ -183,9 +208,9 @@ export default function MemberBottles({ member, onBottleCountChange }) {
       const backUrl = await uploadImage(backFile, inserted.id, "back");
 
       await supabase
-        .from('cellar_bottles')
+        .from("cellar_bottles")
         .update({ image_front_url: frontUrl, image_back_url: backUrl })
-        .eq('id', inserted.id);
+        .eq("id", inserted.id);
 
       setForm(BLANK);
       setFrontFile(null);
@@ -205,12 +230,30 @@ export default function MemberBottles({ member, onBottleCountChange }) {
 
   const handleCheckOut = async (id) => {
     const { error } = await supabase
-      .from('cellar_bottles')
+      .from("cellar_bottles")
       .update({ status: "consumed", checked_out_at: new Date().toISOString() })
-      .eq('id', id);
+      .eq("id", id);
     if (!error) {
       await load();
       toast.success("Bottle checked out");
+
+      if (member.status === "inactive") {
+        const { data: remaining } = await supabase
+          .from("cellar_bottles")
+          .select("id")
+          .eq("member_id", member.id)
+          .eq("status", "stored");
+
+        if (!remaining || remaining.length === 0) {
+          await supabase
+            .from("vault_slots")
+            .update({ status: "available", member_id: null, updated_at: new Date().toISOString() })
+            .eq("member_id", member.id)
+            .eq("status", "pending_release");
+
+          toast.success("All bottles collected — vault slots released");
+        }
+      }
     }
   };
 
@@ -239,9 +282,9 @@ export default function MemberBottles({ member, onBottleCountChange }) {
       const frontUrl = await uploadImage(replaceFront, photoBottleId, "front");
       const backUrl = await uploadImage(replaceBack, photoBottleId, "back");
       await supabase
-        .from('cellar_bottles')
+        .from("cellar_bottles")
         .update({ image_front_url: frontUrl, image_back_url: backUrl })
-        .eq('id', photoBottleId);
+        .eq("id", photoBottleId);
       setPhotoBottleId(null);
       await load();
       toast.success("Photos updated");
@@ -263,12 +306,12 @@ export default function MemberBottles({ member, onBottleCountChange }) {
   if (loading) return <div className="flex justify-center py-6"><Loader2 className="h-4 w-4 animate-spin" style={{ color: "#1E4D5A" }} /></div>;
 
   const total = storedBottles.length;
-  const canSave = form.wine_name && form.cellar_location && frontFile && backFile;
+  const canSave = form.wine_name && form.slot_id && frontFile && backFile;
 
   return (
     <div className="space-y-6" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
       {lightbox && <ImageLightbox url={lightbox.url} label={lightbox.label} onClose={() => setLightbox(null)} />}
-      {qrBottle && <BottleQRModal bottle={qrBottle} member={member} onClose={() => setQrBottle(null)} />}
+      {qrBottle && <BottleQRModal bottle={qrBottle} member={member} slotLabel={qrSlotLabel} onClose={() => { setQrBottle(null); setQrSlotLabel(""); }} />}
 
       <div>
         <div className="flex items-center justify-between mb-3">
@@ -303,8 +346,21 @@ export default function MemberBottles({ member, onBottleCountChange }) {
                 <input style={inputStyle} value={form.vintage} onChange={(e) => f("vintage", e.target.value)} placeholder="e.g. 2018" />
               </div>
               <div className="col-span-2">
-                <label style={labelStyle}>Cellar location *</label>
-                <input style={inputStyle} value={form.cellar_location} onChange={(e) => f("cellar_location", e.target.value)} placeholder="e.g. A20" />
+                <label style={labelStyle}>Vault slot *</label>
+                {availableSlots.length === 0 ? (
+                  <p className="text-xs" style={{ color: "#777777", padding: "8px 0" }}>No available slots — all assigned slots have bottles.</p>
+                ) : (
+                  <Select value={form.slot_id} onValueChange={(v) => f("slot_id", v)}>
+                    <SelectTrigger style={{ ...inputStyle, height: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <SelectValue placeholder="Select a slot..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableSlots.map((slot) => (
+                        <SelectItem key={slot.id} value={slot.id}>{slotLabel(slot)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
               <div className="col-span-2">
                 <label style={labelStyle}>Type</label>
@@ -351,7 +407,7 @@ export default function MemberBottles({ member, onBottleCountChange }) {
                       <p className="text-xs" style={{ color: "#0A242C" }}>{b.wine_name}</p>
                       {b.vintage && <span className="text-xs" style={{ color: "#777777" }}>{b.vintage}</span>}
                       {b.type && <span className="text-xs" style={{ color: "#777777" }}>· {b.type}</span>}
-                      {b.cellar_location && <span className="text-xs" style={{ color: "#1E4D5A" }}>· {b.cellar_location}</span>}
+                      {b.slot_id && <span className="text-xs" style={{ color: "#1E4D5A" }}>· {getSlotLabelById(b.slot_id)}</span>}
                     </div>
                     {b.notes && <p className="text-xs mt-0.5" style={{ color: "#777777" }}>{b.notes}</p>}
                     <BottleThumbnails bottle={b} onOpen={(url, label) => setLightbox({ url, label })} />
@@ -364,7 +420,11 @@ export default function MemberBottles({ member, onBottleCountChange }) {
                     >
                       <Camera className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={() => setQrBottle(b)} style={{ background: "none", border: "none", cursor: "pointer", color: "#777777", padding: "2px" }} title="Generate QR label">
+                    <button
+                      onClick={() => { setQrBottle(b); setQrSlotLabel(getSlotLabelById(b.slot_id)); }}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "#777777", padding: "2px" }}
+                      title="Generate QR label"
+                    >
                       <QrCode className="h-3.5 w-3.5" />
                     </button>
                     <button onClick={() => handleCheckOut(b.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#777777", padding: "2px" }} title="Check out (consumed)">
