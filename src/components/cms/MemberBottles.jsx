@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { Loader2, Plus, Trash2, X, QrCode, Camera, ZoomIn } from "lucide-react";
+import { Loader2, Plus, X, QrCode, Camera, Pencil, Trash2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
 import BottleQRModal from "./BottleQRModal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const BLANK = { wine_name: "", producer: "", vintage: "", slot_id: "", type: "Red", notes: "" };
+const BLANK = { wine_name: "", producer: "", vintage: "", type: "Red", notes: "" };
 const TYPES = ["Red", "White", "Rosé", "Sparkling", "Dessert", "Fortified", "Other"];
 
 const inputStyle = { backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", borderRadius: "6px", fontFamily: "'Courier New', Courier, monospace", fontSize: "13px", padding: "8px 11px", color: "#0A242C", width: "100%", outline: "none", transition: "border-color 0.15s" };
@@ -16,32 +16,14 @@ function slotLabel(slot) {
   return `${slot.row_label}-${String(slot.column_number).padStart(2, "0")}`;
 }
 
-function ImageLightbox({ url, label, onClose }) {
-  return (
-    <div
-      onClick={onClose}
-      style={{ position: "fixed", inset: 0, backgroundColor: "rgba(10,36,44,0.92)", zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px", cursor: "pointer" }}
-    >
-      <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", opacity: 0.6 }}>{label}</p>
-      <img
-        src={url}
-        alt={label}
-        onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth: "90vw", maxHeight: "80vh", objectFit: "contain", cursor: "default" }}
-      />
-      <p className="text-xs mt-4" style={{ color: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", opacity: 0.4 }}>Click anywhere to close</p>
-    </div>
-  );
-}
-
-function PhotoUploadField({ label, file, previewUrl, onChange }) {
+function PhotoUploadField({ label, file, previewUrl, onChange, required = false }) {
   const inputRef = useRef(null);
   return (
     <div>
-      <label style={labelStyle}>{label} *</label>
+      <label style={labelStyle}>{label}{required ? " *" : ""}</label>
       <div
         onClick={() => inputRef.current?.click()}
-        style={{ border: "1px dashed #d8d6d0", backgroundColor: "#f3f2ee", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", minHeight: "80px", overflow: "hidden", position: "relative" }}
+        style={{ border: "1px dashed #d8d6d0", backgroundColor: "#f3f2ee", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", minHeight: "80px", overflow: "hidden" }}
       >
         {previewUrl ? (
           <img src={previewUrl} alt={label} style={{ width: "100%", height: "80px", objectFit: "cover" }} />
@@ -59,40 +41,142 @@ function PhotoUploadField({ label, file, previewUrl, onChange }) {
   );
 }
 
-function BottleThumbnails({ bottle, onOpen }) {
-  if (!bottle.image_front_url && !bottle.image_back_url) return null;
+function BottleModal({ slot, bottle, assignedSlots, storedBottles, member, onClose, onSaved, uploadImage }) {
+  const isEdit = !!bottle;
+  const [form, setForm] = useState(
+    isEdit
+      ? { wine_name: bottle.wine_name || "", producer: bottle.producer || "", vintage: bottle.vintage || "", type: bottle.type || "Red", notes: bottle.notes || "" }
+      : { ...BLANK }
+  );
+  const [frontFile, setFrontFile] = useState(null);
+  const [backFile, setBackFile] = useState(null);
+  const [frontPreview, setFrontPreview] = useState(isEdit ? bottle.image_front_url || null : null);
+  const [backPreview, setBackPreview] = useState(isEdit ? bottle.image_back_url || null : null);
+  const [saving, setSaving] = useState(false);
+
+  const f = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+
+  const canSave = form.wine_name && (isEdit || (frontFile && backFile));
+
+  const handleSave = async () => {
+    if (!canSave) return;
+    setSaving(true);
+
+    if (isEdit) {
+      const { error } = await supabase.from("cellar_bottles").update({
+        wine_name: form.wine_name,
+        producer: form.producer || null,
+        vintage: form.vintage || null,
+        type: form.type,
+        notes: form.notes || null,
+      }).eq("id", bottle.id);
+
+      if (error) { toast.error("Failed to update bottle"); setSaving(false); return; }
+
+      if (frontFile || backFile) {
+        try {
+          const updates = {};
+          if (frontFile) updates.image_front_url = await uploadImage(frontFile, bottle.id, "front");
+          if (backFile) updates.image_back_url = await uploadImage(backFile, bottle.id, "back");
+          if (Object.keys(updates).length > 0) {
+            await supabase.from("cellar_bottles").update(updates).eq("id", bottle.id);
+          }
+        } catch { toast.error("Details saved but photos failed to upload"); }
+      }
+
+      toast.success("Bottle updated");
+    } else {
+      const { data: inserted, error: insertError } = await supabase
+        .from("cellar_bottles")
+        .insert({ ...form, slot_id: slot.id, member_id: member.id, status: "stored", quantity: 1 })
+        .select()
+        .single();
+
+      if (insertError || !inserted) { toast.error("Failed to add bottle"); setSaving(false); return; }
+
+      try {
+        const frontUrl = await uploadImage(frontFile, inserted.id, "front");
+        const backUrl = await uploadImage(backFile, inserted.id, "back");
+        await supabase.from("cellar_bottles").update({ image_front_url: frontUrl, image_back_url: backUrl }).eq("id", inserted.id);
+      } catch { toast.error("Bottle saved but photos failed to upload"); }
+
+      toast.success("Bottle added");
+    }
+
+    setSaving(false);
+    onSaved();
+  };
+
   return (
-    <div className="flex gap-1.5 mt-1.5">
-      {bottle.image_front_url && (
-        <div
-          onClick={() => onOpen(bottle.image_front_url, "Front label")}
-          style={{ width: "36px", height: "48px", cursor: "pointer", overflow: "hidden", border: "1px solid #d8d6d0", position: "relative", flexShrink: 0 }}
-          title="View front label"
-        >
-          <img src={bottle.image_front_url} alt="Front" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,36,44,0)", transition: "background-color 0.15s", display: "flex", alignItems: "center", justifyContent: "center" }}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0.3)"}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0)"}
-          >
-            <ZoomIn className="h-3 w-3" style={{ color: "#f3f2ee", opacity: 0 }} />
+    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }} onClick={onClose}>
+      <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,36,44,0.6)" }} />
+      <div
+        style={{ position: "relative", backgroundColor: "#f3f2ee", width: "100%", maxWidth: "480px", maxHeight: "90vh", overflowY: "auto", padding: "28px", fontFamily: "'Courier New', Courier, monospace" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <p className="text-xs uppercase tracking-widest" style={{ color: "#777777" }}>{isEdit ? "Edit bottle" : "Add bottle"}</p>
+            <p className="text-sm mt-0.5" style={{ color: "#1E4D5A" }}>{slotLabel(slot)}</p>
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#777777" }}><X className="h-4 w-4" /></button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="col-span-2">
+            <label style={labelStyle}>Wine name *</label>
+            <input style={inputStyle} value={form.wine_name} onChange={(e) => f("wine_name", e.target.value)} placeholder="e.g. Château Margaux" />
+          </div>
+          <div>
+            <label style={labelStyle}>Producer</label>
+            <input style={inputStyle} value={form.producer} onChange={(e) => f("producer", e.target.value)} placeholder="Producer" />
+          </div>
+          <div>
+            <label style={labelStyle}>Vintage</label>
+            <input style={inputStyle} value={form.vintage} onChange={(e) => f("vintage", e.target.value)} placeholder="e.g. 2018" />
+          </div>
+          <div className="col-span-2">
+            <label style={labelStyle}>Type</label>
+            <Select value={form.type} onValueChange={(v) => f("type", v)}>
+              <SelectTrigger style={{ ...inputStyle, height: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}><SelectValue /></SelectTrigger>
+              <SelectContent>{TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="col-span-2">
+            <label style={labelStyle}>Notes</label>
+            <input style={inputStyle} value={form.notes} onChange={(e) => f("notes", e.target.value)} placeholder="Optional notes..." />
+          </div>
+          <div>
+            <PhotoUploadField
+              label="Front label"
+              file={frontFile}
+              previewUrl={frontPreview}
+              onChange={(file) => { setFrontFile(file); setFrontPreview(file ? URL.createObjectURL(file) : null); }}
+              required={!isEdit}
+            />
+          </div>
+          <div>
+            <PhotoUploadField
+              label="Back label"
+              file={backFile}
+              previewUrl={backPreview}
+              onChange={(file) => { setBackFile(file); setBackPreview(file ? URL.createObjectURL(file) : null); }}
+              required={!isEdit}
+            />
           </div>
         </div>
-      )}
-      {bottle.image_back_url && (
-        <div
-          onClick={() => onOpen(bottle.image_back_url, "Back label")}
-          style={{ width: "36px", height: "48px", cursor: "pointer", overflow: "hidden", border: "1px solid #d8d6d0", position: "relative", flexShrink: 0 }}
-          title="View back label"
-        >
-          <img src={bottle.image_back_url} alt="Back" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,36,44,0)", transition: "background-color 0.15s", display: "flex", alignItems: "center", justifyContent: "center" }}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0.3)"}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = "rgba(10,36,44,0)"}
+
+        <div className="flex gap-2 mt-5">
+          <button
+            onClick={handleSave}
+            disabled={saving || !canSave}
+            style={{ padding: "8px 20px", backgroundColor: saving || !canSave ? "#d8d6d0" : "#1E4D5A", color: saving || !canSave ? "#777777" : "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: saving || !canSave ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "5px" }}
           >
-            <ZoomIn className="h-3 w-3" style={{ color: "#f3f2ee", opacity: 0 }} />
-          </div>
+            {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {isEdit ? "Save changes" : "Add bottle"}
+          </button>
+          <button onClick={onClose} style={{ padding: "8px 16px", backgroundColor: "transparent", color: "#777777", border: "1px solid #d8d6d0", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer" }}>Cancel</button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -102,37 +186,15 @@ export default function MemberBottles({ member, onBottleCountChange }) {
   const [consumedBottles, setConsumedBottles] = useState([]);
   const [assignedSlots, setAssignedSlots] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState(BLANK);
-  const [frontFile, setFrontFile] = useState(null);
-  const [backFile, setBackFile] = useState(null);
-  const [frontPreview, setFrontPreview] = useState(null);
-  const [backPreview, setBackPreview] = useState(null);
-  const [saving, setSaving] = useState(false);
+  const [modalSlot, setModalSlot] = useState(null);
+  const [modalBottle, setModalBottle] = useState(null);
   const [qrBottle, setQrBottle] = useState(null);
   const [qrSlotLabel, setQrSlotLabel] = useState("");
-  const [lightbox, setLightbox] = useState(null);
-  const [photoBottleId, setPhotoBottleId] = useState(null);
-  const [replaceFront, setReplaceFront] = useState(null);
-  const [replaceBack, setReplaceBack] = useState(null);
-  const [replaceFrontPreview, setReplaceFrontPreview] = useState(null);
-  const [replaceBackPreview, setReplaceBackPreview] = useState(null);
-  const [replaceSaving, setReplaceSaving] = useState(false);
 
   const load = async () => {
     const [{ data: bottleData }, { data: slotData }] = await Promise.all([
-      supabase
-        .from("cellar_bottles")
-        .select()
-        .eq("member_id", member.id)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("vault_slots")
-        .select("id, row_label, column_number, status")
-        .eq("member_id", member.id)
-        .eq("status", "assigned")
-        .order("row_label", { ascending: true })
-        .order("column_number", { ascending: true }),
+      supabase.from("cellar_bottles").select().eq("member_id", member.id).order("created_at", { ascending: false }),
+      supabase.from("vault_slots").select("id, row_label, column_number, status").eq("member_id", member.id).in("status", ["assigned", "pending_release"]).order("row_label", { ascending: true }).order("column_number", { ascending: true }),
     ]);
 
     const all = bottleData || [];
@@ -147,325 +209,140 @@ export default function MemberBottles({ member, onBottleCountChange }) {
     const count = stored.length;
     onBottleCountChange?.(count);
 
-    await supabase
-      .from("cellar_members")
-      .update({ bottles_stored: count })
-      .eq("id", member.id);
+    await supabase.from("cellar_members").update({ bottles_stored: count }).eq("id", member.id);
   };
 
   useEffect(() => { load(); }, [member.id]);
 
-  const f = (k, v) => setForm((p) => ({ ...p, [k]: v }));
-
-  const handleFrontChange = (file) => {
-    setFrontFile(file);
-    setFrontPreview(file ? URL.createObjectURL(file) : null);
-  };
-
-  const handleBackChange = (file) => {
-    setBackFile(file);
-    setBackPreview(file ? URL.createObjectURL(file) : null);
-  };
-
   const uploadImage = async (file, bottleId, side) => {
     const ext = file.name.split(".").pop();
     const path = `bottles/${bottleId}/${side}.${ext}`;
-    const { error } = await supabase.storage
-      .from("cellar-bottles")
-      .upload(path, file, { upsert: true });
+    const { error } = await supabase.storage.from("cellar-bottles").upload(path, file, { upsert: true });
     if (error) throw error;
     const { data } = supabase.storage.from("cellar-bottles").getPublicUrl(path);
     return data.publicUrl;
   };
 
-  const availableSlots = assignedSlots.filter(
-    (slot) => !storedBottles.some((b) => b.slot_id === slot.id)
-  );
+  const getBottleForSlot = (slotId) => storedBottles.find(b => b.slot_id === slotId) || null;
 
-  const getSlotLabelById = (slotId) => {
-    const slot = assignedSlots.find((s) => s.id === slotId);
-    return slot ? slotLabel(slot) : "";
-  };
-
-  const handleAdd = async () => {
-    if (!form.wine_name || !form.slot_id || !frontFile || !backFile) return;
-    setSaving(true);
-
-    const { data: inserted, error: insertError } = await supabase
-      .from("cellar_bottles")
-      .insert({ ...form, member_id: member.id, status: "stored", quantity: 1 })
-      .select()
-      .single();
-
-    if (insertError || !inserted) {
-      toast.error("Failed to add bottle");
-      setSaving(false);
-      return;
-    }
-
-    try {
-      const frontUrl = await uploadImage(frontFile, inserted.id, "front");
-      const backUrl = await uploadImage(backFile, inserted.id, "back");
-
-      await supabase
-        .from("cellar_bottles")
-        .update({ image_front_url: frontUrl, image_back_url: backUrl })
-        .eq("id", inserted.id);
-
-      setForm(BLANK);
-      setFrontFile(null);
-      setBackFile(null);
-      setFrontPreview(null);
-      setBackPreview(null);
-      setAdding(false);
-      await load();
-      toast.success("Bottle added");
-    } catch {
-      toast.error("Bottle saved but photos failed to upload");
-      await load();
-    }
-
-    setSaving(false);
-  };
-
-  const handleCheckOut = async (id) => {
-    const { error } = await supabase
-      .from("cellar_bottles")
-      .update({ status: "consumed", checked_out_at: new Date().toISOString() })
-      .eq("id", id);
+  const handleCheckOut = async (bottleId, slotId) => {
+    const { error } = await supabase.from("cellar_bottles").update({ status: "consumed", checked_out_at: new Date().toISOString() }).eq("id", bottleId);
     if (!error) {
       await load();
       toast.success("Bottle checked out");
 
       if (member.status === "inactive") {
-        const { data: remaining } = await supabase
-          .from("cellar_bottles")
-          .select("id")
-          .eq("member_id", member.id)
-          .eq("status", "stored");
-
+        const { data: remaining } = await supabase.from("cellar_bottles").select("id").eq("member_id", member.id).eq("status", "stored");
         if (!remaining || remaining.length === 0) {
-          await supabase
-            .from("vault_slots")
-            .update({ status: "available", member_id: null, updated_at: new Date().toISOString() })
-            .eq("member_id", member.id)
-            .eq("status", "pending_release");
-
+          await supabase.from("vault_slots").update({ status: "available", member_id: null, updated_at: new Date().toISOString() }).eq("member_id", member.id).eq("status", "pending_release");
           toast.success("All bottles collected — vault slots released");
         }
       }
     }
   };
 
-  const openPhotoReplace = (bottleId) => {
-    setPhotoBottleId(bottleId);
-    setReplaceFront(null);
-    setReplaceBack(null);
-    setReplaceFrontPreview(null);
-    setReplaceBackPreview(null);
-  };
-
-  const handleReplaceFrontChange = (file) => {
-    setReplaceFront(file);
-    setReplaceFrontPreview(file ? URL.createObjectURL(file) : null);
-  };
-
-  const handleReplaceBackChange = (file) => {
-    setReplaceBack(file);
-    setReplaceBackPreview(file ? URL.createObjectURL(file) : null);
-  };
-
-  const handleSavePhotos = async () => {
-    if (!replaceFront || !replaceBack) return;
-    setReplaceSaving(true);
-    try {
-      const frontUrl = await uploadImage(replaceFront, photoBottleId, "front");
-      const backUrl = await uploadImage(replaceBack, photoBottleId, "back");
-      await supabase
-        .from("cellar_bottles")
-        .update({ image_front_url: frontUrl, image_back_url: backUrl })
-        .eq("id", photoBottleId);
-      setPhotoBottleId(null);
-      await load();
-      toast.success("Photos updated");
-    } catch {
-      toast.error("Failed to update photos");
-    }
-    setReplaceSaving(false);
-  };
-
-  const cancelAdd = () => {
-    setAdding(false);
-    setForm(BLANK);
-    setFrontFile(null);
-    setBackFile(null);
-    setFrontPreview(null);
-    setBackPreview(null);
-  };
+  const closeModal = () => { setModalSlot(null); setModalBottle(null); };
 
   if (loading) return <div className="flex justify-center py-6"><Loader2 className="h-4 w-4 animate-spin" style={{ color: "#1E4D5A" }} /></div>;
 
   const total = storedBottles.length;
-  const canSave = form.wine_name && form.slot_id && frontFile && backFile;
 
   return (
-    <div className="space-y-6" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
-      {lightbox && <ImageLightbox url={lightbox.url} label={lightbox.label} onClose={() => setLightbox(null)} />}
-      {qrBottle && <BottleQRModal bottle={qrBottle} member={member} slotLabel={qrSlotLabel} onClose={() => { setQrBottle(null); setQrSlotLabel(""); }} />}
+    <div className="space-y-5" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
+      {(modalSlot || modalBottle) && (
+        <BottleModal
+          slot={modalSlot}
+          bottle={modalBottle}
+          assignedSlots={assignedSlots}
+          storedBottles={storedBottles}
+          member={member}
+          onClose={closeModal}
+          onSaved={() => { closeModal(); load(); }}
+          uploadImage={uploadImage}
+        />
+      )}
+      {qrBottle && (
+        <BottleQRModal
+          bottle={qrBottle}
+          member={member}
+          slotLabel={qrSlotLabel}
+          onClose={() => { setQrBottle(null); setQrSlotLabel(""); }}
+        />
+      )}
 
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-xs" style={{ color: "#777777" }}>{total} bottle{total !== 1 ? "s" : ""} stored</p>
-          {!adding && (
-            <button
-              onClick={() => setAdding(true)}
-              style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "5px 12px", backgroundColor: "transparent", color: "#1E4D5A", border: "1px solid #1E4D5A", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer" }}
-            >
-              <Plus className="h-3 w-3" /> Add bottle
-            </button>
-          )}
-        </div>
+      <p className="text-xs" style={{ color: "#777777" }}>{total} bottle{total !== 1 ? "s" : ""} stored · {assignedSlots.length} slot{assignedSlots.length !== 1 ? "s" : ""} assigned</p>
 
-        {adding && (
-          <div style={{ backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", padding: "14px", marginBottom: "12px" }}>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs uppercase tracking-widest" style={{ color: "#777777" }}>New bottle</p>
-              <button onClick={cancelAdd} style={{ background: "none", border: "none", cursor: "pointer", color: "#777777" }}><X className="h-3.5 w-3.5" /></button>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <label style={labelStyle}>Wine name *</label>
-                <input style={inputStyle} value={form.wine_name} onChange={(e) => f("wine_name", e.target.value)} placeholder="e.g. Château Margaux" />
-              </div>
-              <div>
-                <label style={labelStyle}>Producer</label>
-                <input style={inputStyle} value={form.producer} onChange={(e) => f("producer", e.target.value)} placeholder="e.g. Château Margaux" />
-              </div>
-              <div>
-                <label style={labelStyle}>Vintage</label>
-                <input style={inputStyle} value={form.vintage} onChange={(e) => f("vintage", e.target.value)} placeholder="e.g. 2018" />
-              </div>
-              <div className="col-span-2">
-                <label style={labelStyle}>Vault slot *</label>
-                {availableSlots.length === 0 ? (
-                  <p className="text-xs" style={{ color: "#777777", padding: "8px 0" }}>No available slots — all assigned slots have bottles.</p>
-                ) : (
-                  <Select value={form.slot_id} onValueChange={(v) => f("slot_id", v)}>
-                    <SelectTrigger style={{ ...inputStyle, height: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <SelectValue placeholder="Select a slot..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableSlots.map((slot) => (
-                        <SelectItem key={slot.id} value={slot.id}>{slotLabel(slot)}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-              <div className="col-span-2">
-                <label style={labelStyle}>Type</label>
-                <Select value={form.type} onValueChange={(v) => f("type", v)}>
-                  <SelectTrigger style={{ ...inputStyle, height: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}><SelectValue /></SelectTrigger>
-                  <SelectContent>{TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="col-span-2">
-                <label style={labelStyle}>Notes</label>
-                <input style={inputStyle} value={form.notes} onChange={(e) => f("notes", e.target.value)} placeholder="Optional notes..." />
-              </div>
-              <div>
-                <PhotoUploadField label="Front label" file={frontFile} previewUrl={frontPreview} onChange={handleFrontChange} />
-              </div>
-              <div>
-                <PhotoUploadField label="Back label" file={backFile} previewUrl={backPreview} onChange={handleBackChange} />
-              </div>
-            </div>
-            <div className="flex gap-2 mt-3">
-              <button
-                onClick={handleAdd}
-                disabled={saving || !canSave}
-                style={{ padding: "6px 14px", backgroundColor: saving || !canSave ? "#d8d6d0" : "#1E4D5A", color: saving || !canSave ? "#777777" : "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: saving || !canSave ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "5px" }}
-              >
-                {saving && <Loader2 className="h-3 w-3 animate-spin" />} Save
-              </button>
-              <button onClick={cancelAdd} style={{ padding: "6px 14px", backgroundColor: "transparent", color: "#777777", border: "1px solid #d8d6d0", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer" }}>Cancel</button>
-            </div>
-          </div>
-        )}
+      {assignedSlots.length === 0 ? (
+        <p className="text-xs text-center py-8" style={{ color: "#777777" }}>No vault slots assigned to this member.</p>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
+          {assignedSlots.map((slot) => {
+            const bottle = getBottleForSlot(slot.id);
+            const label = slotLabel(slot);
 
-        {storedBottles.length === 0 && !adding ? (
-          <div className="text-center py-6" style={{ color: "#777777" }}>
-            <p className="text-xs">No bottles stored yet</p>
-          </div>
-        ) : (
-          <div style={{ borderTop: "1px solid #d8d6d0" }}>
-            {storedBottles.map((b) => (
-              <div key={b.id} style={{ borderBottom: "1px solid #d8d6d0" }}>
-                <div className="flex items-start gap-3 py-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-xs" style={{ color: "#0A242C" }}>{b.wine_name}</p>
-                      {b.vintage && <span className="text-xs" style={{ color: "#777777" }}>{b.vintage}</span>}
-                      {b.type && <span className="text-xs" style={{ color: "#777777" }}>· {b.type}</span>}
-                      {b.slot_id && <span className="text-xs" style={{ color: "#1E4D5A" }}>· {getSlotLabelById(b.slot_id)}</span>}
+            if (bottle) {
+              return (
+                <div key={slot.id} style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", overflow: "hidden" }}>
+                  <div
+                    style={{ position: "relative", paddingBottom: "130%", backgroundColor: "#d8d6d0", overflow: "hidden", cursor: "pointer" }}
+                    onClick={() => { setModalSlot(slot); setModalBottle(bottle); }}
+                  >
+                    {bottle.image_front_url ? (
+                      <img src={bottle.image_front_url} alt={bottle.wine_name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <p style={{ fontSize: "10px", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em" }}>No image</p>
+                      </div>
+                    )}
+                    <div style={{ position: "absolute", top: "6px", left: "6px", backgroundColor: "rgba(10,36,44,0.7)", padding: "2px 6px" }}>
+                      <p style={{ fontSize: "9px", color: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", letterSpacing: "0.06em" }}>{label}</p>
                     </div>
-                    {b.notes && <p className="text-xs mt-0.5" style={{ color: "#777777" }}>{b.notes}</p>}
-                    <BottleThumbnails bottle={b} onOpen={(url, label) => setLightbox({ url, label })} />
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={() => photoBottleId === b.id ? setPhotoBottleId(null) : openPhotoReplace(b.id)}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: photoBottleId === b.id ? "#1E4D5A" : "#777777", padding: "2px" }}
-                      title="Update photos"
-                    >
-                      <Camera className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => { setQrBottle(b); setQrSlotLabel(getSlotLabelById(b.slot_id)); }}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "#777777", padding: "2px" }}
-                      title="Generate QR label"
-                    >
-                      <QrCode className="h-3.5 w-3.5" />
-                    </button>
-                    <button onClick={() => handleCheckOut(b.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#777777", padding: "2px" }} title="Check out (consumed)">
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                  <div style={{ padding: "8px" }}>
+                    <p style={{ fontSize: "11px", color: "#0A242C", marginBottom: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{bottle.wine_name}</p>
+                    <p style={{ fontSize: "10px", color: "#777777" }}>{[bottle.vintage, bottle.type].filter(Boolean).join(" · ")}</p>
+                    <div className="flex items-center gap-2 mt-2" style={{ borderTop: "1px solid #d8d6d0", paddingTop: "8px" }}>
+                      <button onClick={() => { setModalSlot(slot); setModalBottle(bottle); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#777777", padding: "2px" }} title="Edit bottle">
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => { setQrBottle(bottle); setQrSlotLabel(label); }}
+                        style={{ background: "none", border: "none", cursor: "pointer", color: "#777777", padding: "2px" }}
+                        title="QR label"
+                      >
+                        <QrCode className="h-3.5 w-3.5" />
+                      </button>
+                      <button onClick={() => handleCheckOut(bottle.id, slot.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#777777", padding: "2px" }} title="Check out">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
+              );
+            }
 
-                {photoBottleId === b.id && (
-                  <div style={{ backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", padding: "12px", marginBottom: "10px" }}>
-                    <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#777777" }}>Replace photos</p>
-                    <div className="grid grid-cols-2 gap-3 mb-3">
-                      <PhotoUploadField label="Front label" file={replaceFront} previewUrl={replaceFrontPreview} onChange={handleReplaceFrontChange} />
-                      <PhotoUploadField label="Back label" file={replaceBack} previewUrl={replaceBackPreview} onChange={handleReplaceBackChange} />
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleSavePhotos}
-                        disabled={replaceSaving || !replaceFront || !replaceBack}
-                        style={{ padding: "6px 14px", backgroundColor: replaceSaving || !replaceFront || !replaceBack ? "#d8d6d0" : "#1E4D5A", color: replaceSaving || !replaceFront || !replaceBack ? "#777777" : "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: replaceSaving || !replaceFront || !replaceBack ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "5px" }}
-                      >
-                        {replaceSaving && <Loader2 className="h-3 w-3 animate-spin" />} Save photos
-                      </button>
-                      <button
-                        onClick={() => setPhotoBottleId(null)}
-                        style={{ padding: "6px 14px", backgroundColor: "transparent", color: "#777777", border: "1px solid #d8d6d0", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer" }}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
+            return (
+              <div
+                key={slot.id}
+                onClick={() => setModalSlot(slot)}
+                style={{ backgroundColor: "#f3f2ee", border: "1px dashed #d8d6d0", overflow: "hidden", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "180px", transition: "border-color 0.15s" }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = "#1E4D5A"}
+                onMouseLeave={e => e.currentTarget.style.borderColor = "#d8d6d0"}
+              >
+                <p style={{ fontSize: "10px", color: "#1E4D5A", fontFamily: "'Courier New', Courier, monospace", letterSpacing: "0.06em", marginBottom: "8px" }}>{label}</p>
+                <div style={{ width: "28px", height: "28px", border: "1px solid #d8d6d0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Plus className="h-3.5 w-3.5" style={{ color: "#777777" }} />
+                </div>
+                <p style={{ fontSize: "9px", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: "6px" }}>Add bottle</p>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {consumedBottles.length > 0 && (
         <div>
-          <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#777777" }}>History</p>
+          <p className="text-xs uppercase tracking-widest mb-3 mt-4" style={{ color: "#777777" }}>History</p>
           <div style={{ borderTop: "1px solid #d8d6d0" }}>
             {consumedBottles.map((b) => (
               <div key={b.id} className="flex items-center justify-between py-3 gap-3" style={{ borderBottom: "1px solid #d8d6d0" }}>
@@ -476,9 +353,7 @@ export default function MemberBottles({ member, onBottleCountChange }) {
                     {b.type && <span className="text-xs" style={{ color: "#aaa" }}>· {b.type}</span>}
                   </div>
                   {b.checked_out_at && (
-                    <p className="text-xs mt-0.5" style={{ color: "#aaa" }}>
-                      Checked out {format(parseISO(b.checked_out_at), "d MMM yyyy")}
-                    </p>
+                    <p className="text-xs mt-0.5" style={{ color: "#aaa" }}>Checked out {format(parseISO(b.checked_out_at), "d MMM yyyy")}</p>
                   )}
                 </div>
               </div>
