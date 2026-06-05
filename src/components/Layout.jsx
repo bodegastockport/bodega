@@ -202,7 +202,7 @@ export default function Layout() {
                 <p>Engine Room</p>
                 <p>Weir Mill</p>
                 <p>Stockport, SK3 0AG</p>
-                <p className="mt-3">+44 (0) 000 000 0000</p>
+                <p className="mt-3">0161 826 0168</p>
                 <p className="mt-1">
                   <a href="mailto:hello@bodegawine.co.uk" style={{ color: "#0A242C" }}>hello@bodegawine.co.uk</a>
                 </p>
