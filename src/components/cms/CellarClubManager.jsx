@@ -8,7 +8,7 @@ const inputStyle = { backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", bo
 const labelStyle = { display: "block", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#777777", marginBottom: "5px", fontFamily: "'Courier New', Courier, monospace" };
 
 const BLANK = { name: "", email: "", phone: "", membership_start: "", notes: "", status: "active", membership_tier: "" };
-const VAULT_CAPACITY = 780;
+const VAULT_CAPACITY = 1152;
 
 export default function CellarClubManager() {
   const [members, setMembers] = useState([]);
