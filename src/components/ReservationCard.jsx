@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { supabase } from "@/lib/supabase";
 
@@ -21,6 +22,22 @@ const btnOutline = {
 };
 
 export default function ReservationCard({ reservation, onUpdate }) {
+  const [tables, setTables] = useState([]);
+  const [selectedTable, setSelectedTable] = useState(reservation.table_id || "");
+  const [reassigning, setReassigning] = useState(false);
+
+  useEffect(() => {
+    const loadTables = async () => {
+      const { data } = await supabase
+        .from("tables")
+        .select("id, name, capacity")
+        .eq("active", true)
+        .order("name");
+      setTables(data || []);
+    };
+    loadTables();
+  }, []);
+
   const updateStatus = async (newStatus) => {
     await supabase.from("reservations").update({ status: newStatus }).eq("id", reservation.id);
     onUpdate();
@@ -28,6 +45,17 @@ export default function ReservationCard({ reservation, onUpdate }) {
 
   const deleteReservation = async () => {
     await supabase.from("reservations").delete().eq("id", reservation.id);
+    onUpdate();
+  };
+
+  const reassignTable = async (tableId) => {
+    setReassigning(true);
+    setSelectedTable(tableId);
+    await supabase
+      .from("reservations")
+      .update({ table_id: tableId || null })
+      .eq("id", reservation.id);
+    setReassigning(false);
     onUpdate();
   };
 
@@ -50,7 +78,6 @@ export default function ReservationCard({ reservation, onUpdate }) {
           { label: "Date", value: format(parseISO(reservation.date), "dd MMM yyyy") },
           { label: "Time", value: reservation.time },
           { label: "Guests", value: reservation.party_size },
-          { label: "Table", value: reservation.tables?.name || "—" },
           { label: "Phone", value: reservation.phone },
         ].map(({ label, value }) => (
           <div key={label}>
@@ -58,6 +85,34 @@ export default function ReservationCard({ reservation, onUpdate }) {
             <p className="text-xs" style={{ color: "#0A242C" }}>{value}</p>
           </div>
         ))}
+        <div>
+          <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>Table</p>
+          <select
+            value={selectedTable}
+            onChange={(e) => reassignTable(e.target.value)}
+            disabled={reassigning || reservation.status === "completed"}
+            style={{
+              backgroundColor: "#f3f2ee",
+              border: "1px solid #d8d6d0",
+              borderRadius: "0px",
+              fontFamily: "'Courier New', Courier, monospace",
+              fontSize: "11px",
+              color: "#0A242C",
+              padding: "3px 6px",
+              cursor: reservation.status === "completed" ? "default" : "pointer",
+              outline: "none",
+              width: "100%",
+              opacity: reassigning ? 0.6 : 1,
+            }}
+          >
+            <option value="">— none —</option>
+            {tables.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name} ({t.capacity})
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {reservation.special_requests && (
