@@ -64,7 +64,9 @@ export default function MyCellar() {
 
   const handleCancel = async () => {
     setCancelling(true);
-    const { error } = await supabase.from("cellar_members").update({ status: "inactive" }).eq("id", member.id);
+    const { error } = await supabase.functions.invoke("cancel-cellar-membership", {
+      body: { member_id: member.id },
+    });
     if (!error) setCancelled(true);
     setCancelling(false);
   };
