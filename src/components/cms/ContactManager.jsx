@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,9 +18,9 @@ export default function ContactManager() {
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase
-        .from('contact_submissions')
+        .from("contact_submissions")
         .select()
-        .order('created_at', { ascending: false });
+        .order("created_at", { ascending: false });
       setMessages(data || []);
       setLoading(false);
     };
@@ -29,12 +29,23 @@ export default function ContactManager() {
 
   const updateStatus = async (id, status) => {
     const { error } = await supabase
-      .from('contact_submissions')
+      .from("contact_submissions")
       .update({ status })
-      .eq('id', id);
+      .eq("id", id);
     if (!error) {
       setMessages((p) => p.map((m) => m.id === id ? { ...m, status } : m));
       toast.success("Status updated");
+    }
+  };
+
+  const deleteMessage = async (id) => {
+    const { error } = await supabase
+      .from("contact_submissions")
+      .delete()
+      .eq("id", id);
+    if (!error) {
+      setMessages((p) => p.filter((m) => m.id !== id));
+      toast.success("Message deleted");
     }
   };
 
@@ -60,16 +71,25 @@ export default function ContactManager() {
                     {msg.created_at ? format(new Date(msg.created_at), "d MMM yyyy 'at' HH:mm") : ""}
                   </p>
                 </div>
-                <Select value={msg.status || "new"} onValueChange={(v) => updateStatus(msg.id, v)}>
-                  <SelectTrigger style={{ ...STATUS_STYLE[msg.status || "new"], fontSize: "11px", padding: "4px 10px", borderRadius: "4px", fontFamily: "'Courier New', Courier, monospace", textTransform: "uppercase", letterSpacing: "0.05em", cursor: "pointer", minWidth: "90px" }}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="new">New</SelectItem>
-                    <SelectItem value="read">Read</SelectItem>
-                    <SelectItem value="replied">Replied</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-2">
+                  <Select value={msg.status || "new"} onValueChange={(v) => updateStatus(msg.id, v)}>
+                    <SelectTrigger style={{ ...STATUS_STYLE[msg.status || "new"], fontSize: "11px", padding: "4px 10px", borderRadius: "4px", fontFamily: "'Courier New', Courier, monospace", textTransform: "uppercase", letterSpacing: "0.05em", cursor: "pointer", minWidth: "90px" }}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="new">New</SelectItem>
+                      <SelectItem value="read">Read</SelectItem>
+                      <SelectItem value="replied">Replied</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <button
+                    onClick={() => deleteMessage(msg.id)}
+                    style={{ padding: "4px", backgroundColor: "transparent", border: "none", cursor: "pointer", color: "#777777", display: "flex", alignItems: "center" }}
+                    title="Delete message"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
               <div style={{ backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", borderRadius: "4px", padding: "12px" }}>
                 <p className="text-sm leading-relaxed" style={{ color: "#777777" }}>{msg.message}</p>

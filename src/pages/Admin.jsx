@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
-import { parseISO, isToday } from "date-fns";
+import { parseISO, isToday, subDays, isAfter, startOfDay } from "date-fns";
 import { Search, Loader2, CalendarDays } from "lucide-react";
 import ReservationCard from "../components/ReservationCard";
 import AdminCalendarView from "../components/AdminCalendarView";
@@ -141,6 +141,8 @@ export default function Admin() {
 
   const availableTabs = isAdmin ? ALL_TABS : TEAM_TABS;
 
+  const yesterday = startOfDay(subDays(new Date(), 1));
+
   const load = async () => {
     setLoading(true);
     const { data } = await supabase
@@ -177,14 +179,22 @@ export default function Admin() {
     if (!q) return false;
     if (resTab === "upcoming") return r.status === "confirmed";
     if (resTab === "today")    return isToday(parseISO(r.date)) && r.status === "confirmed";
-    if (resTab === "past")     return r.status === "completed" || r.status === "cancelled";
+    if (resTab === "past") {
+      const isPast = r.status === "completed" || r.status === "cancelled";
+      const isRecent = isAfter(startOfDay(parseISO(r.date)), yesterday);
+      return isPast && isRecent;
+    }
     return true;
   });
 
   const counts = {
     upcoming: reservations.filter(r => r.status === "confirmed").length,
     today:    reservations.filter(r => isToday(parseISO(r.date)) && r.status === "confirmed").length,
-    past:     reservations.filter(r => r.status === "completed" || r.status === "cancelled").length,
+    past:     reservations.filter(r => {
+      const isPast = r.status === "completed" || r.status === "cancelled";
+      const isRecent = isAfter(startOfDay(parseISO(r.date)), yesterday);
+      return isPast && isRecent;
+    }).length,
   };
 
   return (

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,9 +18,9 @@ export default function HireEnquiriesManager() {
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase
-        .from('hire_enquiries')
+        .from("hire_enquiries")
         .select()
-        .order('created_at', { ascending: false });
+        .order("created_at", { ascending: false });
       setEnquiries(data || []);
       setLoading(false);
     };
@@ -29,12 +29,23 @@ export default function HireEnquiriesManager() {
 
   const updateStatus = async (id, status) => {
     const { error } = await supabase
-      .from('hire_enquiries')
+      .from("hire_enquiries")
       .update({ status })
-      .eq('id', id);
+      .eq("id", id);
     if (!error) {
       setEnquiries((p) => p.map((e) => e.id === id ? { ...e, status } : e));
       toast.success("Status updated");
+    }
+  };
+
+  const deleteEnquiry = async (id) => {
+    const { error } = await supabase
+      .from("hire_enquiries")
+      .delete()
+      .eq("id", id);
+    if (!error) {
+      setEnquiries((p) => p.filter((e) => e.id !== id));
+      toast.success("Enquiry deleted");
     }
   };
 
@@ -59,16 +70,25 @@ export default function HireEnquiriesManager() {
                     {enq.created_at ? format(new Date(enq.created_at), "d MMM yyyy 'at' HH:mm") : ""}
                   </p>
                 </div>
-                <Select value={enq.status || "new"} onValueChange={(v) => updateStatus(enq.id, v)}>
-                  <SelectTrigger style={{ ...STATUS_STYLE[enq.status || "new"], fontSize: "11px", padding: "4px 10px", borderRadius: "4px", fontFamily: "'Courier New', Courier, monospace", textTransform: "uppercase", letterSpacing: "0.05em", cursor: "pointer", minWidth: "110px" }}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="new">New</SelectItem>
-                    <SelectItem value="in_progress">In progress</SelectItem>
-                    <SelectItem value="resolved">Resolved</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-2">
+                  <Select value={enq.status || "new"} onValueChange={(v) => updateStatus(enq.id, v)}>
+                    <SelectTrigger style={{ ...STATUS_STYLE[enq.status || "new"], fontSize: "11px", padding: "4px 10px", borderRadius: "4px", fontFamily: "'Courier New', Courier, monospace", textTransform: "uppercase", letterSpacing: "0.05em", cursor: "pointer", minWidth: "110px" }}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="new">New</SelectItem>
+                      <SelectItem value="in_progress">In progress</SelectItem>
+                      <SelectItem value="resolved">Resolved</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <button
+                    onClick={() => deleteEnquiry(enq.id)}
+                    style={{ padding: "4px", backgroundColor: "transparent", border: "none", cursor: "pointer", color: "#777777", display: "flex", alignItems: "center" }}
+                    title="Delete enquiry"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
                 {[
