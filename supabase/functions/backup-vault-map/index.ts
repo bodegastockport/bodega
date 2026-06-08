@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
       .select("id, section, row_label, column_number, status, member_id")
       .order("section")
       .order("row_label")
-      .order("column_number");
+      .order("column_number").range(0, 1999);
 
     if (error) throw error;
 
