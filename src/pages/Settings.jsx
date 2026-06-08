@@ -320,7 +320,7 @@ export default function Settings() {
           <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777", borderBottom: "1px solid #d8d6d0", paddingBottom: "10px" }}>Booking config</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
             {[
-              { key: "slot_duration", label: "Time slot duration (mins)", hint: "Gap between available booking times" },
+              { key: "slot_duration", label: "Booking length (mins)", hint: "How long each table booking lasts" },
               { key: "booking_lead_days", label: "Bookings open up to (days ahead)", hint: "How far in advance customers can book" },
             ].map(({ key, label, hint }) => (
               <div key={key}>
