@@ -145,15 +145,28 @@ function SectionGrid({ section, slots, selected, onSelect }) {
 
 export default function VaultMap() {
   const [slots, setSlots] = useState([]);
+  const [stats, setStats] = useState({ total: 0, assigned: 0, withBottle: 0, available: 0, pending: 0 });
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     const load = async () => {
-      const [{ data: slotData }, { data: members }, { data: bottles }] = await Promise.all([
+      const [
+        { data: slotData },
+        { data: members },
+        { data: bottles },
+        { count: totalCount },
+        { count: assignedCount },
+        { count: availableCount },
+        { count: pendingCount },
+      ] = await Promise.all([
         supabase.from("vault_slots").select("id, section, row_label, column_number, status, member_id").order("section").order("row_label").order("column_number").range(0, 1999),
         supabase.from("cellar_members").select("id, name, membership_tier"),
         supabase.from("cellar_bottles").select("id, slot_id, wine_name, vintage, type, notes, image_front_url, status").eq("status", "stored"),
+        supabase.from("vault_slots").select("*", { count: "exact", head: true }),
+        supabase.from("vault_slots").select("*", { count: "exact", head: true }).eq("status", "assigned"),
+        supabase.from("vault_slots").select("*", { count: "exact", head: true }).eq("status", "available"),
+        supabase.from("vault_slots").select("*", { count: "exact", head: true }).eq("status", "pending_release"),
       ]);
 
       const memberMap = {};
@@ -162,6 +175,8 @@ export default function VaultMap() {
       const bottleMap = {};
       for (const b of bottles || []) if (b.slot_id) bottleMap[b.slot_id] = b;
 
+      const assignedWithBottle = (slotData || []).filter(s => s.status === "assigned" && bottleMap[s.id]).length;
+
       const enriched = (slotData || []).map(s => ({
         ...s,
         member: s.member_id ? memberMap[s.member_id] || null : null,
@@ -169,16 +184,17 @@ export default function VaultMap() {
       }));
 
       setSlots(enriched);
+      setStats({
+        total: totalCount || 0,
+        assigned: assignedCount || 0,
+        withBottle: assignedWithBottle,
+        available: availableCount || 0,
+        pending: pendingCount || 0,
+      });
       setLoading(false);
     };
     load();
   }, []);
-
-  const total = slots.length;
-  const assigned = slots.filter(s => s.status === "assigned").length;
-  const withBottle = slots.filter(s => s.status === "assigned" && s.bottle).length;
-  const available = slots.filter(s => s.status === "available").length;
-  const pending = slots.filter(s => s.status === "pending_release").length;
 
   if (loading) return (
     <div className="flex justify-center py-16">
@@ -196,10 +212,10 @@ export default function VaultMap() {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
-          { label: "Total slots", value: total },
-          { label: "Assigned", value: assigned },
-          { label: "With bottle", value: withBottle },
-          { label: "Available", value: available },
+          { label: "Total slots", value: stats.total },
+          { label: "Assigned", value: stats.assigned },
+          { label: "With bottle", value: stats.withBottle },
+          { label: "Available", value: stats.available },
         ].map(({ label, value }) => (
           <div key={label} style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "14px" }}>
             <p style={{ fontSize: "10px", color: "#777777", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>{label}</p>
@@ -238,10 +254,10 @@ export default function VaultMap() {
         ))}
       </div>
 
-      {pending > 0 && (
+      {stats.pending > 0 && (
         <div style={{ marginTop: "16px", backgroundColor: "#fdf3e7", border: "1px solid #f5e6d3", padding: "12px" }}>
           <p style={{ fontSize: "11px", color: "#c0792b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            {pending} slot{pending !== 1 ? "s" : ""} pending release — bottles still to collect
+            {stats.pending} slot{stats.pending !== 1 ? "s" : ""} pending release — bottles still to collect
           </p>
         </div>
       )}
