@@ -1,45 +1,23 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { JWT } from "https://deno.land/x/djwt@v2.8/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-async function getAccessToken(key: Record<string, string>): Promise<string> {
+async function getGoogleAccessToken(serviceAccountKey: string): Promise<string> {
+  const sa = JSON.parse(serviceAccountKey);
   const now = Math.floor(Date.now() / 1000);
-  const encode = (o: object) =>
-    btoa(JSON.stringify(o)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-
-  const header  = encode({ alg: "RS256", typ: "JWT" });
-  const payload = encode({
-    iss: key.client_email,
+  const payload = {
+    iss: sa.client_email,
     scope: "https://www.googleapis.com/auth/spreadsheets",
     aud: "https://oauth2.googleapis.com/token",
-    exp: now + 3600,
     iat: now,
-  });
-
-  const toSign  = `${header}.${payload}`;
-  const pemBody = key.private_key
-    .replace(/-----BEGIN PRIVATE KEY-----/, "")
-    .replace(/-----END PRIVATE KEY-----/, "")
-    .replace(/\n/g, "");
-
-  const keyBuffer = Uint8Array.from(atob(pemBody), (c) => c.charCodeAt(0));
-  const cryptoKey = await crypto.subtle.importKey(
-    "pkcs8", keyBuffer,
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false, ["sign"]
-  );
-
-  const sig = await crypto.subtle.sign(
-    "RSASSA-PKCS1-v1_5", cryptoKey, new TextEncoder().encode(toSign)
-  );
-  const signature = btoa(String.fromCharCode(...new Uint8Array(sig)))
-    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-
-  const jwt = `${toSign}.${signature}`;
+    exp: now + 3600,
+  };
+  const privateKey = sa.private_key;
+  const jwt = await JWT.sign(payload, privateKey, { algorithm: "RS256" });
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -48,41 +26,46 @@ async function getAccessToken(key: Record<string, string>): Promise<string> {
       assertion: jwt,
     }),
   });
-
   const data = await res.json();
-  if (!data.access_token) throw new Error(`Token error: ${JSON.stringify(data)}`);
   return data.access_token;
 }
 
-async function writeGrid(token: string, sheetId: string, gridValues: string[][]) {
-  const rowCount = gridValues.length;
-  const colCount = gridValues[0]?.length || 0;
-
-  function colLetter(n: number): string {
-    let s = "";
-    while (n > 0) {
-      n--;
-      s = String.fromCharCode(65 + (n % 26)) + s;
-      n = Math.floor(n / 26);
+async function writeSheet(
+  accessToken: string,
+  sheetId: string,
+  range: string,
+  values: string[][]
+): Promise<void> {
+  await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?valueInputOption=RAW`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ values }),
     }
-    return s;
-  }
-
-  const endCol = colLetter(colCount);
-  const range = `Vault Map!A1:${endCol}${rowCount}`;
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
-
-  const res = await fetch(url, {
-    method: "PUT",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ values: gridValues }),
-  });
-
-  if (!res.ok) throw new Error(`Grid write failed: ${await res.text()}`);
+  );
 }
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+async function clearSheet(accessToken: string, sheetId: string, sheetName: string): Promise<void> {
+  await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName)}:clear`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
 
   try {
     const supabase = createClient(
@@ -90,15 +73,16 @@ serve(async (req) => {
       Deno.env.get("SERVICE_ROLE_KEY")!
     );
 
-    const { data: slots, error: slotsErr } = await supabase
+    const { data: slots, error } = await supabase
       .from("vault_slots")
-      .select("row_label, column_number, status, member_id")
-      .order("row_label", { ascending: true })
-      .order("column_number", { ascending: true });
+      .select("id, section, row_label, column_number, status, member_id")
+      .order("section")
+      .order("row_label")
+      .order("column_number");
 
-    if (slotsErr || !slots) throw new Error(`Failed to fetch vault slots: ${slotsErr?.message}`);
+    if (error) throw error;
 
-    const memberIds = [...new Set(slots.filter(s => s.member_id).map(s => s.member_id))];
+    const memberIds = [...new Set(slots.filter((s) => s.member_id).map((s) => s.member_id))];
     const memberMap: Record<string, string> = {};
 
     if (memberIds.length > 0) {
@@ -107,52 +91,73 @@ serve(async (req) => {
         .select("id, name, membership_tier")
         .in("id", memberIds);
 
-      for (const m of members || []) {
-        memberMap[m.id] = `${m.name} — ${m.membership_tier || ""}`.trim().replace(/—\s*$/, "");
+      if (members) {
+        for (const m of members) {
+          memberMap[m.id] = m.name + (m.membership_tier ? ` (${m.membership_tier})` : "");
+        }
       }
     }
 
-    const ROWS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-    const COLS = Array.from({ length: 30 }, (_, i) => i + 1);
+    const rows = "ABCDEFGHIJKLMNOPQRSTUVWX".split("");
 
-    const slotMap: Record<string, { status: string; member_id: string | null }> = {};
-    for (const slot of slots) {
-      slotMap[`${slot.row_label}-${slot.column_number}`] = {
-        status: slot.status,
-        member_id: slot.member_id,
-      };
-    }
-
-    const headerRow = ["", ...COLS.map(c => String(c))];
-    const dataRows = ROWS.map(row => {
-      const cells = COLS.map(col => {
-        const slot = slotMap[`${row}-${col}`];
-        if (!slot) return "";
-        if (slot.status === "available") return "";
-        if (slot.status === "pending_release") return "PENDING";
-        if (slot.status === "assigned" && slot.member_id) {
-          return memberMap[slot.member_id] || "Assigned";
+    const buildGrid = (section: string, cols: number): string[][] => {
+      const header = ["", ...Array.from({ length: cols }, (_, i) => String(i + 1))];
+      const grid: string[][] = [header];
+      for (const row of rows) {
+        const rowData: string[] = [row];
+        for (let col = 1; col <= cols; col++) {
+          const slot = slots.find(
+            (s) => s.section === section && s.row_label === row && s.column_number === col
+          );
+          if (!slot) {
+            rowData.push("");
+          } else if (slot.status === "available") {
+            rowData.push("");
+          } else if (slot.status === "pending_release") {
+            rowData.push("PENDING");
+          } else if (slot.member_id && memberMap[slot.member_id]) {
+            rowData.push(memberMap[slot.member_id]);
+          } else {
+            rowData.push(slot.status);
+          }
         }
-        return "";
-      });
-      return [row, ...cells];
-    });
+        grid.push(rowData);
+      }
+      return grid;
+    };
 
-    const gridValues = [headerRow, ...dataRows];
+    const leftGrid = buildGrid("L", 20);
+    const backGrid = buildGrid("B", 8);
+    const rightGrid = buildGrid("R", 20);
 
-    const serviceAccount = JSON.parse(Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY") || "");
-    const sheetId = Deno.env.get("VAULT_MAP_SHEET_ID") || "";
-    const token = await getAccessToken(serviceAccount);
+    const spacer = [[""]];
+    const leftHeader = [["LEFT WALL"]];
+    const backHeader = [["BACK WALL"]];
+    const rightHeader = [["RIGHT WALL"]];
 
-    await writeGrid(token, sheetId, gridValues);
+    const allRows = [
+      ...leftHeader,
+      ...leftGrid,
+      ...spacer,
+      ...backHeader,
+      ...backGrid,
+      ...spacer,
+      ...rightHeader,
+      ...rightGrid,
+    ];
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
+    const serviceAccountKey = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY")!;
+    const sheetId = Deno.env.get("VAULT_MAP_SHEET_ID")!;
+    const sheetName = "Vault Map";
+
+    const accessToken = await getGoogleAccessToken(serviceAccountKey);
+    await clearSheet(accessToken, sheetId, sheetName);
+    await writeSheet(accessToken, sheetId, `${sheetName}!A1`, allRows);
+
+    return new Response(JSON.stringify({ ok: true, slots: slots.length }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-
   } catch (err) {
-    console.error("backup-vault-map error:", err);
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
