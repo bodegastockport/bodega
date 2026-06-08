@@ -1,23 +1,44 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { JWT } from "https://deno.land/x/djwt@v2.8/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-async function getGoogleAccessToken(serviceAccountKey: string): Promise<string> {
-  const sa = JSON.parse(serviceAccountKey);
+async function getAccessToken(key: Record<string, string>): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
-  const payload = {
-    iss: sa.client_email,
+  const encode = (o: object) =>
+    btoa(JSON.stringify(o)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+  const header  = encode({ alg: "RS256", typ: "JWT" });
+  const payload = encode({
+    iss: key.client_email,
     scope: "https://www.googleapis.com/auth/spreadsheets",
     aud: "https://oauth2.googleapis.com/token",
-    iat: now,
     exp: now + 3600,
-  };
-  const privateKey = sa.private_key;
-  const jwt = await JWT.sign(payload, privateKey, { algorithm: "RS256" });
+    iat: now,
+  });
+
+  const toSign  = `${header}.${payload}`;
+  const pemBody = key.private_key
+    .replace(/-----BEGIN PRIVATE KEY-----/, "")
+    .replace(/-----END PRIVATE KEY-----/, "")
+    .replace(/\n/g, "");
+
+  const keyBuffer = Uint8Array.from(atob(pemBody), (c) => c.charCodeAt(0));
+  const cryptoKey = await crypto.subtle.importKey(
+    "pkcs8", keyBuffer,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false, ["sign"]
+  );
+
+  const sig = await crypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5", cryptoKey, new TextEncoder().encode(toSign)
+  );
+  const signature = btoa(String.fromCharCode(...new Uint8Array(sig)))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+  const jwt = `${toSign}.${signature}`;
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -26,40 +47,10 @@ async function getGoogleAccessToken(serviceAccountKey: string): Promise<string> 
       assertion: jwt,
     }),
   });
+
   const data = await res.json();
+  if (!data.access_token) throw new Error(`Token error: ${JSON.stringify(data)}`);
   return data.access_token;
-}
-
-async function writeSheet(
-  accessToken: string,
-  sheetId: string,
-  range: string,
-  values: string[][]
-): Promise<void> {
-  await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?valueInputOption=RAW`,
-    {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ values }),
-    }
-  );
-}
-
-async function clearSheet(accessToken: string, sheetId: string, sheetName: string): Promise<void> {
-  await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName)}:clear`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
 }
 
 Deno.serve(async (req) => {
@@ -78,11 +69,12 @@ Deno.serve(async (req) => {
       .select("id, section, row_label, column_number, status, member_id")
       .order("section")
       .order("row_label")
-      .order("column_number").range(0, 1999);
+      .order("column_number")
+      .range(0, 1999);
 
     if (error) throw error;
 
-    const memberIds = [...new Set(slots.filter((s) => s.member_id).map((s) => s.member_id))];
+    const memberIds = [...new Set((slots || []).filter((s) => s.member_id).map((s) => s.member_id))];
     const memberMap: Record<string, string> = {};
 
     if (memberIds.length > 0) {
@@ -106,12 +98,10 @@ Deno.serve(async (req) => {
       for (const row of rows) {
         const rowData: string[] = [row];
         for (let col = 1; col <= cols; col++) {
-          const slot = slots.find(
+          const slot = (slots || []).find(
             (s) => s.section === section && s.row_label === row && s.column_number === col
           );
-          if (!slot) {
-            rowData.push("");
-          } else if (slot.status === "available") {
+          if (!slot || slot.status === "available") {
             rowData.push("");
           } else if (slot.status === "pending_release") {
             rowData.push("PENDING");
@@ -126,35 +116,38 @@ Deno.serve(async (req) => {
       return grid;
     };
 
-    const leftGrid = buildGrid("L", 20);
-    const backGrid = buildGrid("B", 8);
-    const rightGrid = buildGrid("R", 20);
-
-    const spacer = [[""]];
-    const leftHeader = [["LEFT WALL"]];
-    const backHeader = [["BACK WALL"]];
-    const rightHeader = [["RIGHT WALL"]];
-
     const allRows = [
-      ...leftHeader,
-      ...leftGrid,
-      ...spacer,
-      ...backHeader,
-      ...backGrid,
-      ...spacer,
-      ...rightHeader,
-      ...rightGrid,
-    ];
+      [["LEFT WALL"]],
+      buildGrid("L", 20),
+      [[""]],
+      [["BACK WALL"]],
+      buildGrid("B", 8),
+      [[""]],
+      [["RIGHT WALL"]],
+      buildGrid("R", 20),
+    ].flat();
 
-    const serviceAccountKey = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY")!;
+    const saKey = JSON.parse(Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY")!);
     const sheetId = "1d-w9q4PoToaYAS3AqcCnPch57ogpzP_taGj8iVbQ6yU";
     const sheetName = "Vault Map";
 
-    const accessToken = await getGoogleAccessToken(serviceAccountKey);
-    await clearSheet(accessToken, sheetId, sheetName);
-    await writeSheet(accessToken, sheetId, `${sheetName}!A1`, allRows);
+    const token = await getAccessToken(saKey);
 
-    return new Response(JSON.stringify({ ok: true, slots: slots.length }), {
+    await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName)}:clear`,
+      { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+    );
+
+    await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName + "!A1")}?valueInputOption=RAW`,
+      {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ values: allRows }),
+      }
+    );
+
+    return new Response(JSON.stringify({ ok: true, slots: slots?.length }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
