@@ -9,6 +9,7 @@ const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
 const DEFAULT_SETTINGS = {
   slot_duration: "30",
   booking_lead_days: "28",
+  walkin_cap_enabled: "false",
   open_days: JSON.stringify({
     Monday:    { open: false, from: "14:00", to: "22:00" },
     Tuesday:   { open: true,  from: "14:00", to: "22:00" },
@@ -73,6 +74,8 @@ export default function Settings() {
     try { return JSON.parse(settings.closed_dates); }
     catch { return []; }
   })();
+
+  const walkinCapEnabled = settings.walkin_cap_enabled === "true";
 
   const loadSettings = async () => {
     const { data } = await supabase.from('bar_settings').select();
@@ -198,7 +201,6 @@ export default function Settings() {
           </button>
         </div>
 
-        
         <section className="mb-10">
           <div className="flex items-center justify-between mb-5" style={{ borderBottom: "1px solid #d8d6d0", paddingBottom: "10px" }}>
             <p className="text-xs uppercase tracking-widest" style={{ color: "#777777" }}>Tables</p>
@@ -262,7 +264,6 @@ export default function Settings() {
           )}
         </section>
 
-        
         <section className="mb-10">
           <div className="flex items-center justify-between mb-5" style={{ borderBottom: "1px solid #d8d6d0", paddingBottom: "10px" }}>
             <div>
@@ -315,10 +316,9 @@ export default function Settings() {
           )}
         </section>
 
-        
         <section className="mb-10">
           <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777", borderBottom: "1px solid #d8d6d0", paddingBottom: "10px" }}>Booking config</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
             {[
               { key: "slot_duration", label: "Time slot duration (mins)", hint: "Gap between available booking times" },
               { key: "booking_lead_days", label: "Bookings open up to (days ahead)", hint: "How far in advance customers can book" },
@@ -330,9 +330,20 @@ export default function Settings() {
               </div>
             ))}
           </div>
+          <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "16px" }} className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>Walk-in cap</p>
+              <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>
+                When on, online bookings stop accepting once 14 seats are taken per time slot, keeping the remainder free for walk-ins.
+              </p>
+            </div>
+            <Switch
+              checked={walkinCapEnabled}
+              onCheckedChange={(v) => updateSetting("walkin_cap_enabled", String(v))}
+            />
+          </div>
         </section>
 
-     
         <section className="mb-10">
           <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777", borderBottom: "1px solid #d8d6d0", paddingBottom: "10px" }}>Opening hours</p>
           <div className="space-y-2">
@@ -357,7 +368,6 @@ export default function Settings() {
           </div>
         </section>
 
-     
         <section className="mb-10">
           <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777", borderBottom: "1px solid #d8d6d0", paddingBottom: "10px" }}>Closed dates</p>
           <p className="text-xs mb-4" style={{ color: "#777777" }}>Block out entire days — holidays, private events, etc.</p>
@@ -381,7 +391,7 @@ export default function Settings() {
 
         <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "16px" }}>
           <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>
-            Changes to opening hours and booking config affect new bookings only. Remember to click <strong style={{ color: "#0A242C" }}>Save changes</strong> after editing. Table changes save immediately.
+            Changes to opening hours, booking config and the walk-in cap require clicking <strong style={{ color: "#0A242C" }}>Save changes</strong>. Table changes save immediately.
           </p>
         </div>
       </div>

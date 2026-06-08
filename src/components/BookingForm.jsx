@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const WALKIN_CAP_SEATS = 14;
 
 const inputStyle = {
   backgroundColor: "#f3f2ee",
@@ -58,6 +59,7 @@ export default function BookingForm({ onSuccess }) {
   const [openDays, setOpenDays] = useState({});
   const [slotDuration, setSlotDuration] = useState(30);
   const [bookingLeadDays, setBookingLeadDays] = useState(28);
+  const [walkinCapEnabled, setWalkinCapEnabled] = useState(false);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   const [availableSlots, setAvailableSlots] = useState([]);
@@ -73,6 +75,7 @@ export default function BookingForm({ onSuccess }) {
         if (map.open_days) { try { setOpenDays(JSON.parse(map.open_days)); } catch {} }
         if (map.slot_duration) setSlotDuration(parseInt(map.slot_duration));
         if (map.booking_lead_days) setBookingLeadDays(parseInt(map.booking_lead_days));
+        if (map.walkin_cap_enabled) setWalkinCapEnabled(map.walkin_cap_enabled === "true");
       }
       setSettingsLoaded(true);
     };
@@ -103,7 +106,7 @@ export default function BookingForm({ onSuccess }) {
 
       const { data: existingReservations } = await supabase
         .from('reservations')
-        .select('table_id, time')
+        .select('table_id, time, party_size')
         .eq('date', dateStr)
         .in('status', ['confirmed']);
 
@@ -112,13 +115,20 @@ export default function BookingForm({ onSuccess }) {
       let maxAvailableCapacity = 0;
 
       slots.forEach(slot => {
-        const bookedTableIds = (existingReservations || []).filter(r => r.time === slot).map(r => r.table_id);
+        const slotReservations = (existingReservations || []).filter(r => r.time === slot);
+        const bookedTableIds = slotReservations.map(r => r.table_id);
         const freeTables = tables.filter(t => !bookedTableIds.includes(t.id));
-        if (freeTables.length > 0) {
-          availableSlotSet.add(slot);
-          const maxCap = Math.max(...freeTables.map(t => t.capacity));
-          if (maxCap > maxAvailableCapacity) maxAvailableCapacity = maxCap;
+
+        if (freeTables.length === 0) return;
+
+        if (walkinCapEnabled) {
+          const seatsBooked = slotReservations.reduce((sum, r) => sum + (r.party_size || 0), 0);
+          if (seatsBooked >= WALKIN_CAP_SEATS) return;
         }
+
+        availableSlotSet.add(slot);
+        const maxCap = Math.max(...freeTables.map(t => t.capacity));
+        if (maxCap > maxAvailableCapacity) maxAvailableCapacity = maxCap;
       });
 
       setAvailableSlots([...availableSlotSet]);
@@ -126,7 +136,7 @@ export default function BookingForm({ onSuccess }) {
       setCheckingAvailability(false);
     };
     checkAvailability();
-  }, [form.date, settingsLoaded, openDays, slotDuration]);
+  }, [form.date, settingsLoaded, openDays, slotDuration, walkinCapEnabled]);
 
   const isDateDisabled = (date) => {
     if (isBefore(date, startOfToday())) return true;
@@ -151,9 +161,19 @@ export default function BookingForm({ onSuccess }) {
     const overriddenIds = (overrides || []).map(o => o.table_id);
 
     const { data: tables } = await supabase.from('tables').select().eq('active', true).gte('capacity', partySize).order('capacity', { ascending: true });
-    const { data: bookedAtSlot } = await supabase.from('reservations').select('table_id').eq('date', dateStr).eq('time', form.time).in('status', ['confirmed']);
+    const { data: bookedAtSlot } = await supabase.from('reservations').select('table_id, party_size').eq('date', dateStr).eq('time', form.time).in('status', ['confirmed']);
 
     const bookedIds = (bookedAtSlot || []).map(r => r.table_id);
+
+    if (walkinCapEnabled) {
+      const seatsBooked = (bookedAtSlot || []).reduce((sum, r) => sum + (r.party_size || 0), 0);
+      if (seatsBooked >= WALKIN_CAP_SEATS) {
+        setError("Sorry, that slot is no longer available. Please choose another time.");
+        setSubmitting(false);
+        return;
+      }
+    }
+
     const availableTable = (tables || []).find(t => !bookedIds.includes(t.id) && !overriddenIds.includes(t.id));
 
     if (!availableTable) {
