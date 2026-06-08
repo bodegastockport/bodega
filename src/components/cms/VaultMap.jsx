@@ -2,21 +2,20 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 
-const ROWS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-const COLS = Array.from({ length: 30 }, (_, i) => i + 1);
+const ROWS = "ABCDEFGHIJKLMNOPQRSTUVWX".split("");
+const SECTION_COLS = { L: 20, B: 8, R: 20 };
+const SECTION_LABELS = { L: "Left Wall", B: "Back Wall", R: "Right Wall" };
 
-function slotLabel(rowLabel, colNum) {
-  return `${rowLabel}-${String(colNum).padStart(2, "0")}`;
+function slotLabel(section, rowLabel, colNum) {
+  return `${section}-${rowLabel}${String(colNum).padStart(2, "0")}`;
 }
 
-function SlotPopover({ slot, onClose, anchorRef }) {
+function SlotPopover({ slot, onClose }) {
   const popRef = useRef(null);
 
   useEffect(() => {
     const handler = (e) => {
-      if (popRef.current && !popRef.current.contains(e.target) && !anchorRef.current?.contains(e.target)) {
-        onClose();
-      }
+      if (popRef.current && !popRef.current.contains(e.target)) onClose();
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -40,7 +39,7 @@ function SlotPopover({ slot, onClose, anchorRef }) {
       }}
     >
       <div className="flex items-center justify-between mb-4">
-        <p style={{ fontSize: "13px", color: "#1E4D5A", fontWeight: 500 }}>{slotLabel(slot.row_label, slot.column_number)}</p>
+        <p style={{ fontSize: "13px", color: "#1E4D5A", fontWeight: 500 }}>{slotLabel(slot.section, slot.row_label, slot.column_number)}</p>
         <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#777777", fontSize: "16px", lineHeight: 1 }}>×</button>
       </div>
 
@@ -55,7 +54,7 @@ function SlotPopover({ slot, onClose, anchorRef }) {
         </>
       )}
 
-      {(slot.status === "assigned") && slot.member && (
+      {slot.status === "assigned" && slot.member && (
         <div>
           <p style={{ fontSize: "11px", color: "#777777", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "6px" }}>Member</p>
           <p style={{ fontSize: "12px", color: "#0A242C", marginBottom: "2px" }}>{slot.member.name}</p>
@@ -86,16 +85,73 @@ function SlotPopover({ slot, onClose, anchorRef }) {
   );
 }
 
+function SectionGrid({ section, slots, selected, onSelect }) {
+  const cols = Array.from({ length: SECTION_COLS[section] }, (_, i) => i + 1);
+  const slotMap = {};
+  for (const s of slots) slotMap[`${s.row_label}-${s.column_number}`] = s;
+
+  const getColor = (slot) => {
+    if (!slot || slot.status === "available") return "#eceae4";
+    if (slot.status === "pending_release") return "#f5e6d3";
+    if (slot.status === "assigned" && slot.bottle) return "#1E4D5A";
+    if (slot.status === "assigned" && !slot.bottle) return "#a8c4cc";
+    return "#eceae4";
+  };
+
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <div style={{ display: "inline-block", minWidth: "fit-content" }}>
+        <div style={{ display: "flex", marginBottom: "2px", marginLeft: "24px", gap: "2px" }}>
+          {cols.map(col => (
+            <div key={col} style={{ width: "22px", textAlign: "center", fontSize: "8px", color: "#aaa", fontFamily: "'Courier New', Courier, monospace", flexShrink: 0 }}>
+              {col}
+            </div>
+          ))}
+        </div>
+
+        {ROWS.map(row => (
+          <div key={row} style={{ display: "flex", alignItems: "center", gap: "2px", marginBottom: "2px" }}>
+            <div style={{ width: "20px", fontSize: "9px", color: "#aaa", fontFamily: "'Courier New', Courier, monospace", flexShrink: 0, textAlign: "right", paddingRight: "4px" }}>
+              {row}
+            </div>
+            {cols.map(col => {
+              const slot = slotMap[`${row}-${col}`];
+              const isSelected = selected?.section === section && selected?.row_label === row && selected?.column_number === col;
+              return (
+                <div
+                  key={col}
+                  onClick={() => slot && onSelect(slot)}
+                  title={slotLabel(section, row, col)}
+                  style={{
+                    width: "22px",
+                    height: "22px",
+                    backgroundColor: getColor(slot),
+                    border: isSelected ? "2px solid #0A242C" : "1px solid rgba(0,0,0,0.06)",
+                    cursor: slot ? "pointer" : "default",
+                    flexShrink: 0,
+                    transition: "opacity 0.1s",
+                  }}
+                  onMouseEnter={e => { if (slot) e.currentTarget.style.opacity = "0.75"; }}
+                  onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+                />
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function VaultMap() {
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
-  const selectedRef = useRef(null);
 
   useEffect(() => {
     const load = async () => {
       const [{ data: slotData }, { data: members }, { data: bottles }] = await Promise.all([
-        supabase.from("vault_slots").select("id, row_label, column_number, status, member_id").order("row_label").order("column_number"),
+        supabase.from("vault_slots").select("id, section, row_label, column_number, status, member_id").order("section").order("row_label").order("column_number"),
         supabase.from("cellar_members").select("id, name, membership_tier"),
         supabase.from("cellar_bottles").select("id, slot_id, wine_name, vintage, type, notes, image_front_url, status").eq("status", "stored"),
       ]);
@@ -118,23 +174,11 @@ export default function VaultMap() {
     load();
   }, []);
 
-  const slotMap = {};
-  for (const s of slots) slotMap[`${s.row_label}-${s.column_number}`] = s;
-
   const total = slots.length;
   const assigned = slots.filter(s => s.status === "assigned").length;
   const withBottle = slots.filter(s => s.status === "assigned" && s.bottle).length;
-  const pending = slots.filter(s => s.status === "pending_release").length;
   const available = slots.filter(s => s.status === "available").length;
-
-  const getColor = (slot) => {
-    if (!slot) return "#eceae4";
-    if (slot.status === "available") return "#eceae4";
-    if (slot.status === "pending_release") return "#f5e6d3";
-    if (slot.status === "assigned" && slot.bottle) return "#1E4D5A";
-    if (slot.status === "assigned" && !slot.bottle) return "#a8c4cc";
-    return "#eceae4";
-  };
+  const pending = slots.filter(s => s.status === "pending_release").length;
 
   if (loading) return (
     <div className="flex justify-center py-16">
@@ -146,7 +190,7 @@ export default function VaultMap() {
     <div style={{ fontFamily: "'Courier New', Courier, monospace" }}>
       {selected && (
         <div style={{ position: "fixed", inset: 0, zIndex: 99, backgroundColor: "rgba(10,36,44,0.4)" }} onClick={() => setSelected(null)}>
-          <SlotPopover slot={selected} onClose={() => setSelected(null)} anchorRef={selectedRef} />
+          <SlotPopover slot={selected} onClose={() => setSelected(null)} />
         </div>
       )}
 
@@ -164,7 +208,7 @@ export default function VaultMap() {
         ))}
       </div>
 
-      <div className="flex items-center gap-4 mb-4 flex-wrap">
+      <div className="flex items-center gap-4 mb-6 flex-wrap">
         {[
           { color: "#1E4D5A", label: "Bottle stored" },
           { color: "#a8c4cc", label: "Assigned, empty" },
@@ -178,47 +222,20 @@ export default function VaultMap() {
         ))}
       </div>
 
-      <div style={{ overflowX: "auto" }}>
-        <div style={{ display: "inline-block", minWidth: "fit-content" }}>
-          <div style={{ display: "flex", marginBottom: "2px", marginLeft: "24px", gap: "2px" }}>
-            {COLS.map(col => (
-              <div key={col} style={{ width: "22px", textAlign: "center", fontSize: "8px", color: "#aaa", fontFamily: "'Courier New', Courier, monospace", flexShrink: 0 }}>
-                {col}
-              </div>
-            ))}
+      <div className="space-y-8">
+        {["L", "B", "R"].map(section => (
+          <div key={section}>
+            <p style={{ fontSize: "10px", color: "#777777", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "10px", borderBottom: "1px solid #d8d6d0", paddingBottom: "6px" }}>
+              {SECTION_LABELS[section]}
+            </p>
+            <SectionGrid
+              section={section}
+              slots={slots.filter(s => s.section === section)}
+              selected={selected}
+              onSelect={setSelected}
+            />
           </div>
-
-          {ROWS.map(row => (
-            <div key={row} style={{ display: "flex", alignItems: "center", gap: "2px", marginBottom: "2px" }}>
-              <div style={{ width: "20px", fontSize: "9px", color: "#aaa", fontFamily: "'Courier New', Courier, monospace", flexShrink: 0, textAlign: "right", paddingRight: "4px" }}>
-                {row}
-              </div>
-              {COLS.map(col => {
-                const slot = slotMap[`${row}-${col}`];
-                const color = getColor(slot);
-                return (
-                  <div
-                    key={col}
-                    ref={selected?.row_label === row && selected?.column_number === col ? selectedRef : null}
-                    onClick={() => slot && setSelected(slot)}
-                    title={slotLabel(row, col)}
-                    style={{
-                      width: "22px",
-                      height: "22px",
-                      backgroundColor: color,
-                      border: selected?.row_label === row && selected?.column_number === col ? "2px solid #0A242C" : "1px solid rgba(0,0,0,0.06)",
-                      cursor: slot ? "pointer" : "default",
-                      flexShrink: 0,
-                      transition: "opacity 0.1s",
-                    }}
-                    onMouseEnter={e => { if (slot) e.currentTarget.style.opacity = "0.75"; }}
-                    onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
-                  />
-                );
-              })}
-            </div>
-          ))}
-        </div>
+        ))}
       </div>
 
       {pending > 0 && (
