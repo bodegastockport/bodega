@@ -3,7 +3,6 @@ import { supabase } from "@/lib/supabase";
 
 const STATUS_STYLES = {
   confirmed: { backgroundColor: "#eaf0ec", color: "#2e6b45", border: "1px solid #c8dace" },
-  cancelled: { backgroundColor: "#f0eaea", color: "#6b2e2e", border: "1px solid #dac8c8" },
   completed: { backgroundColor: "#eceae4", color: "#777777", border: "1px solid #d8d6d0" },
 };
 
@@ -23,7 +22,12 @@ const btnOutline = {
 
 export default function ReservationCard({ reservation, onUpdate }) {
   const updateStatus = async (newStatus) => {
-    await supabase.from('reservations').update({ status: newStatus }).eq('id', reservation.id);
+    await supabase.from("reservations").update({ status: newStatus }).eq("id", reservation.id);
+    onUpdate();
+  };
+
+  const deleteReservation = async () => {
+    await supabase.from("reservations").delete().eq("id", reservation.id);
     onUpdate();
   };
 
@@ -77,13 +81,13 @@ export default function ReservationCard({ reservation, onUpdate }) {
               style={btnOutline}
               onMouseEnter={e => { e.currentTarget.style.backgroundColor = "#1E4D5A"; e.currentTarget.style.color = "#f3f2ee"; }}
               onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#1E4D5A"; }}
-              onClick={() => updateStatus("cancelled")}
+              onClick={deleteReservation}
             >
               Cancel
             </button>
           </>
         )}
-        {(reservation.status === "cancelled" || reservation.status === "completed") && (
+        {reservation.status === "completed" && (
           <button
             style={btnOutline}
             onMouseEnter={e => { e.currentTarget.style.backgroundColor = "#1E4D5A"; e.currentTarget.style.color = "#f3f2ee"; }}
