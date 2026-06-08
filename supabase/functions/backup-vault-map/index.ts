@@ -1,3 +1,4 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -53,7 +54,25 @@ async function getAccessToken(key: Record<string, string>): Promise<string> {
   return data.access_token;
 }
 
-Deno.serve(async (req) => {
+async function writeGrid(token: string, sheetId: string, sheetName: string, values: string[][]): Promise<void> {
+  await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName + "!A1")}?valueInputOption=RAW`,
+    {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ values }),
+    }
+  );
+}
+
+async function clearGrid(token: string, sheetId: string, sheetName: string): Promise<void> {
+  await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName)}:clear`,
+    { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+  );
+}
+
+serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -132,20 +151,8 @@ Deno.serve(async (req) => {
     const sheetName = "Vault Map";
 
     const token = await getAccessToken(saKey);
-
-    await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName)}:clear`,
-      { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
-    );
-
-    await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName + "!A1")}?valueInputOption=RAW`,
-      {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ values: allRows }),
-      }
-    );
+    await clearGrid(token, sheetId, sheetName);
+    await writeGrid(token, sheetId, sheetName, allRows);
 
     return new Response(JSON.stringify({ ok: true, slots: slots?.length }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
