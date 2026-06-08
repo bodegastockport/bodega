@@ -151,7 +151,7 @@ export default function VaultMap() {
   useEffect(() => {
     const load = async () => {
       const [{ data: slotData }, { data: members }, { data: bottles }] = await Promise.all([
-        supabase.from("vault_slots").select("id, section, row_label, column_number, status, member_id").order("section").order("row_label").order("column_number"),
+        supabase.from("vault_slots").select("id, section, row_label, column_number, status, member_id").order("section").order("row_label").order("column_number").limit(2000),
         supabase.from("cellar_members").select("id, name, membership_tier"),
         supabase.from("cellar_bottles").select("id, slot_id, wine_name, vintage, type, notes, image_front_url, status").eq("status", "stored"),
       ]);
