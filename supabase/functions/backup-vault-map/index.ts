@@ -147,7 +147,7 @@ Deno.serve(async (req) => {
     ];
 
     const serviceAccountKey = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY")!;
-    const sheetId = Deno.env.get("VAULT_MAP_SHEET_ID")!;
+    const sheetId = "1d-w9q4PoToaYAS3AqcCnPch57ogpzP_taGj8iVbQ6yU";
     const sheetName = "Vault Map";
 
     const accessToken = await getGoogleAccessToken(serviceAccountKey);
