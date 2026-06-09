@@ -9,6 +9,7 @@ const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
 const DEFAULT_SETTINGS = {
   slot_duration: "30",
   booking_lead_days: "28",
+  min_notice_hours: "2",
   walkin_cap_enabled: "false",
   open_days: JSON.stringify({
     Monday:    { open: false, from: "14:00", to: "22:00" },
@@ -322,10 +323,11 @@ export default function Settings() {
             {[
               { key: "slot_duration", label: "Booking length (mins)", hint: "How long each table booking lasts" },
               { key: "booking_lead_days", label: "Bookings open up to (days ahead)", hint: "How far in advance customers can book" },
+              { key: "min_notice_hours", label: "Minimum notice (hours)", hint: "How far ahead a booking must be made — slots closer than this won't appear" },
             ].map(({ key, label, hint }) => (
               <div key={key}>
                 <label style={labelStyle}>{label}</label>
-                <input type="number" min="1" style={{ ...inputStyle, width: "100%" }} value={settings[key]} onChange={(e) => updateSetting(key, e.target.value)} />
+                <input type="number" min="0" style={{ ...inputStyle, width: "100%" }} value={settings[key]} onChange={(e) => updateSetting(key, e.target.value)} />
                 <p className="text-xs mt-1" style={{ color: "#777777" }}>{hint}</p>
               </div>
             ))}

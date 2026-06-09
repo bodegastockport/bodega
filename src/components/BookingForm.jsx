@@ -60,6 +60,7 @@ export default function BookingForm({ onSuccess }) {
   const [slotDuration, setSlotDuration] = useState(30);
   const [bookingLeadDays, setBookingLeadDays] = useState(28);
   const [walkinCapEnabled, setWalkinCapEnabled] = useState(false);
+  const [minNoticeHours, setMinNoticeHours] = useState(0);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   const [availableSlots, setAvailableSlots] = useState([]);
@@ -76,6 +77,7 @@ export default function BookingForm({ onSuccess }) {
         if (map.slot_duration) setSlotDuration(parseInt(map.slot_duration));
         if (map.booking_lead_days) setBookingLeadDays(parseInt(map.booking_lead_days));
         if (map.walkin_cap_enabled) setWalkinCapEnabled(map.walkin_cap_enabled === "true");
+        if (map.min_notice_hours) setMinNoticeHours(parseInt(map.min_notice_hours));
       }
       setSettingsLoaded(true);
     };
@@ -95,6 +97,7 @@ export default function BookingForm({ onSuccess }) {
       if (!dayConfig?.open) { setCheckingAvailability(false); return; }
 
       const dateStr = format(form.date, "yyyy-MM-dd");
+      const now = new Date();
 
       const { data: allTables } = await supabase.from('tables').select().eq('active', true);
       const { data: overrides } = await supabase.from('table_date_overrides').select('table_id').eq('date', dateStr).eq('available', false);
@@ -115,6 +118,14 @@ export default function BookingForm({ onSuccess }) {
       let maxAvailableCapacity = 0;
 
       slots.forEach(slot => {
+        if (minNoticeHours > 0) {
+          const [slotH, slotM] = slot.split(":").map(Number);
+          const slotDateTime = new Date(form.date);
+          slotDateTime.setHours(slotH, slotM, 0, 0);
+          const cutoff = new Date(now.getTime() + minNoticeHours * 60 * 60 * 1000);
+          if (slotDateTime <= cutoff) return;
+        }
+
         const slotReservations = (existingReservations || []).filter(r => r.time === slot);
         const bookedTableIds = slotReservations.map(r => r.table_id);
         const freeTables = tables.filter(t => !bookedTableIds.includes(t.id));
@@ -136,7 +147,7 @@ export default function BookingForm({ onSuccess }) {
       setCheckingAvailability(false);
     };
     checkAvailability();
-  }, [form.date, settingsLoaded, openDays, slotDuration, walkinCapEnabled]);
+  }, [form.date, settingsLoaded, openDays, slotDuration, walkinCapEnabled, minNoticeHours]);
 
   const isDateDisabled = (date) => {
     if (isBefore(date, startOfToday())) return true;
@@ -156,6 +167,18 @@ export default function BookingForm({ onSuccess }) {
 
     const dateStr = format(form.date, "yyyy-MM-dd");
     const partySize = Number(form.party_size);
+
+    if (minNoticeHours > 0) {
+      const [slotH, slotM] = form.time.split(":").map(Number);
+      const slotDateTime = new Date(form.date);
+      slotDateTime.setHours(slotH, slotM, 0, 0);
+      const cutoff = new Date(Date.now() + minNoticeHours * 60 * 60 * 1000);
+      if (slotDateTime <= cutoff) {
+        setError("Sorry, bookings must be made further in advance. Please choose another time.");
+        setSubmitting(false);
+        return;
+      }
+    }
 
     const { data: overrides } = await supabase.from('table_date_overrides').select('table_id').eq('date', dateStr).eq('available', false);
     const overriddenIds = (overrides || []).map(o => o.table_id);
