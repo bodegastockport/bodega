@@ -323,7 +323,7 @@ export default function Settings() {
             {[
               { key: "slot_duration", label: "Booking length (mins)", hint: "How long each table booking lasts" },
               { key: "booking_lead_days", label: "Bookings open up to (days ahead)", hint: "How far in advance customers can book" },
-              { key: "min_notice_hours", label: "Minimum notice (hours)", hint: "How far ahead a booking must be made — slots closer than this won't appear" },
+              { key: "min_notice_hours", label: "Minimum notice (hours)", hint: "How far ahead a booking must be made" },
             ].map(({ key, label, hint }) => (
               <div key={key}>
                 <label style={labelStyle}>{label}</label>
