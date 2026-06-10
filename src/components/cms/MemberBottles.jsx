@@ -13,7 +13,7 @@ const inputStyle = { backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", bo
 const labelStyle = { display: "block", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#777777", marginBottom: "4px", fontFamily: "'Courier New', Courier, monospace" };
 
 function slotLabel(slot) {
-  return `${slot.row_label}-${String(slot.column_number).padStart(2, "0")}`;
+  return `${slot.section}-${slot.row_label}${String(slot.column_number).padStart(2, "0")}`;
 }
 
 function PhotoUploadField({ label, file, previewUrl, onChange, required = false }) {
@@ -194,7 +194,7 @@ export default function MemberBottles({ member, onBottleCountChange }) {
   const load = async () => {
     const [{ data: bottleData }, { data: slotData }] = await Promise.all([
       supabase.from("cellar_bottles").select().eq("member_id", member.id).order("created_at", { ascending: false }),
-      supabase.from("vault_slots").select("id, row_label, column_number, status").eq("member_id", member.id).in("status", ["assigned", "pending_release"]).order("row_label", { ascending: true }).order("column_number", { ascending: true }),
+      supabase.from("vault_slots").select("id, section, row_label, column_number, status").eq("member_id", member.id).in("status", ["assigned", "pending_release"]).order("row_label", { ascending: true }).order("column_number", { ascending: true }),
     ]);
 
     const all = bottleData || [];
