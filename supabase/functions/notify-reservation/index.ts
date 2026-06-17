@@ -83,6 +83,15 @@ Deno.serve(async (req) => {
             </td>
           </tr>
 
+          ${reservation.requested_bottle_label ? `
+          <tr>
+            <td style="padding:24px 0;border-bottom:1px solid #d8d6d0;">
+              <p style="margin:0 0 2px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#777777;">Requested bottle</p>
+              <p style="margin:0;font-size:13px;color:#0A242C;">${reservation.requested_bottle_label}</p>
+            </td>
+          </tr>
+          ` : ""}
+
           ${reservation.special_requests ? `
           <tr>
             <td style="padding:24px 0;border-bottom:1px solid #d8d6d0;">
@@ -168,6 +177,14 @@ Deno.serve(async (req) => {
                     <p style="margin:0;font-size:13px;color:#0A242C;">${reservation.phone}</p>
                   </td>
                 </tr>
+                ${reservation.requested_bottle_label ? `
+                <tr>
+                  <td style="padding-bottom:14px;">
+                    <p style="margin:0 0 2px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#777777;">Requested bottle</p>
+                    <p style="margin:0;font-size:13px;color:#0A242C;">${reservation.requested_bottle_label}</p>
+                  </td>
+                </tr>
+                ` : ""}
                 ${reservation.special_requests ? `
                 <tr>
                   <td>
