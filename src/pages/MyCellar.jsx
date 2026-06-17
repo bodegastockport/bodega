@@ -35,6 +35,7 @@ export default function MyCellar() {
   const [lightbox, setLightbox] = useState(null);
   const [showBooking, setShowBooking] = useState(false);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  const [bookedBottleIds, setBookedBottleIds] = useState(new Set());
 
   useEffect(() => {
     const load = async () => {
@@ -74,6 +75,21 @@ export default function MyCellar() {
     setCancelling(false);
   };
 
+  const openBooking = async () => {
+    const { data: activeRequests } = await supabase
+      .from("reservations")
+      .select("requested_bottle_id")
+      .eq("status", "confirmed")
+      .not("requested_bottle_id", "is", null);
+    setBookedBottleIds(new Set((activeRequests || []).map(r => r.requested_bottle_id)));
+    setShowBooking(true);
+  };
+
+  const closeBooking = () => {
+    setShowBooking(false);
+    setBookingConfirmed(false);
+  };
+
   if (loading) return (
     <div className="flex justify-center items-center" style={{ minHeight: "60vh" }}>
       <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#1E4D5A" }} />
@@ -108,19 +124,16 @@ export default function MyCellar() {
   const getBottleForSlot = (slotId) => storedBottles.find(b => b.slot_id === slotId) || null;
   const getSlotForBottle = (bottle) => assignedSlots.find(s => s.id === bottle.slot_id) || null;
 
-  const bottleOptions = storedBottles.map((b) => {
-    const slot = getSlotForBottle(b);
-    const namePart = `${b.wine_name}${b.vintage ? ` ${b.vintage}` : ""}`;
-    return {
-      id: b.id,
-      label: slot ? `${namePart} — Slot ${slotLabel(slot)}` : namePart,
-    };
-  });
-
-  const closeBooking = () => {
-    setShowBooking(false);
-    setBookingConfirmed(false);
-  };
+  const bottleOptions = storedBottles
+    .filter((b) => !bookedBottleIds.has(b.id))
+    .map((b) => {
+      const slot = getSlotForBottle(b);
+      const namePart = `${b.wine_name}${b.vintage ? ` ${b.vintage}` : ""}`;
+      return {
+        id: b.id,
+        label: slot ? `${namePart} — Slot ${slotLabel(slot)}` : namePart,
+      };
+    });
 
   return (
     <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", minHeight: "100vh" }}>
@@ -184,7 +197,7 @@ export default function MyCellar() {
 
         <div style={{ marginBottom: "24px" }}>
           <button
-            onClick={() => setShowBooking(true)}
+            onClick={openBooking}
             style={{ padding: "9px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}
             onMouseEnter={e => e.currentTarget.style.backgroundColor = "#0A242C"}
             onMouseLeave={e => e.currentTarget.style.backgroundColor = "#1E4D5A"}

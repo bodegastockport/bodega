@@ -217,6 +217,21 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
       return;
     }
 
+    if (form.requested_bottle_id) {
+      const { data: bottleClash } = await supabase
+        .from('reservations')
+        .select('id')
+        .eq('requested_bottle_id', form.requested_bottle_id)
+        .eq('status', 'confirmed')
+        .limit(1);
+
+      if (bottleClash && bottleClash.length > 0) {
+        setError("Sorry, that bottle has just been requested for another booking. Please choose a different bottle.");
+        setSubmitting(false);
+        return;
+      }
+    }
+
     const chosenBottle = bottleOptions.find((b) => b.id === form.requested_bottle_id) || null;
 
     const { data, error: err } = await supabase.from('reservations').insert({
