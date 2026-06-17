@@ -115,6 +115,13 @@ export default function ReservationCard({ reservation, onUpdate }) {
         </div>
       </div>
 
+      {reservation.requested_bottle_label && (
+        <div style={{ backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", padding: "10px 12px", marginBottom: "16px" }}>
+          <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#1E4D5A" }}>Requested bottle</p>
+          <p className="text-xs" style={{ color: "#0A242C" }}>{reservation.requested_bottle_label}</p>
+        </div>
+      )}
+
       {reservation.special_requests && (
         <div style={{ backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", padding: "10px 12px", marginBottom: "16px" }}>
           <p className="text-xs" style={{ color: "#777777" }}>{reservation.special_requests}</p>

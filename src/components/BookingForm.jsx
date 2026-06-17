@@ -46,10 +46,11 @@ function generateTimeSlots(from, to, slotDuration) {
   return slots;
 }
 
-export default function BookingForm({ onSuccess }) {
+export default function BookingForm({ onSuccess, member = null, bottleOptions = [] }) {
   const [form, setForm] = useState({
     guest_name: "", email: "", phone: "",
     date: null, time: "", party_size: "", special_requests: "",
+    requested_bottle_id: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -83,6 +84,17 @@ export default function BookingForm({ onSuccess }) {
     };
     loadSettings();
   }, []);
+
+  useEffect(() => {
+    if (member) {
+      setForm((p) => ({
+        ...p,
+        guest_name: member.name || p.guest_name,
+        email: member.email || p.email,
+        phone: member.phone || p.phone,
+      }));
+    }
+  }, [member]);
 
   useEffect(() => {
     if (!form.date || !settingsLoaded) return;
@@ -205,6 +217,8 @@ export default function BookingForm({ onSuccess }) {
       return;
     }
 
+    const chosenBottle = bottleOptions.find((b) => b.id === form.requested_bottle_id) || null;
+
     const { data, error: err } = await supabase.from('reservations').insert({
       guest_name: form.guest_name,
       email: form.email,
@@ -215,6 +229,8 @@ export default function BookingForm({ onSuccess }) {
       special_requests: form.special_requests || null,
       status: "confirmed",
       table_id: availableTable.id,
+      requested_bottle_id: form.requested_bottle_id || null,
+      requested_bottle_label: chosenBottle ? chosenBottle.label : null,
     }).select().single();
 
     setSubmitting(false);
@@ -299,6 +315,20 @@ export default function BookingForm({ onSuccess }) {
         <label style={labelStyle}>Special requests <span style={{ color: "#aaa", textTransform: "none", letterSpacing: "normal" }}>(optional)</span></label>
         <textarea style={{ ...getInputStyle("special_requests"), minHeight: "56px", resize: "none" }} placeholder="Allergies, celebrations, seating preferences..." value={form.special_requests} onChange={(e) => update("special_requests", e.target.value)} onFocus={() => setFocused("special_requests")} onBlur={() => setFocused(null)} />
       </div>
+
+      {bottleOptions.length > 0 && (
+        <div>
+          <label style={labelStyle}>Request a bottle <span style={{ color: "#aaa", textTransform: "none", letterSpacing: "normal" }}>(optional)</span></label>
+          <Select value={form.requested_bottle_id} onValueChange={(v) => update("requested_bottle_id", v)}>
+            <SelectTrigger style={getInputStyle("requested_bottle_id")} onFocus={() => setFocused("requested_bottle_id")} onBlur={() => setFocused(null)}>
+              <SelectValue placeholder="None" />
+            </SelectTrigger>
+            <SelectContent>
+              {bottleOptions.map((b) => <SelectItem key={b.id} value={b.id}>{b.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {error && <p style={{ fontSize: "12px", color: "#c0392b" }}>{error}</p>}
 

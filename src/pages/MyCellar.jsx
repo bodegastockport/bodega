@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import BookingForm from "../components/BookingForm";
 
 function slotLabel(slot) {
   return `${slot.section}-${slot.row_label}${String(slot.column_number).padStart(2, "0")}`;
@@ -32,6 +33,8 @@ export default function MyCellar() {
   const [cancelled, setCancelled] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [lightbox, setLightbox] = useState(null);
+  const [showBooking, setShowBooking] = useState(false);
+  const [bookingConfirmed, setBookingConfirmed] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -103,10 +106,55 @@ export default function MyCellar() {
   });
 
   const getBottleForSlot = (slotId) => storedBottles.find(b => b.slot_id === slotId) || null;
+  const getSlotForBottle = (bottle) => assignedSlots.find(s => s.id === bottle.slot_id) || null;
+
+  const bottleOptions = storedBottles.map((b) => {
+    const slot = getSlotForBottle(b);
+    const namePart = `${b.wine_name}${b.vintage ? ` ${b.vintage}` : ""}`;
+    return {
+      id: b.id,
+      label: slot ? `${namePart} — Slot ${slotLabel(slot)}` : namePart,
+    };
+  });
+
+  const closeBooking = () => {
+    setShowBooking(false);
+    setBookingConfirmed(false);
+  };
 
   return (
     <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", minHeight: "100vh" }}>
       {lightbox && <ImageLightbox url={lightbox.url} label={lightbox.label} onClose={() => setLightbox(null)} />}
+
+      {showBooking && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }} onClick={closeBooking}>
+          <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,36,44,0.6)" }} />
+          <div
+            style={{ position: "relative", backgroundColor: "#f3f2ee", width: "100%", maxWidth: "480px", maxHeight: "90vh", overflowY: "auto", padding: "28px", fontFamily: "'Courier New', Courier, monospace" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <p className="text-xs uppercase tracking-widest" style={{ color: "#777777" }}>Book a table</p>
+              <button onClick={closeBooking} style={{ background: "none", border: "none", cursor: "pointer", color: "#777777" }}><X className="h-4 w-4" /></button>
+            </div>
+
+            {bookingConfirmed ? (
+              <div>
+                <p className="text-sm mb-2" style={{ color: "#0A242C" }}>Booking confirmed.</p>
+                <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>We'll see you then. A confirmation has been sent to your email.</p>
+                <button
+                  onClick={closeBooking}
+                  style={{ marginTop: "16px", padding: "8px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer" }}
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <BookingForm member={member} bottleOptions={bottleOptions} onSuccess={() => setBookingConfirmed(true)} />
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="max-w-[1100px] mx-auto px-6 py-10 sm:py-14">
 
@@ -132,6 +180,17 @@ export default function MyCellar() {
               </div>
             ))}
           </div>
+        </div>
+
+        <div style={{ marginBottom: "24px" }}>
+          <button
+            onClick={() => setShowBooking(true)}
+            style={{ padding: "9px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = "#0A242C"}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = "#1E4D5A"}
+          >
+            Book a table
+          </button>
         </div>
 
         <div className="flex gap-0 mb-6" style={{ border: "1px solid #d8d6d0", overflow: "hidden", width: "fit-content" }}>
