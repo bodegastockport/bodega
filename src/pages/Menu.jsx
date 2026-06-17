@@ -1,9 +1,40 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
+import SEO from "../components/SEO";
 
 const PDFJS_CDN = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
 const PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "Menu",
+  "name": "Bodega Wine Bar Menu",
+  "description": "Wine list and food boards at Bodega, Weir Mill, Stockport.",
+  "url": "https://bodegawine.co.uk/menu",
+  "hasMenuSection": [
+    {
+      "@type": "MenuSection",
+      "name": "Wine"
+    },
+    {
+      "@type": "MenuSection",
+      "name": "Charcuterie & Cheese Boards"
+    }
+  ],
+  "inLanguage": "en-GB",
+  "provider": {
+    "@type": "LocalBusiness",
+    "name": "Bodega Wine Vault",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Engine Room, Weir Mill",
+      "addressLocality": "Stockport",
+      "postalCode": "SK3 0AG",
+      "addressCountry": "GB"
+    }
+  }
+}
 
 function loadPdfJs() {
   return new Promise((resolve, reject) => {
@@ -115,13 +146,59 @@ export default function Menu() {
   };
 
   return (
-    <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace" }}>
+    <>
+      <SEO
+        title="Menu — Wine List & Boards | Bodega Stockport"
+        description="Our wine list changes regularly. Paired with carefully sourced charcuterie and cheese boards. View our full menu at Bodega, Stockport."
+        canonical="/menu"
+        schema={schema}
+      />
+      <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace" }}>
 
-      <div className="hidden lg:grid lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
-        <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
-          <div style={{ width: "100%", maxWidth: "520px", padding: "48px 64px" }}>
+        <div className="hidden lg:grid lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
+          <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
+            <div style={{ width: "100%", maxWidth: "520px", padding: "48px 64px" }}>
+              <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#0A242C" }}>What we pour</p>
+              <h1 className="text-2xl mb-4 leading-snug" style={{ color: "#1E4D5A", fontWeight: 400 }}>Good wine, no waffle.</h1>
+              <p className="text-sm leading-relaxed mb-3" style={{ color: "#0A242C" }}>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+              </p>
+              <p className="text-sm leading-relaxed mb-8" style={{ color: "#0A242C" }}>
+                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt.
+              </p>
+              <DownloadBtn />
+            </div>
+          </div>
+          <div style={{ position: "relative" }}>
+            <img
+              src="/images/menu.webp"
+              alt="Food boards at Bodega, Stockport"
+              width="1600"
+              height="2000"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+          </div>
+        </div>
+
+        <div className="lg:hidden flex flex-col">
+          <div style={{ position: "relative", height: "50vw", minHeight: "200px", flexShrink: 0 }}>
+            <img
+              src="/images/menu.webp"
+              alt="Food boards at Bodega, Stockport"
+              width="1600"
+              height="2000"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+          </div>
+          <div style={{ padding: "32px 24px" }}>
             <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#0A242C" }}>What we pour</p>
-            <h1 className="text-2xl mb-4 leading-snug" style={{ color: "#1E4D5A", fontWeight: 400 }}>Good wine, no waffle.</h1>
+            <h1 style={{ fontSize: "22px", color: "#1E4D5A", fontWeight: 400, marginBottom: "12px" }}>Good wine, no waffle.</h1>
             <p className="text-sm leading-relaxed mb-3" style={{ color: "#0A242C" }}>
               Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
             </p>
@@ -131,45 +208,7 @@ export default function Menu() {
             <DownloadBtn />
           </div>
         </div>
-        <div style={{ position: "relative" }}>
-          <img
-            src="/images/menu.webp"
-            alt="Food at Bodega"
-            width="1600"
-            height="2000"
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-          />
-        </div>
       </div>
-
-      <div className="lg:hidden flex flex-col">
-        <div style={{ position: "relative", height: "50vw", minHeight: "200px", flexShrink: 0 }}>
-          <img
-            src="/images/menu.webp"
-            alt="Food at Bodega"
-            width="1600"
-            height="2000"
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-          />
-        </div>
-        <div style={{ padding: "32px 24px" }}>
-          <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#0A242C" }}>What we pour</p>
-          <h1 style={{ fontSize: "22px", color: "#1E4D5A", fontWeight: 400, marginBottom: "12px" }}>Good wine, no waffle.</h1>
-          <p className="text-sm leading-relaxed mb-3" style={{ color: "#0A242C" }}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
-          </p>
-          <p className="text-sm leading-relaxed mb-8" style={{ color: "#0A242C" }}>
-            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt.
-          </p>
-          <DownloadBtn />
-        </div>
-      </div>
-    </div>
-  );
+    </>
+  )
 }

@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import SEO from "../components/SEO";
 
 const CAPACITY = 50;
 
@@ -45,6 +46,71 @@ const overlayLabel = {
   fontFamily: "'Courier New', Courier, monospace",
 };
 
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Cellar Club — Private Wine Storage Membership",
+  "serviceType": "Private Wine Storage",
+  "description": "A private wine storage membership at Bodega in Stockport. Store your bottles in a temperature and humidity-controlled vault and drink them at the bar whenever you like.",
+  "url": "https://bodegawine.co.uk/cellar-club",
+  "areaServed": {
+    "@type": "Place",
+    "name": "Stockport, Greater Manchester"
+  },
+  "provider": {
+    "@type": "LocalBusiness",
+    "name": "Bodega Wine Vault",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Engine Room, Weir Mill",
+      "addressLocality": "Stockport",
+      "postalCode": "SK3 0AG",
+      "addressCountry": "GB"
+    }
+  },
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Cellar 6",
+      "description": "Store up to 6 bottles",
+      "price": "21.00",
+      "priceCurrency": "GBP",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "21.00",
+        "priceCurrency": "GBP",
+        "unitCode": "MON"
+      }
+    },
+    {
+      "@type": "Offer",
+      "name": "Cellar 12",
+      "description": "Store up to 12 bottles",
+      "price": "33.50",
+      "priceCurrency": "GBP",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "33.50",
+        "priceCurrency": "GBP",
+        "unitCode": "MON"
+      }
+    },
+    {
+      "@type": "Offer",
+      "name": "Cellar 18",
+      "description": "Store up to 18 bottles",
+      "price": "47.00",
+      "priceCurrency": "GBP",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "47.00",
+        "priceCurrency": "GBP",
+        "unitCode": "MON"
+      }
+    }
+  ]
+}
+
 const WaitlistForm = ({ inputSt, labelSt }) => {
   const [form, setForm] = useState(WAITLIST_BLANK);
   const [submitting, setSubmitting] = useState(false);
@@ -81,7 +147,7 @@ const WaitlistForm = ({ inputSt, labelSt }) => {
   if (submitted) {
     return (
       <div>
-        <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#f3f2ee" }}>You're on the list</p>
+        <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#f3f2ee" }}>You're on the list</p>
         <h2 className="text-xl mb-2" style={{ color: "#f3f2ee", fontWeight: 400 }}>We'll be in touch, {form.name.split(" ")[0]}.</h2>
         <p className="text-xs leading-relaxed" style={{ color: "#f3f2ee", letterSpacing: "-0.02em" }}>
           As soon as a space becomes available, you'll be the first to know.
@@ -390,167 +456,175 @@ export default function CellarClub() {
   };
 
   return (
-    <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace" }}>
+    <>
+      <SEO
+        title="Cellar Club — Private Wine Storage, Stockport | Bodega"
+        description="Store your wine in Bodega's temperature-controlled vault in Stockport. Simple membership, your own space, drink your bottles here whenever you like."
+        canonical="/cellar-club"
+        schema={schema}
+      />
+      <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace" }}>
 
-      {view === "about" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
-          <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
-            <div style={{ width: "100%", maxWidth: "520px", padding: "48px 36px" }}>
+        {view === "about" && (
+          <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
+            <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
+              <div style={{ width: "100%", maxWidth: "520px", padding: "48px 36px" }}>
 
-              <h1 className="text-2xl mb-4" style={{ color: "#1E4D5A", fontWeight: 400 }}>A wine storage concept like no other.</h1>
+                <h1 className="text-2xl mb-4" style={{ color: "#1E4D5A", fontWeight: 400 }}>A wine storage concept like no other.</h1>
 
-              <p className="text-xs leading-relaxed mb-4" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
-                Wine storage, done properly. A simple membership that lets you keep your bottles with us — in perfect conditions, ready when you are.
-              </p>
-              <p className="text-xs leading-relaxed mb-4" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
-                There's a temperature and humidity-controlled wine vault right here in Bodega. Members get their own space to store bottles as they should be — not too warm, not too cold, just right for ageing.
-              </p>
-              <p className="text-xs leading-relaxed mb-6" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
-                The best part? You can drink your own wine here whenever you like. Just pay a small corkage and we'll take care of the rest.
-              </p>
+                <p className="text-xs leading-relaxed mb-4" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
+                  Wine storage, done properly. A simple membership that lets you keep your bottles with us — in perfect conditions, ready when you are.
+                </p>
+                <p className="text-xs leading-relaxed mb-4" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
+                  There's a temperature and humidity-controlled wine vault right here in Bodega. Members get their own space to store bottles as they should be — not too warm, not too cold, just right for ageing.
+                </p>
+                <p className="text-xs leading-relaxed mb-6" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
+                  The best part? You can drink your own wine here whenever you like. Just pay a small corkage and we'll take care of the rest.
+                </p>
 
-              <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#0A242C" }}>How it works</p>
-              <p className="text-xs leading-relaxed mb-8" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
-                Fill out the form, pick your tier and then start storing. Wine needs to be dropped off at least a day before you plan to drink it here. Drop-offs are by appointment, between 2–6pm Tuesday to Thursday and between 2–4pm Friday to Sunday.
-              </p>
+                <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#0A242C" }}>How it works</p>
+                <p className="text-xs leading-relaxed mb-8" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
+                  Fill out the form, pick your tier and then start storing. Wine needs to be dropped off at least a day before you plan to drink it here. Drop-offs are by appointment, between 2–6pm Tuesday to Thursday and between 2–4pm Friday to Sunday.
+                </p>
 
-              <div className="flex items-center gap-3 pt-4" style={{ borderTop: "1px solid #d8d6d0" }}>
-                <a
-                  href="/login"
-                  style={{
-                    ...btnBase,
-                    backgroundColor: "transparent",
-                    color: "#0A242C",
-                    border: "1px solid #0A242C",
-                  }}
-                >
-                  Member login →
-                </a>
-                <button
-                  onClick={() => setView("pricing")}
-                  style={{
-                    ...btnBase,
-                    backgroundColor: "#1E4D5A",
-                    color: "#f3f2ee",
-                  }}
-                >
-                  View pricing →
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="lg:hidden" style={{ backgroundColor: "#1E4D5A", padding: "36px 24px" }}>
-            <div style={{ width: "100%", maxWidth: "400px", margin: "0 auto" }}>
-              {rightPanelContent()}
-            </div>
-          </div>
-
-          <div className="hidden lg:block" style={{ position: "relative", minHeight: "50vh" }}>
-            <img
-              src="/images/cellar-club.webp"
-              alt="Wine vault"
-              width="1600"
-              height="2000"
-              loading="eager"
-              fetchPriority="high"
-              decoding="async"
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-            />
-            <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,10,10,0.6)" }} />
-            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
-              <div style={{ width: "100%", maxWidth: "340px" }}>
-                {rightPanelContent()}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {view === "pricing" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
-
-          <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
-            <div style={{ width: "100%", maxWidth: "420px", padding: "48px 36px" }}>
-              <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C", opacity: 0.5 }}>Individual pricing</p>
-              <h2 className="text-2xl mb-8" style={{ color: "#1E4D5A", fontWeight: 400 }}>For personal collections.</h2>
-              <div style={{ borderTop: "1px solid #d8d6d0" }}>
-                {individualTiers.map((tier) => (
-                  <div key={tier.name} className="flex items-center justify-between py-5" style={{ borderBottom: "1px solid #d8d6d0" }}>
-                    <div>
-                      <p style={{ fontSize: "13px", color: "#0A242C", marginBottom: "3px" }}>{tier.name}</p>
-                      <p style={{ fontSize: "11px", color: "#0A242C", opacity: 0.45, letterSpacing: "-0.01em" }}>Up to {tier.bottles} bottles</p>
-                    </div>
-                    <p style={{ fontSize: "13px", color: "#1E4D5A" }}>{tier.price}<span style={{ fontSize: "11px", color: "#0A242C", opacity: 0.45 }}>/mo</span></p>
-                  </div>
-                ))}
-              </div>
-              <p style={{ fontSize: "10px", color: "#0A242C", opacity: 0.45, marginTop: "20px", letterSpacing: "-0.01em", lineHeight: "1.6" }}>
-                Prices increase annually in line with RPI on your membership anniversary date. 30 days notice always given.
-              </p>
-              <div className="flex items-center gap-3 mt-8">
-                <button
-                  onClick={() => setView("about")}
-                  style={{
-                    ...btnBase,
-                    backgroundColor: "transparent",
-                    color: "#0A242C",
-                    border: "1px solid #0A242C",
-                  }}
-                >
-                  ← Back
-                </button>
-                {!isFull && (
+                <div className="flex items-center gap-3 pt-4" style={{ borderTop: "1px solid #d8d6d0" }}>
+                  <a
+                    href="/login"
+                    style={{
+                      ...btnBase,
+                      backgroundColor: "transparent",
+                      color: "#0A242C",
+                      border: "1px solid #0A242C",
+                    }}
+                  >
+                    Member login →
+                  </a>
                   <button
-                    onClick={() => setJoinOpen(true)}
+                    onClick={() => setView("pricing")}
                     style={{
                       ...btnBase,
                       backgroundColor: "#1E4D5A",
                       color: "#f3f2ee",
                     }}
                   >
-                    Join the Cellar Club →
+                    View pricing →
                   </button>
-                )}
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:hidden" style={{ backgroundColor: "#1E4D5A", padding: "36px 24px" }}>
+              <div style={{ width: "100%", maxWidth: "400px", margin: "0 auto" }}>
+                {rightPanelContent()}
+              </div>
+            </div>
+
+            <div className="hidden lg:block" style={{ position: "relative", minHeight: "50vh" }}>
+              <img
+                src="/images/cellar-club.webp"
+                alt="Wine vault at Bodega, Stockport"
+                width="1600"
+                height="2000"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              />
+              <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,10,10,0.6)" }} />
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+                <div style={{ width: "100%", maxWidth: "340px" }}>
+                  {rightPanelContent()}
+                </div>
               </div>
             </div>
           </div>
+        )}
 
-          <div className="flex flex-col justify-center items-center" style={{ backgroundColor: "#1E4D5A" }}>
-            <div style={{ width: "100%", maxWidth: "420px", padding: "48px 36px" }}>
-              <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.5)" }}>Corporate entity pricing</p>
-              <h2 className="text-2xl mb-8" style={{ color: "#f3f2ee", fontWeight: 400 }}>For businesses and teams.</h2>
-              <div style={{ borderTop: "1px solid rgba(243,242,238,0.18)" }}>
-                {corporateTiers.map((tier) => (
-                  <div key={tier.name} className="flex items-center justify-between py-5" style={{ borderBottom: "1px solid rgba(243,242,238,0.18)" }}>
-                    <div>
-                      <p style={{ fontSize: "13px", color: "#f3f2ee", marginBottom: "3px" }}>{tier.name}</p>
-                      <p style={{ fontSize: "11px", color: "rgba(243,242,238,0.5)", letterSpacing: "-0.01em" }}>Up to {tier.bottles} bottles</p>
+        {view === "pricing" && (
+          <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
+
+            <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
+              <div style={{ width: "100%", maxWidth: "420px", padding: "48px 36px" }}>
+                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C", opacity: 0.5 }}>Individual pricing</p>
+                <h2 className="text-2xl mb-8" style={{ color: "#1E4D5A", fontWeight: 400 }}>For personal collections.</h2>
+                <div style={{ borderTop: "1px solid #d8d6d0" }}>
+                  {individualTiers.map((tier) => (
+                    <div key={tier.name} className="flex items-center justify-between py-5" style={{ borderBottom: "1px solid #d8d6d0" }}>
+                      <div>
+                        <p style={{ fontSize: "13px", color: "#0A242C", marginBottom: "3px" }}>{tier.name}</p>
+                        <p style={{ fontSize: "11px", color: "#0A242C", opacity: 0.45, letterSpacing: "-0.01em" }}>Up to {tier.bottles} bottles</p>
+                      </div>
+                      <p style={{ fontSize: "13px", color: "#1E4D5A" }}>{tier.price}<span style={{ fontSize: "11px", color: "#0A242C", opacity: 0.45 }}>/mo</span></p>
                     </div>
-                    <p style={{ fontSize: "13px", color: "#f3f2ee" }}>{tier.price}<span style={{ fontSize: "11px", color: "rgba(243,242,238,0.5)" }}>/mo</span></p>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                <p style={{ fontSize: "10px", color: "#0A242C", opacity: 0.45, marginTop: "20px", letterSpacing: "-0.01em", lineHeight: "1.6" }}>
+                  Prices increase annually in line with RPI on your membership anniversary date. 30 days notice always given.
+                </p>
+                <div className="flex items-center gap-3 mt-8">
+                  <button
+                    onClick={() => setView("about")}
+                    style={{
+                      ...btnBase,
+                      backgroundColor: "transparent",
+                      color: "#0A242C",
+                      border: "1px solid #0A242C",
+                    }}
+                  >
+                    ← Back
+                  </button>
+                  {!isFull && (
+                    <button
+                      onClick={() => setJoinOpen(true)}
+                      style={{
+                        ...btnBase,
+                        backgroundColor: "#1E4D5A",
+                        color: "#f3f2ee",
+                      }}
+                    >
+                      Join the Cellar Club →
+                    </button>
+                  )}
+                </div>
               </div>
-              <p style={{ fontSize: "10px", color: "rgba(243,242,238,0.45)", marginTop: "20px", letterSpacing: "-0.01em", lineHeight: "1.6" }}>
-                Corporate memberships include additional authorised users. Contact us to discuss bespoke arrangements.
-              </p>
+            </div>
+
+            <div className="flex flex-col justify-center items-center" style={{ backgroundColor: "#1E4D5A" }}>
+              <div style={{ width: "100%", maxWidth: "420px", padding: "48px 36px" }}>
+                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.5)" }}>Corporate entity pricing</p>
+                <h2 className="text-2xl mb-8" style={{ color: "#f3f2ee", fontWeight: 400 }}>For businesses and teams.</h2>
+                <div style={{ borderTop: "1px solid rgba(243,242,238,0.18)" }}>
+                  {corporateTiers.map((tier) => (
+                    <div key={tier.name} className="flex items-center justify-between py-5" style={{ borderBottom: "1px solid rgba(243,242,238,0.18)" }}>
+                      <div>
+                        <p style={{ fontSize: "13px", color: "#f3f2ee", marginBottom: "3px" }}>{tier.name}</p>
+                        <p style={{ fontSize: "11px", color: "rgba(243,242,238,0.5)", letterSpacing: "-0.01em" }}>Up to {tier.bottles} bottles</p>
+                      </div>
+                      <p style={{ fontSize: "13px", color: "#f3f2ee" }}>{tier.price}<span style={{ fontSize: "11px", color: "rgba(243,242,238,0.5)" }}>/mo</span></p>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ fontSize: "10px", color: "rgba(243,242,238,0.45)", marginTop: "20px", letterSpacing: "-0.01em", lineHeight: "1.6" }}>
+                  Corporate memberships include additional authorised users. Contact us to discuss bespoke arrangements.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {joinOpen && !isFull && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,10,10,0.6)" }} onClick={() => setJoinOpen(false)} />
+            <div style={{ position: "relative", backgroundColor: "#1E4D5A", width: "100%", maxWidth: "500px", maxHeight: "90vh", overflowY: "auto", padding: "36px", margin: "0 16px" }}>
+              <button onClick={() => setJoinOpen(false)} style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", cursor: "pointer", color: "rgba(243,242,238,0.5)", fontFamily: "'Courier New', Courier, monospace", fontSize: "18px", lineHeight: 1 }}>×</button>
+              <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#f3f2ee" }}>Join the Cellar Club</p>
+              <h2 className="text-xl mb-4" style={{ color: "#f3f2ee", fontWeight: 400 }}>Start your membership</h2>
+              <JoinForm {...joinFormProps} />
             </div>
           </div>
-
-        </div>
-      )}
-
-      {joinOpen && !isFull && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,10,10,0.6)" }} onClick={() => setJoinOpen(false)} />
-          <div style={{ position: "relative", backgroundColor: "#1E4D5A", width: "100%", maxWidth: "500px", maxHeight: "90vh", overflowY: "auto", padding: "36px", margin: "0 16px" }}>
-            <button onClick={() => setJoinOpen(false)} style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", cursor: "pointer", color: "rgba(243,242,238,0.5)", fontFamily: "'Courier New', Courier, monospace", fontSize: "18px", lineHeight: 1 }}>×</button>
-            <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#f3f2ee" }}>Join the Cellar Club</p>
-            <h2 className="text-xl mb-4" style={{ color: "#f3f2ee", fontWeight: 400 }}>Start your membership</h2>
-            <JoinForm {...joinFormProps} />
-          </div>
-        </div>
-      )}
-    </div>
-  );
+        )}
+      </div>
+    </>
+  )
 }

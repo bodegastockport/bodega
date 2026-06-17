@@ -1,6 +1,45 @@
 import { useState } from "react";
+import SEO from "../components/SEO";
 import BookingForm from "../components/BookingForm";
 import BookingConfirmation from "../components/BookingConfirmation";
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": ["BarOrClub", "LocalBusiness"],
+  "name": "Bodega Wine Vault",
+  "description": "A neighbourhood wine bar in the heart of Stockport. Great bottles, cold lager, proper boards. No lectures, no pretence — just good taste.",
+  "url": "https://bodegawine.co.uk",
+  "telephone": "01618260168",
+  "email": "hello@bodegawine.co.uk",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Engine Room, Weir Mill",
+    "addressLocality": "Stockport",
+    "postalCode": "SK3 0AG",
+    "addressCountry": "GB"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": "53.3901",
+    "longitude": "-2.1577"
+  },
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+      "opens": "14:00",
+      "closes": "23:59"
+    }
+  ],
+  "servesCuisine": ["Wine", "Charcuterie", "Cheese"],
+  "priceRange": "££",
+  "currenciesAccepted": "GBP",
+  "image": "https://bodegawine.co.uk/images/hero.webp",
+  "sameAs": [
+    "https://www.instagram.com/bodegastockport",
+    "https://www.tiktok.com/@bodegastockport"
+  ]
+}
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -11,11 +50,18 @@ export default function Home() {
 
   return (
     <>
+      <SEO
+        title="Bodega — Wine Bar & Cellar Club, Stockport"
+        description="Bodega is a neighbourhood wine bar in the heart of Stockport. Great bottles, cold lager, proper boards. No lectures, no pretence — just good taste."
+        canonical="/"
+        schema={schema}
+      />
+
       <div className="hidden lg:block">
         <div style={{ position: "fixed", top: 0, left: 0, width: "50vw", height: "100vh", zIndex: 0 }}>
           <img
             src="/images/hero.webp"
-            alt="Wine at Bodega"
+            alt="Wine at Bodega wine bar, Stockport"
             width="1600"
             height="2000"
             loading="eager"
@@ -61,7 +107,7 @@ export default function Home() {
         <div style={{ position: "relative", width: "100%", height: "50vh", flexShrink: 0 }}>
           <img
             src="/images/hero.webp"
-            alt="Wine at Bodega"
+            alt="Wine at Bodega wine bar, Stockport"
             width="1600"
             height="2000"
             loading="eager"
@@ -123,5 +169,5 @@ export default function Home() {
         </div>
       )}
     </>
-  );
+  )
 }
