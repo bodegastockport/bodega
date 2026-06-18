@@ -2,7 +2,26 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Loader2, X } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { toast } from "sonner";
 import BookingForm from "../components/BookingForm";
+
+const CORPORATE_LIMITS = {
+  "Corporate 6": 1,
+  "Corporate 12": 2,
+  "Corporate 18": 3,
+  "Corporate 24": 4,
+};
+
+const inputStyle = {
+  backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", borderRadius: "6px",
+  fontFamily: "'Courier New', Courier, monospace", fontSize: "13px",
+  padding: "8px 11px", color: "#0A242C", width: "100%", outline: "none",
+};
+const labelStyle = {
+  display: "block", fontSize: "10px", textTransform: "uppercase",
+  letterSpacing: "0.08em", color: "#777777", marginBottom: "4px",
+  fontFamily: "'Courier New', Courier, monospace",
+};
 
 function slotLabel(slot) {
   return `${slot.section}-${slot.row_label}${String(slot.column_number).padStart(2, "0")}`;
@@ -26,6 +45,7 @@ export default function MyCellar() {
   const [storedBottles, setStoredBottles] = useState([]);
   const [consumedBottles, setConsumedBottles] = useState([]);
   const [assignedSlots, setAssignedSlots] = useState([]);
+  const [authorisedUsers, setAuthorisedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState("inventory");
@@ -36,6 +56,9 @@ export default function MyCellar() {
   const [showBooking, setShowBooking] = useState(false);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [bookedBottleIds, setBookedBottleIds] = useState(new Set());
+  const [editingSlot, setEditingSlot] = useState(null);
+  const [slotForm, setSlotForm] = useState({ name: "", email: "", mobile: "" });
+  const [savingSlot, setSavingSlot] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -53,14 +76,16 @@ export default function MyCellar() {
       const m = members[0];
       setMember(m);
 
-      const [{ data: bottles }, { data: slots }] = await Promise.all([
+      const [{ data: bottles }, { data: slots }, { data: authUsers }] = await Promise.all([
         supabase.from("cellar_bottles").select().eq("member_id", m.id),
         supabase.from("vault_slots").select("id, section, row_label, column_number, status").eq("member_id", m.id).eq("status", "assigned").order("row_label", { ascending: true }).order("column_number", { ascending: true }),
+        supabase.from("cellar_authorised_users").select().eq("member_id", m.id).order("added_at", { ascending: true }),
       ]);
 
       setStoredBottles((bottles || []).filter(b => b.status !== "consumed"));
       setConsumedBottles((bottles || []).filter(b => b.status === "consumed"));
       setAssignedSlots(slots || []);
+      setAuthorisedUsers(authUsers || []);
       setLoading(false);
     };
     load();
@@ -88,6 +113,76 @@ export default function MyCellar() {
   const closeBooking = () => {
     setShowBooking(false);
     setBookingConfirmed(false);
+  };
+
+  const isCorporate = member ? Object.prototype.hasOwnProperty.call(CORPORATE_LIMITS, member.membership_tier) : false;
+  const slotLimit = member ? (CORPORATE_LIMITS[member.membership_tier] || 0) : 0;
+
+  const isLocked = (row) => {
+    if (!row?.last_changed_at) return false;
+    const unlockTime = new Date(row.last_changed_at).getTime() + 28 * 24 * 60 * 60 * 1000;
+    return Date.now() < unlockTime;
+  };
+
+  const unlockDateLabel = (row) => {
+    const unlockTime = new Date(row.last_changed_at).getTime() + 28 * 24 * 60 * 60 * 1000;
+    return format(new Date(unlockTime), "d MMM yyyy");
+  };
+
+  const startEditSlot = (index, row) => {
+    setEditingSlot(index);
+    setSlotForm({ name: row?.name || "", email: row?.email || "", mobile: row?.mobile || "" });
+  };
+
+  const cancelEditSlot = () => {
+    setEditingSlot(null);
+    setSlotForm({ name: "", email: "", mobile: "" });
+  };
+
+  const saveSlot = async (index) => {
+    if (!slotForm.name.trim() || !slotForm.email.trim()) {
+      toast.error("Name and email are required");
+      return;
+    }
+    setSavingSlot(true);
+    const existing = authorisedUsers[index];
+    const now = new Date().toISOString();
+
+    if (existing) {
+      const { error } = await supabase
+        .from("cellar_authorised_users")
+        .update({ name: slotForm.name, email: slotForm.email, mobile: slotForm.mobile || null, last_changed_at: now })
+        .eq("id", existing.id);
+      if (error) {
+        toast.error("Failed to save");
+      } else {
+        setAuthorisedUsers((prev) => {
+          const next = [...prev];
+          next[index] = { ...existing, name: slotForm.name, email: slotForm.email, mobile: slotForm.mobile || null, last_changed_at: now };
+          return next;
+        });
+        toast.success("Saved");
+        setEditingSlot(null);
+      }
+    } else {
+      const { data, error } = await supabase
+        .from("cellar_authorised_users")
+        .insert({ member_id: member.id, name: slotForm.name, email: slotForm.email, mobile: slotForm.mobile || null, added_at: now, last_changed_at: now })
+        .select()
+        .single();
+      if (error) {
+        toast.error("Failed to save");
+      } else {
+        setAuthorisedUsers((prev) => {
+          const next = [...prev];
+          next[index] = data;
+          return next;
+        });
+        toast.success("Saved");
+        setEditingSlot(null);
+      }
+    }
+    setSavingSlot(false);
   };
 
   if (loading) return (
@@ -134,6 +229,9 @@ export default function MyCellar() {
         label: slot ? `${namePart} — Slot ${slotLabel(slot)}` : namePart,
       };
     });
+
+  const tabs = [["inventory", "My vault"], ["history", "History"], ["membership", "Membership"]];
+  if (isCorporate) tabs.push(["authorised", "Authorised users"]);
 
   return (
     <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", minHeight: "100vh" }}>
@@ -207,9 +305,9 @@ export default function MyCellar() {
         </div>
 
         <div className="flex gap-0 mb-6" style={{ border: "1px solid #d8d6d0", overflow: "hidden", width: "fit-content" }}>
-          {[["inventory", "My vault"], ["history", "History"], ["membership", "Membership"]].map(([key, label]) => (
+          {tabs.map(([key, label], i) => (
             <button key={key} onClick={() => setActiveTab(key)}
-              style={{ ...TAB_STYLE(activeTab === key), borderRight: key !== "membership" ? "1px solid #d8d6d0" : "none" }}>
+              style={{ ...TAB_STYLE(activeTab === key), borderRight: i !== tabs.length - 1 ? "1px solid #d8d6d0" : "none" }}>
               {label}
             </button>
           ))}
@@ -363,6 +461,81 @@ export default function MyCellar() {
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {activeTab === "authorised" && (
+          <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
+            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>Authorised users</p>
+            <p className="text-xs mb-5" style={{ color: "#777777" }}>
+              Your {member.membership_tier} membership allows {slotLimit} authorised user{slotLimit !== 1 ? "s" : ""}. Adding or changing an authorised user locks that slot for 28 days.
+            </p>
+
+            {Array.from({ length: slotLimit }).map((_, index) => {
+              const row = authorisedUsers[index] || null;
+              const locked = row && isLocked(row);
+              const isEditing = editingSlot === index;
+
+              return (
+                <div key={index} style={{ backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", padding: "16px", marginBottom: "12px" }}>
+                  <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#777777" }}>Authorised user {index + 1}</p>
+
+                  {isEditing ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label style={labelStyle}>Name</label>
+                        <input style={inputStyle} value={slotForm.name} onChange={(e) => setSlotForm((f) => ({ ...f, name: e.target.value }))} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Email</label>
+                        <input type="email" style={inputStyle} value={slotForm.email} onChange={(e) => setSlotForm((f) => ({ ...f, email: e.target.value }))} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Mobile</label>
+                        <input style={inputStyle} value={slotForm.mobile} onChange={(e) => setSlotForm((f) => ({ ...f, mobile: e.target.value }))} />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => saveSlot(index)}
+                          disabled={savingSlot}
+                          style={{ padding: "8px 18px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                        >
+                          {savingSlot && <Loader2 className="h-3 w-3 animate-spin" />} Save
+                        </button>
+                        <button
+                          onClick={cancelEditSlot}
+                          style={{ padding: "8px 16px", backgroundColor: "transparent", color: "#777777", border: "1px solid #d8d6d0", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer" }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : row ? (
+                    <div>
+                      <p className="text-sm" style={{ color: "#0A242C" }}>{row.name}</p>
+                      <p className="text-xs mt-1" style={{ color: "#777777" }}>{row.email}{row.mobile ? ` · ${row.mobile}` : ""}</p>
+                      {locked ? (
+                        <p className="text-xs mt-2" style={{ color: "#777777" }}>Locked until {unlockDateLabel(row)}</p>
+                      ) : (
+                        <button
+                          onClick={() => startEditSlot(index, row)}
+                          style={{ marginTop: "8px", fontSize: "11px", color: "#1E4D5A", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", textTransform: "uppercase", letterSpacing: "0.06em", textDecoration: "underline", padding: 0 }}
+                        >
+                          Edit
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => startEditSlot(index, null)}
+                      style={{ fontSize: "11px", color: "#1E4D5A", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", textTransform: "uppercase", letterSpacing: "0.06em", textDecoration: "underline", padding: 0 }}
+                    >
+                      Add authorised user
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
