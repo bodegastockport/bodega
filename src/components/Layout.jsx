@@ -284,7 +284,7 @@ export default function Layout() {
                 onMouseEnter={e => e.target.style.color = "#0A242C"}
                 onMouseLeave={e => e.target.style.color = "#777777"}
               >
-                Cookie Settings
+                Cookies
               </button>
             </div>
             <div className="flex items-center gap-4">
