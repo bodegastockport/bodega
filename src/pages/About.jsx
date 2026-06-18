@@ -38,7 +38,7 @@ export default function About() {
                 We just really like good wine.
               </h1>
               <p className="text-sm leading-relaxed mb-3" style={{ color: "#0A242C" }}>
-                Bodega is a neighbourhood wine bar built for drinking, not overthinking.
+                Bodega is a neighbourhood wine bar at Weir Mill, Stockport. Built for drinking, not overthinking.
               </p>
               <p className="text-sm leading-relaxed mb-3" style={{ color: "#0A242C" }}>
                 Wine can get a bit much — too many rules, too much jargon, not enough fun. We're here to change that. Good bottles, no pressure, no fuss.

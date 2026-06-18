@@ -230,6 +230,9 @@ const JoinForm = ({
   const [dobOpen, setDobOpen] = useState(false);
   const formValid = form.name && form.email && form.phone && form.dob && isOver18(form.dob) && form.tier && form.address_line1 && form.postcode && form.agreed_terms;
 
+  const isCorporateTier = corporateTiers.some((t) => t.name === form.tier);
+  const termsHref = isCorporateTier ? "/cellar-club/terms?type=corporate" : "/cellar-club/terms";
+
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div className="grid grid-cols-2 gap-2">
@@ -309,7 +312,7 @@ const JoinForm = ({
         <input type="checkbox" id="terms" checked={form.agreed_terms} onChange={e => f("agreed_terms", e.target.checked)} style={{ marginTop: "2px", accentColor: "#f3f2ee" }} required />
         <label htmlFor="terms" style={{ ...overlayLabel, textTransform: "none", letterSpacing: 0, lineHeight: "1.5", cursor: "pointer" }}>
           I agree to the{" "}
-          <a href="/cellar-club/terms" target="_blank" rel="noopener noreferrer" style={{ color: "#f3f2ee", textDecoration: "underline" }}>
+          <a href={termsHref} target="_blank" rel="noopener noreferrer" style={{ color: "#f3f2ee", textDecoration: "underline" }}>
             Cellar Club terms and conditions
           </a>.
         </label>
@@ -473,7 +476,7 @@ export default function CellarClub() {
                 <h1 className="text-2xl mb-4" style={{ color: "#1E4D5A", fontWeight: 400 }}>A wine storage concept like no other.</h1>
 
                 <p className="text-xs leading-relaxed mb-4" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
-                  Wine storage, done properly. A simple membership that lets you keep your bottles with us — in perfect conditions, ready when you are.
+                  Wine storage, done properly. A wine cellar club right here in Stockport. A simple membership that lets you keep your bottles with us in perfect conditions, ready when you are.
                 </p>
                 <p className="text-xs leading-relaxed mb-4" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
                   There's a temperature and humidity-controlled wine vault right here in Bodega. Members get their own space to store bottles as they should be — not too warm, not too cold, just right for ageing.
