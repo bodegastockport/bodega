@@ -27,8 +27,6 @@ import CellarClubTerms from "./pages/CellarClubTerms";
 import CellarClubSuccess from "./pages/CellarClubSuccess";
 import ScanBottle from "./pages/ScanBottle";
 import ComingSoon from "./pages/ComingSoon";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
 
 const BYPASS_PATHS = ["/cellar-club/success", "/cellar-club/terms", "/login", "/my-cellar", "/scan", "/reset-password", "/auth/confirm"];
 
@@ -80,8 +78,6 @@ const AppRoutes = () => {
         <Route path="/auth/confirm" element={<AuthConfirm />} />
         <Route path="/my-cellar" element={<MyCellar />} />
         <Route path="/scan/:id" element={<ScanBottle />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/terms" element={<Terms />} />
 
         <Route element={<ProtectedRoute redirectTo="/team-login" />}>
           <Route path="/admin" element={<Admin />} />

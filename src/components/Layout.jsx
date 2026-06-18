@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
-import CookieConsent from "@/components/CookieConsent";
 
 const LOGO_URL = "/bodega_logo_teal.svg";
 
@@ -53,10 +52,6 @@ export default function Layout() {
       document.removeEventListener("mouseleave", hide);
     };
   }, []);
-
-  const openCookieSettings = () => {
-    window.dispatchEvent(new CustomEvent("bodega-open-cookie-settings"));
-  };
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#f3f2ee", color: "#0A242C", fontFamily: "'Courier New', Courier, monospace", cursor: "none" }}>
@@ -242,51 +237,9 @@ export default function Layout() {
           </div>
 
           <div style={{ borderTop: "1px solid #d8d6d0" }} className="pt-4 flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center flex-wrap gap-3">
-              <p className="text-xs" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
-                © {new Date().getFullYear()} Bodega, Stockport. All rights reserved.
-              </p>
-              <span className="text-xs" style={{ color: "#d8d6d0" }}>·</span>
-              <Link
-                to="/privacy"
-                className="text-xs"
-                style={{ color: "#0A242C", textDecoration: "none", letterSpacing: "-0.02em" }}
-                onMouseEnter={e => e.target.style.color = "#0A242C"}
-                onMouseLeave={e => e.target.style.color = "#777777"}
-              >
-                Privacy Policy
-              </Link>
-              <span className="text-xs" style={{ color: "#d8d6d0" }}>·</span>
-              <Link
-                to="/terms"
-                className="text-xs"
-                style={{ color: "#0A242C", textDecoration: "none", letterSpacing: "-0.02em" }}
-                onMouseEnter={e => e.target.style.color = "#0A242C"}
-                onMouseLeave={e => e.target.style.color = "#777777"}
-              >
-                Terms of Use
-              </Link>
-              <span className="text-xs" style={{ color: "#d8d6d0" }}>·</span>
-              <Link
-                to="/cellar-club/terms"
-                className="text-xs"
-                style={{ color: "#0A242C", textDecoration: "none", letterSpacing: "-0.02em" }}
-                onMouseEnter={e => e.target.style.color = "#0A242C"}
-                onMouseLeave={e => e.target.style.color = "#777777"}
-              >
-                Cellar Club Terms
-              </Link>
-              <span className="text-xs" style={{ color: "#d8d6d0" }}>·</span>
-              <button
-                onClick={openCookieSettings}
-                className="text-xs"
-                style={{ color: "#0A242C", background: "none", border: "none", cursor: "none", fontFamily: "'Courier New', Courier, monospace", padding: 0, letterSpacing: "-0.02em" }}
-                onMouseEnter={e => e.target.style.color = "#0A242C"}
-                onMouseLeave={e => e.target.style.color = "#777777"}
-              >
-                Cookie Settings
-              </button>
-            </div>
+            <p className="text-xs" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
+              © {new Date().getFullYear()} Bodega, Stockport. All rights reserved.
+            </p>
             <div className="flex items-center gap-4">
               <a
                 href="https://www.rolke.studio"
@@ -316,8 +269,6 @@ export default function Layout() {
           </div>
         </div>
       </footer>
-
-      <CookieConsent />
     </div>
   );
 }
