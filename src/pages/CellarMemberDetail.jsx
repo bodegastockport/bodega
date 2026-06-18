@@ -1,10 +1,18 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/AuthContext";
 import { Loader2, ArrowLeft, Pencil, Check, X } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
 import MemberBottles from "../components/cms/MemberBottles";
+
+const CORPORATE_LIMITS = {
+  "Corporate 6": 1,
+  "Corporate 12": 2,
+  "Corporate 18": 3,
+  "Corporate 24": 4,
+};
 
 const inputStyle = {
   backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", borderRadius: "6px",
@@ -19,12 +27,17 @@ const labelStyle = {
 
 export default function CellarMemberDetail() {
   const { id } = useParams();
+  const { user } = useAuth();
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editingField, setEditingField] = useState(null);
   const [fieldValue, setFieldValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [bottleCount, setBottleCount] = useState(0);
+  const [authorisedUsers, setAuthorisedUsers] = useState([]);
+  const [editingSlot, setEditingSlot] = useState(null);
+  const [slotForm, setSlotForm] = useState({ name: "", email: "", mobile: "" });
+  const [savingSlot, setSavingSlot] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -34,6 +47,14 @@ export default function CellarMemberDetail() {
         .eq('id', id)
         .single();
       setMember(data || null);
+      if (data) {
+        const { data: authUsers } = await supabase
+          .from('cellar_authorised_users')
+          .select()
+          .eq('member_id', data.id)
+          .order('added_at', { ascending: true });
+        setAuthorisedUsers(authUsers || []);
+      }
       setLoading(false);
     };
     load();
@@ -56,6 +77,77 @@ export default function CellarMemberDetail() {
     }
     setSaving(false);
     setEditingField(null);
+  };
+
+  const isAdmin = user?.user_metadata?.role === "admin";
+  const isCorporate = member ? Object.prototype.hasOwnProperty.call(CORPORATE_LIMITS, member.membership_tier) : false;
+  const slotLimit = member ? (CORPORATE_LIMITS[member.membership_tier] || 0) : 0;
+
+  const isLocked = (row) => {
+    if (!row?.last_changed_at) return false;
+    const unlockTime = new Date(row.last_changed_at).getTime() + 28 * 24 * 60 * 60 * 1000;
+    return Date.now() < unlockTime;
+  };
+
+  const unlockDateLabel = (row) => {
+    const unlockTime = new Date(row.last_changed_at).getTime() + 28 * 24 * 60 * 60 * 1000;
+    return format(new Date(unlockTime), "d MMM yyyy");
+  };
+
+  const startEditSlot = (index, row) => {
+    setEditingSlot(index);
+    setSlotForm({ name: row?.name || "", email: row?.email || "", mobile: row?.mobile || "" });
+  };
+
+  const cancelEditSlot = () => {
+    setEditingSlot(null);
+    setSlotForm({ name: "", email: "", mobile: "" });
+  };
+
+  const saveSlot = async (index) => {
+    if (!slotForm.name.trim() || !slotForm.email.trim()) {
+      toast.error("Name and email are required");
+      return;
+    }
+    setSavingSlot(true);
+    const existing = authorisedUsers[index];
+    const now = new Date().toISOString();
+
+    if (existing) {
+      const { error } = await supabase
+        .from("cellar_authorised_users")
+        .update({ name: slotForm.name, email: slotForm.email, mobile: slotForm.mobile || null, last_changed_at: now })
+        .eq("id", existing.id);
+      if (error) {
+        toast.error("Failed to save");
+      } else {
+        setAuthorisedUsers((prev) => {
+          const next = [...prev];
+          next[index] = { ...existing, name: slotForm.name, email: slotForm.email, mobile: slotForm.mobile || null, last_changed_at: now };
+          return next;
+        });
+        toast.success("Saved");
+        setEditingSlot(null);
+      }
+    } else {
+      const { data, error } = await supabase
+        .from("cellar_authorised_users")
+        .insert({ member_id: member.id, name: slotForm.name, email: slotForm.email, mobile: slotForm.mobile || null, added_at: now, last_changed_at: now })
+        .select()
+        .single();
+      if (error) {
+        toast.error("Failed to save");
+      } else {
+        setAuthorisedUsers((prev) => {
+          const next = [...prev];
+          next[index] = data;
+          return next;
+        });
+        toast.success("Saved");
+        setEditingSlot(null);
+      }
+    }
+    setSavingSlot(false);
   };
 
   if (loading) return (
@@ -214,6 +306,83 @@ export default function CellarMemberDetail() {
             <MemberBottles member={member} onBottleCountChange={setBottleCount} />
           </div>
         </div>
+
+        {isAdmin && isCorporate && (
+          <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px", marginTop: "24px" }}>
+            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#777777" }}>Authorised users</p>
+            <p className="text-xs mb-5" style={{ color: "#777777" }}>
+              {member.membership_tier} allows {slotLimit} authorised user{slotLimit !== 1 ? "s" : ""}. Adding or changing an authorised user locks that slot for 28 days.
+            </p>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {Array.from({ length: slotLimit }).map((_, index) => {
+                const row = authorisedUsers[index] || null;
+                const locked = row && isLocked(row);
+                const isEditing = editingSlot === index;
+
+                return (
+                  <div key={index} style={{ backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", padding: "16px" }}>
+                    <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#777777" }}>Authorised user {index + 1}</p>
+
+                    {isEditing ? (
+                      <div className="space-y-3">
+                        <div>
+                          <label style={labelStyle}>Name</label>
+                          <input style={inputStyle} value={slotForm.name} onChange={(e) => setSlotForm((f) => ({ ...f, name: e.target.value }))} />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Email</label>
+                          <input type="email" style={inputStyle} value={slotForm.email} onChange={(e) => setSlotForm((f) => ({ ...f, email: e.target.value }))} />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Mobile</label>
+                          <input style={inputStyle} value={slotForm.mobile} onChange={(e) => setSlotForm((f) => ({ ...f, mobile: e.target.value }))} />
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => saveSlot(index)}
+                            disabled={savingSlot}
+                            style={{ padding: "8px 18px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                          >
+                            {savingSlot && <Loader2 className="h-3 w-3 animate-spin" />} Save
+                          </button>
+                          <button
+                            onClick={cancelEditSlot}
+                            style={{ padding: "8px 16px", backgroundColor: "transparent", color: "#777777", border: "1px solid #d8d6d0", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer" }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : row ? (
+                      <div>
+                        <p className="text-sm" style={{ color: "#0A242C" }}>{row.name}</p>
+                        <p className="text-xs mt-1" style={{ color: "#777777" }}>{row.email}{row.mobile ? ` · ${row.mobile}` : ""}</p>
+                        {locked ? (
+                          <p className="text-xs mt-2" style={{ color: "#777777" }}>Locked until {unlockDateLabel(row)}</p>
+                        ) : (
+                          <button
+                            onClick={() => startEditSlot(index, row)}
+                            style={{ marginTop: "8px", fontSize: "11px", color: "#1E4D5A", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", textTransform: "uppercase", letterSpacing: "0.06em", textDecoration: "underline", padding: 0 }}
+                          >
+                            Edit
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => startEditSlot(index, null)}
+                        style={{ fontSize: "11px", color: "#1E4D5A", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", textTransform: "uppercase", letterSpacing: "0.06em", textDecoration: "underline", padding: 0 }}
+                      >
+                        Add authorised user
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
