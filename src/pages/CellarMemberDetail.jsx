@@ -204,6 +204,7 @@ export default function CellarMemberDetail() {
                 Active
               </span>
               {member.membership_tier && <span className="text-xs" style={{ color: "#777777" }}>· {member.membership_tier}</span>}
+              {member.billing_interval && <span className="text-xs" style={{ color: "#777777" }}>· {member.billing_interval === "year" ? "Annual" : "Monthly"}</span>}
               <span className="text-xs" style={{ color: "#777777" }}>· {bottleCount} bottles stored</span>
             </div>
           </div>

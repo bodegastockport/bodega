@@ -423,6 +423,7 @@ export default function MyCellar() {
                 <div className="space-y-4 mb-8">
                   {[
                     { label: "Tier", value: member.membership_tier || "—" },
+                    { label: "Billing", value: member.billing_interval === "year" ? "Annual" : "Monthly" },
                     { label: "Member since", value: member.membership_start ? format(parseISO(member.membership_start), "d MMMM yyyy") : "—" },
                     { label: "Email", value: member.email || "—" },
                     { label: "Phone", value: member.phone || "—" },
