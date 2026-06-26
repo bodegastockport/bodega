@@ -9,13 +9,13 @@ import SEO from "../components/SEO";
 const CAPACITY = 50;
 
 const TIERS = [
-  { name: "Cellar 6",     bottles: 6,  price: "£21.00", type: "Individual" },
-  { name: "Cellar 12",    bottles: 12, price: "£33.50", type: "Individual" },
-  { name: "Cellar 18",    bottles: 18, price: "£47.00", type: "Individual" },
-  { name: "Corporate 6",  bottles: 6,  price: "£31.50", type: "Corporate" },
-  { name: "Corporate 12", bottles: 12, price: "£50.50", type: "Corporate" },
-  { name: "Corporate 18", bottles: 18, price: "£70.50", type: "Corporate" },
-  { name: "Corporate 24", bottles: 24, price: "£91.75", type: "Corporate" },
+  { name: "Cellar 6",     bottles: 6,  price: "£21.00", annualPrice: "£231.00",   type: "Individual" },
+  { name: "Cellar 12",    bottles: 12, price: "£33.50", annualPrice: "£368.50",   type: "Individual" },
+  { name: "Cellar 18",    bottles: 18, price: "£47.00", annualPrice: "£517.00",   type: "Individual" },
+  { name: "Corporate 6",  bottles: 6,  price: "£31.50", annualPrice: "£346.50",   type: "Corporate" },
+  { name: "Corporate 12", bottles: 12, price: "£50.50", annualPrice: "£555.50",   type: "Corporate" },
+  { name: "Corporate 18", bottles: 18, price: "£70.50", annualPrice: "£775.50",   type: "Corporate" },
+  { name: "Corporate 24", bottles: 24, price: "£91.75", annualPrice: "£1,009.25", type: "Corporate" },
 ];
 
 const BLANK = {
@@ -226,6 +226,7 @@ const JoinForm = ({
   corporateTiers,
   error,
   submitting,
+  billingInterval,
 }) => {
   const [dobOpen, setDobOpen] = useState(false);
   const formValid = form.name && form.email && form.phone && form.dob && isOver18(form.dob) && form.tier && form.address_line1 && form.postcode && form.agreed_terms;
@@ -233,8 +234,14 @@ const JoinForm = ({
   const isCorporateTier = corporateTiers.some((t) => t.name === form.tier);
   const termsHref = isCorporateTier ? "/cellar-club/terms?type=corporate" : "/cellar-club/terms";
 
+  const unitSuffix = billingInterval === "year" ? "/yr" : "/mo";
+  const tierLabel = (t) => `${t.name} — ${billingInterval === "year" ? t.annualPrice : t.price}${unitSuffix}`;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
+      <p style={{ ...labelSt, marginBottom: "8px" }}>
+        Billing: {billingInterval === "year" ? "Annual" : "Monthly"}
+      </p>
       <div className="grid grid-cols-2 gap-2">
         <div>
           <label style={labelSt}>Full name *</label>
@@ -291,10 +298,10 @@ const JoinForm = ({
         <select style={{ ...inputSt, appearance: "none", WebkitAppearance: "none" }} value={form.tier} onChange={e => f("tier", e.target.value)} required>
           <option value="" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Select a tier...</option>
           <optgroup label="Individual" style={{ color: "#0A242C", backgroundColor: "#fff" }}>
-            {individualTiers.map(t => <option key={t.name} value={t.name} style={{ color: "#0A242C", backgroundColor: "#fff" }}>{t.name} — {t.price}/month</option>)}
+            {individualTiers.map(t => <option key={t.name} value={t.name} style={{ color: "#0A242C", backgroundColor: "#fff" }}>{tierLabel(t)}</option>)}
           </optgroup>
           <optgroup label="Corporate" style={{ color: "#0A242C", backgroundColor: "#fff" }}>
-            {corporateTiers.map(t => <option key={t.name} value={t.name} style={{ color: "#0A242C", backgroundColor: "#fff" }}>{t.name} — {t.price}/month</option>)}
+            {corporateTiers.map(t => <option key={t.name} value={t.name} style={{ color: "#0A242C", backgroundColor: "#fff" }}>{tierLabel(t)}</option>)}
           </optgroup>
         </select>
       </div>
@@ -353,6 +360,7 @@ export default function CellarClub() {
   const [view, setView] = useState("about");
   const [joinOpen, setJoinOpen] = useState(false);
   const [form, setForm] = useState(BLANK);
+  const [billingInterval, setBillingInterval] = useState("month");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [isFull, setIsFull] = useState(false);
@@ -394,6 +402,7 @@ export default function CellarClub() {
             phone: form.phone,
             dob: form.dob ? format(form.dob, "yyyy-MM-dd") : "",
             tier: form.tier,
+            interval: billingInterval,
             address_line1: form.address_line1,
             postcode: form.postcode,
             how_heard: form.how_heard || "",
@@ -431,6 +440,7 @@ export default function CellarClub() {
     corporateTiers,
     error,
     submitting,
+    billingInterval,
   };
 
   const rightPanelContent = () => {
@@ -544,76 +554,110 @@ export default function CellarClub() {
         )}
 
         {view === "pricing" && (
-          <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
+          <>
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "20px 0", borderBottom: "1px solid #d8d6d0", backgroundColor: "#f3f2ee" }}>
+              <button
+                onClick={() => setBillingInterval("month")}
+                style={{
+                  ...btnBase,
+                  backgroundColor: billingInterval === "month" ? "#0A242C" : "transparent",
+                  color: billingInterval === "month" ? "#f3f2ee" : "#0A242C",
+                  border: "1px solid #0A242C",
+                  borderRight: "none",
+                }}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingInterval("year")}
+                style={{
+                  ...btnBase,
+                  backgroundColor: billingInterval === "year" ? "#0A242C" : "transparent",
+                  color: billingInterval === "year" ? "#f3f2ee" : "#0A242C",
+                  border: "1px solid #0A242C",
+                }}
+              >
+                Annual
+              </button>
+            </div>
 
-            <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
-              <div style={{ width: "100%", maxWidth: "420px", padding: "48px 36px" }}>
-                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C", opacity: 0.5 }}>Individual pricing</p>
-                <h2 className="text-2xl mb-8" style={{ color: "#1E4D5A", fontWeight: 400 }}>For personal collections.</h2>
-                <div style={{ borderTop: "1px solid #d8d6d0" }}>
-                  {individualTiers.map((tier) => (
-                    <div key={tier.name} className="flex items-center justify-between py-5" style={{ borderBottom: "1px solid #d8d6d0" }}>
-                      <div>
-                        <p style={{ fontSize: "13px", color: "#0A242C", marginBottom: "3px" }}>{tier.name}</p>
-                        <p style={{ fontSize: "11px", color: "#0A242C", opacity: 0.45, letterSpacing: "-0.01em" }}>Up to {tier.bottles} bottles</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: "calc(100vh - 56px)" }}>
+
+              <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
+                <div style={{ width: "100%", maxWidth: "420px", padding: "48px 36px" }}>
+                  <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C", opacity: 0.5 }}>Individual pricing</p>
+                  <h2 className="text-2xl mb-8" style={{ color: "#1E4D5A", fontWeight: 400 }}>For personal collections.</h2>
+                  <div style={{ borderTop: "1px solid #d8d6d0" }}>
+                    {individualTiers.map((tier) => (
+                      <div key={tier.name} className="flex items-center justify-between py-5" style={{ borderBottom: "1px solid #d8d6d0" }}>
+                        <div>
+                          <p style={{ fontSize: "13px", color: "#0A242C", marginBottom: "3px" }}>{tier.name}</p>
+                          <p style={{ fontSize: "11px", color: "#0A242C", opacity: 0.45, letterSpacing: "-0.01em" }}>Up to {tier.bottles} bottles</p>
+                        </div>
+                        <p style={{ fontSize: "13px", color: "#1E4D5A" }}>
+                          {billingInterval === "year" ? tier.annualPrice : tier.price}
+                          <span style={{ fontSize: "11px", color: "#0A242C", opacity: 0.45 }}>{billingInterval === "year" ? "/yr" : "/mo"}</span>
+                        </p>
                       </div>
-                      <p style={{ fontSize: "13px", color: "#1E4D5A" }}>{tier.price}<span style={{ fontSize: "11px", color: "#0A242C", opacity: 0.45 }}>/mo</span></p>
-                    </div>
-                  ))}
-                </div>
-                <p style={{ fontSize: "10px", color: "#0A242C", opacity: 0.45, marginTop: "20px", letterSpacing: "-0.01em", lineHeight: "1.6" }}>
-                  Prices increase annually in line with RPI on your membership anniversary date. 30 days notice always given.
-                </p>
-                <div className="flex items-center gap-3 mt-8">
-                  <button
-                    onClick={() => setView("about")}
-                    style={{
-                      ...btnBase,
-                      backgroundColor: "transparent",
-                      color: "#0A242C",
-                      border: "1px solid #0A242C",
-                    }}
-                  >
-                    ← Back
-                  </button>
-                  {!isFull && (
+                    ))}
+                  </div>
+                  <p style={{ fontSize: "10px", color: "#0A242C", opacity: 0.45, marginTop: "20px", letterSpacing: "-0.01em", lineHeight: "1.6" }}>
+                    Prices increase annually in line with RPI on your membership anniversary date. 30 days notice always given.
+                  </p>
+                  <div className="flex items-center gap-3 mt-8">
                     <button
-                      onClick={() => setJoinOpen(true)}
+                      onClick={() => setView("about")}
                       style={{
                         ...btnBase,
-                        backgroundColor: "#1E4D5A",
-                        color: "#f3f2ee",
+                        backgroundColor: "transparent",
+                        color: "#0A242C",
+                        border: "1px solid #0A242C",
                       }}
                     >
-                      Join the Cellar Club →
+                      ← Back
                     </button>
-                  )}
+                    {!isFull && (
+                      <button
+                        onClick={() => setJoinOpen(true)}
+                        style={{
+                          ...btnBase,
+                          backgroundColor: "#1E4D5A",
+                          color: "#f3f2ee",
+                        }}
+                      >
+                        Join the Cellar Club →
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex flex-col justify-center items-center" style={{ backgroundColor: "#1E4D5A" }}>
-              <div style={{ width: "100%", maxWidth: "420px", padding: "48px 36px" }}>
-                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.5)" }}>Corporate entity pricing</p>
-                <h2 className="text-2xl mb-8" style={{ color: "#f3f2ee", fontWeight: 400 }}>For businesses and teams.</h2>
-                <div style={{ borderTop: "1px solid rgba(243,242,238,0.18)" }}>
-                  {corporateTiers.map((tier) => (
-                    <div key={tier.name} className="flex items-center justify-between py-5" style={{ borderBottom: "1px solid rgba(243,242,238,0.18)" }}>
-                      <div>
-                        <p style={{ fontSize: "13px", color: "#f3f2ee", marginBottom: "3px" }}>{tier.name}</p>
-                        <p style={{ fontSize: "11px", color: "rgba(243,242,238,0.5)", letterSpacing: "-0.01em" }}>Up to {tier.bottles} bottles</p>
+              <div className="flex flex-col justify-center items-center" style={{ backgroundColor: "#1E4D5A" }}>
+                <div style={{ width: "100%", maxWidth: "420px", padding: "48px 36px" }}>
+                  <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.5)" }}>Corporate entity pricing</p>
+                  <h2 className="text-2xl mb-8" style={{ color: "#f3f2ee", fontWeight: 400 }}>For businesses and teams.</h2>
+                  <div style={{ borderTop: "1px solid rgba(243,242,238,0.18)" }}>
+                    {corporateTiers.map((tier) => (
+                      <div key={tier.name} className="flex items-center justify-between py-5" style={{ borderBottom: "1px solid rgba(243,242,238,0.18)" }}>
+                        <div>
+                          <p style={{ fontSize: "13px", color: "#f3f2ee", marginBottom: "3px" }}>{tier.name}</p>
+                          <p style={{ fontSize: "11px", color: "rgba(243,242,238,0.5)", letterSpacing: "-0.01em" }}>Up to {tier.bottles} bottles</p>
+                        </div>
+                        <p style={{ fontSize: "13px", color: "#f3f2ee" }}>
+                          {billingInterval === "year" ? tier.annualPrice : tier.price}
+                          <span style={{ fontSize: "11px", color: "rgba(243,242,238,0.5)" }}>{billingInterval === "year" ? "/yr" : "/mo"}</span>
+                        </p>
                       </div>
-                      <p style={{ fontSize: "13px", color: "#f3f2ee" }}>{tier.price}<span style={{ fontSize: "11px", color: "rgba(243,242,238,0.5)" }}>/mo</span></p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                  <p style={{ fontSize: "10px", color: "rgba(243,242,238,0.45)", marginTop: "20px", letterSpacing: "-0.01em", lineHeight: "1.6" }}>
+                    Corporate memberships include additional authorised users. Contact us to discuss bespoke arrangements.
+                  </p>
                 </div>
-                <p style={{ fontSize: "10px", color: "rgba(243,242,238,0.45)", marginTop: "20px", letterSpacing: "-0.01em", lineHeight: "1.6" }}>
-                  Corporate memberships include additional authorised users. Contact us to discuss bespoke arrangements.
-                </p>
               </div>
-            </div>
 
-          </div>
+            </div>
+          </>
         )}
 
         {joinOpen && !isFull && (
