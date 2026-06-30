@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
 
     const { data: eventRow, error: eventErr } = await supabase
       .from("events")
-      .select("id, title, date, time")
+      .select("id, title, date, time, price_per_person")
       .eq("id", booking.event_id)
       .maybeSingle();
 
@@ -81,16 +81,44 @@ Deno.serve(async (req) => {
 
     const logoHtml = `<img src="https://bodegawine.co.uk/bodega_logo_teal.png" alt="Bodega" width="180" style="display: block; margin-bottom: 32px;" />`;
 
+    const isFree = !eventRow.price_per_person;
+    const perPersonAmount = eventRow.price_per_person ? eventRow.price_per_person / 100 : 0;
+    const totalAmount = perPersonAmount * booking.party_size;
+    const bookingRef = booking.id.split("-")[0].toUpperCase();
+
     const guestHtml = `
       <div style="background-color: #f3f2ee; font-family: 'Courier New', monospace; max-width: 560px; margin: 0 auto; padding: 40px 32px; color: #0A242C;">
         ${logoHtml}
         <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #1E4D5A; margin-bottom: 8px;">Booking Confirmed</p>
-        <h1 style="font-size: 22px; font-weight: 400; margin-bottom: 24px; color: #0A242C;">${eventRow.title}</h1>
-        <p style="font-size: 13px; line-height: 1.7; margin-bottom: 8px; color: #0A242C;">${dateTimeLine}</p>
-        <p style="font-size: 13px; line-height: 1.7; margin-bottom: 8px; color: #0A242C;">Party of ${booking.party_size}</p>
-        ${booking.dietary_requirements ? `<p style="font-size: 13px; line-height: 1.7; margin-bottom: 24px; color: #0A242C;">Dietary requirements: ${booking.dietary_requirements}</p>` : ""}
-        <p style="font-size: 13px; line-height: 1.7; margin-bottom: 24px; color: #0A242C;">Show this ticket on arrival — one scan covers your whole party.</p>
-        <img src="${qrUrl}" alt="Booking QR code" width="200" height="200" style="display: block; margin-bottom: 24px;" />
+        <h1 style="font-size: 22px; font-weight: 400; margin-bottom: 8px; color: #0A242C;">${eventRow.title}</h1>
+        <p style="font-size: 13px; line-height: 1.7; margin-bottom: 24px; color: #0A242C;">${dateTimeLine}</p>
+
+        <div style="border: 1px solid #d8d6d0; padding: 20px; margin-bottom: 24px;">
+          <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #777; margin-bottom: 12px;">Booking details</p>
+          <table style="font-size: 13px; width: 100%; border-collapse: collapse;">
+            <tr><td style="padding: 4px 0; color: #777;">Booking ref</td><td style="padding: 4px 0; text-align: right;">${bookingRef}</td></tr>
+            <tr><td style="padding: 4px 0; color: #777;">Name</td><td style="padding: 4px 0; text-align: right;">${booking.guest_name}</td></tr>
+            <tr><td style="padding: 4px 0; color: #777;">Party size</td><td style="padding: 4px 0; text-align: right;">${booking.party_size}</td></tr>
+            ${booking.dietary_requirements ? `<tr><td style="padding: 4px 0; color: #777;">Dietary</td><td style="padding: 4px 0; text-align: right;">${booking.dietary_requirements}</td></tr>` : ""}
+          </table>
+          <div style="border-top: 1px solid #d8d6d0; margin-top: 12px; padding-top: 12px;">
+            <table style="font-size: 13px; width: 100%; border-collapse: collapse;">
+              ${isFree
+                ? `<tr><td style="padding: 4px 0;">Price</td><td style="padding: 4px 0; text-align: right;">Free</td></tr>`
+                : `<tr><td style="padding: 4px 0; color: #777;">£${perPersonAmount.toFixed(2)} × ${booking.party_size}</td><td style="padding: 4px 0; text-align: right; color: #777;">£${totalAmount.toFixed(2)}</td></tr>
+                   <tr><td style="padding: 4px 0; font-weight: bold;">Total paid</td><td style="padding: 4px 0; text-align: right; font-weight: bold;">£${totalAmount.toFixed(2)}</td></tr>`
+              }
+            </table>
+          </div>
+        </div>
+
+        <div style="border: 1px solid #1E4D5A; padding: 24px; margin-bottom: 24px; text-align: center;">
+          <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #1E4D5A; margin-bottom: 16px;">Your ticket — show on arrival</p>
+          <img src="${qrUrl}" alt="Booking QR code" width="180" height="180" style="display: block; margin: 0 auto 12px auto;" />
+          <p style="font-size: 11px; color: #777; margin: 0;">One scan covers your whole party of ${booking.party_size}</p>
+          <p style="font-size: 10px; color: #999; margin-top: 8px;">Ref: ${bookingRef}</p>
+        </div>
+
         <div style="border-top: 1px solid #d8d6d0; padding-top: 24px; margin-top: 8px;">
           <p style="font-size: 12px; color: #666; margin-bottom: 0;">Bodega, Weir Mill, Stockport, SK3 0AG</p>
         </div>
@@ -127,6 +155,8 @@ Deno.serve(async (req) => {
             <tr><td style="padding: 6px 0; color: #666;">Party size</td><td>${booking.party_size}</td></tr>
             <tr><td style="padding: 6px 0; color: #666;">Date</td><td>${dateTimeLine}</td></tr>
             <tr><td style="padding: 6px 0; color: #666;">Dietary</td><td>${booking.dietary_requirements || "—"}</td></tr>
+            <tr><td style="padding: 6px 0; color: #666;">Price</td><td>${isFree ? "Free" : `£${totalAmount.toFixed(2)} (£${perPersonAmount.toFixed(2)} × ${booking.party_size})`}</td></tr>
+            <tr><td style="padding: 6px 0; color: #666;">Booking ref</td><td>${bookingRef}</td></tr>
           </table>
           <a href="https://bodegawine.co.uk/admin" style="display: inline-block; margin-top: 24px; padding: 10px 24px; background-color: #1E4D5A; color: #f3f2ee; text-decoration: none; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;">View in admin →</a>
         </div>
