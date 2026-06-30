@@ -255,7 +255,6 @@ export default function EventsManager() {
           {events.map((ev) => {
             const isTicketed = !!ev.price_per_person;
             const isExpanded = expandedEventId === ev.id;
-            const hasBookingActivity = !!bookingCounts[ev.id] || !!ev.capacity;
             const otherUpcomingBookable = events.filter(
               (e) => e.id !== ev.id && isAfter(parseISO(e.date), today)
             );
@@ -273,15 +272,13 @@ export default function EventsManager() {
                           {ev.time && ` · ${ev.time}`}
                           {isTicketed ? ` · £${(ev.price_per_person / 100).toFixed(2)} per person` : ` · Free`}
                         </p>
-                        {hasBookingActivity && (
-                          <button
-                            onClick={() => toggleExpand(ev.id)}
-                            style={{ display: "inline-flex", alignItems: "center", gap: "4px", marginTop: "6px", background: "none", border: "none", cursor: "pointer", padding: 0, color: "#193c47", fontFamily: "'Courier New', Courier, monospace", fontSize: "12px" }}
-                          >
-                            {bookingCounts[ev.id] || 0}{ev.capacity ? ` / ${ev.capacity}` : ""} booked
-                            {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                          </button>
-                        )}
+                        <button
+                          onClick={() => toggleExpand(ev.id)}
+                          style={{ display: "inline-flex", alignItems: "center", gap: "4px", marginTop: "6px", background: "none", border: "none", cursor: "pointer", padding: 0, color: "#193c47", fontFamily: "'Courier New', Courier, monospace", fontSize: "12px" }}
+                        >
+                          {bookingCounts[ev.id] || 0}{ev.capacity ? ` / ${ev.capacity}` : ""} booked
+                          {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                        </button>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
                         {!ev.published && <span style={{ fontSize: "10px", backgroundColor: "#eceae4", color: "#777777", border: "1px solid #d8d6d0", padding: "2px 8px", borderRadius: "3px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Draft</span>}
