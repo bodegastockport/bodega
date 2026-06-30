@@ -280,9 +280,6 @@ export default function EventsManager() {
           {events.map((ev) => {
             const isTicketed = !!ev.price_per_person;
             const isExpanded = expandedEventId === ev.id;
-            const otherUpcomingBookable = events.filter(
-              (e) => e.id !== ev.id && isAfter(parseISO(e.date), today)
-            );
 
             return (
               <div key={ev.id} style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", borderRadius: "6px" }}>
@@ -325,7 +322,16 @@ export default function EventsManager() {
                       <p className="text-xs" style={{ color: "#777777" }}>No bookings yet for this event.</p>
                     ) : (
                       <div className="space-y-3">
-                        {bookings.map((b) => (
+                        {bookings.map((b) => {
+                          const rescheduleOptions = events.filter((e) => {
+                            if (e.id === ev.id) return false;
+                            if (!isAfter(parseISO(e.date), today)) return false;
+                            if (!e.capacity) return true;
+                            const remaining = e.capacity - (bookingCounts[e.id] || 0);
+                            return remaining >= b.party_size;
+                          });
+
+                          return (
                           <div key={b.id} style={{ backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", borderRadius: "6px", padding: "12px" }}>
                             <div className="flex items-start justify-between gap-3 flex-wrap">
                               <div>
@@ -347,7 +353,7 @@ export default function EventsManager() {
                                 )}
                               </div>
                               <div className="flex items-center gap-2">
-                                {otherUpcomingBookable.length > 0 ? (
+                                {rescheduleOptions.length > 0 ? (
                                   <select
                                     disabled={reschedulingId === b.id || cancellingId === b.id}
                                     value=""
@@ -357,14 +363,14 @@ export default function EventsManager() {
                                     <option value="" disabled>
                                       {reschedulingId === b.id ? "Rescheduling..." : "Reschedule to..."}
                                     </option>
-                                    {otherUpcomingBookable.map((opt) => (
+                                    {rescheduleOptions.map((opt) => (
                                       <option key={opt.id} value={opt.id}>
                                         {opt.title} — {format(parseISO(opt.date), "d MMM yyyy")}
                                       </option>
                                     ))}
                                   </select>
                                 ) : (
-                                  <p className="text-xs" style={{ color: "#777777" }}>No other upcoming events to reschedule to</p>
+                                  <p className="text-xs" style={{ color: "#777777" }}>No upcoming events with space for this party</p>
                                 )}
                                 <button
                                   onClick={() => handleCancel(b)}
@@ -377,7 +383,8 @@ export default function EventsManager() {
                               </div>
                             </div>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
