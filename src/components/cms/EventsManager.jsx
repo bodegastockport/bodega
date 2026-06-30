@@ -7,10 +7,11 @@ import { Switch } from "@/components/ui/switch";
 
 const inputStyle = { backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", borderRadius: "6px", fontFamily: "'Courier New', Courier, monospace", fontSize: "13px", padding: "9px 12px", color: "#2e282a", width: "100%", outline: "none", transition: "border-color 0.15s" };
 const labelStyle = { display: "block", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#777777", marginBottom: "5px", fontFamily: "'Courier New', Courier, monospace" };
-const BLANK = { title: "", date: "", time: "", price: "", description: "", image_url: "", published: true };
+const BLANK = { title: "", date: "", time: "", price_per_person: "", capacity: "", description: "", image_url: "", published: true };
 
 export default function EventsManager() {
   const [events, setEvents] = useState([]);
+  const [bookingCounts, setBookingCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(BLANK);
@@ -23,13 +24,43 @@ export default function EventsManager() {
       .select()
       .order('date', { ascending: false });
     setEvents(data || []);
+
+    const ticketedIds = (data || []).filter((e) => e.price_per_person).map((e) => e.id);
+    if (ticketedIds.length > 0) {
+      const { data: bookings } = await supabase
+        .from('event_bookings')
+        .select('event_id, party_size')
+        .in('event_id', ticketedIds)
+        .eq('status', 'confirmed');
+
+      const counts = {};
+      (bookings || []).forEach((b) => {
+        counts[b.event_id] = (counts[b.event_id] || 0) + (b.party_size || 0);
+      });
+      setBookingCounts(counts);
+    } else {
+      setBookingCounts({});
+    }
+
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
 
   const openNew = () => { setForm(BLANK); setEditing("new"); };
-  const openEdit = (ev) => { setForm({ title: ev.title, date: ev.date, time: ev.time || "", price: ev.price || "", description: ev.description, image_url: ev.image_url || "", published: ev.published ?? true }); setEditing(ev); };
+  const openEdit = (ev) => {
+    setForm({
+      title: ev.title,
+      date: ev.date,
+      time: ev.time || "",
+      price_per_person: ev.price_per_person ? (ev.price_per_person / 100).toFixed(2) : "",
+      capacity: ev.capacity || "",
+      description: ev.description,
+      image_url: ev.image_url || "",
+      published: ev.published ?? true,
+    });
+    setEditing(ev);
+  };
   const close = () => setEditing(null);
 
   const handleImageUpload = async (e) => {
@@ -51,11 +82,23 @@ export default function EventsManager() {
   const handleSave = async () => {
     if (!form.title || !form.date || !form.description) return;
     setSaving(true);
+
+    const payload = {
+      title: form.title,
+      date: form.date,
+      time: form.time,
+      description: form.description,
+      image_url: form.image_url,
+      published: form.published,
+      price_per_person: form.price_per_person ? Math.round(parseFloat(form.price_per_person) * 100) : null,
+      capacity: form.capacity ? parseInt(form.capacity, 10) : null,
+    };
+
     if (editing === "new") {
-      const { error } = await supabase.from('events').insert(form);
+      const { error } = await supabase.from('events').insert(payload);
       if (error) { toast.error("Failed to save"); setSaving(false); return; }
     } else {
-      const { error } = await supabase.from('events').update(form).eq('id', editing.id);
+      const { error } = await supabase.from('events').update(payload).eq('id', editing.id);
       if (error) { toast.error("Failed to save"); setSaving(false); return; }
     }
     await load();
@@ -102,8 +145,12 @@ export default function EventsManager() {
               <input style={inputStyle} value={form.time} onChange={(e) => setForm((p) => ({ ...p, time: e.target.value }))} placeholder="e.g. 7:00pm" />
             </div>
             <div>
-              <label style={labelStyle}>Price</label>
-              <input style={inputStyle} value={form.price} onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))} placeholder="e.g. Free, £15 per person" />
+              <label style={labelStyle}>Ticket price (£ per person)</label>
+              <input style={inputStyle} value={form.price_per_person} onChange={(e) => setForm((p) => ({ ...p, price_per_person: e.target.value }))} placeholder="Leave blank for a free event" inputMode="decimal" />
+            </div>
+            <div>
+              <label style={labelStyle}>Capacity</label>
+              <input style={inputStyle} value={form.capacity} onChange={(e) => setForm((p) => ({ ...p, capacity: e.target.value }))} placeholder="Max guests, leave blank if unlimited" inputMode="numeric" />
             </div>
           </div>
           <div className="mb-4">
@@ -155,8 +202,13 @@ export default function EventsManager() {
                     <p className="text-xs mt-0.5" style={{ color: "#777777" }}>
                       {format(parseISO(ev.date), "EEE d MMM yyyy")}
                       {ev.time && ` · ${ev.time}`}
-                      {ev.price && ` · ${ev.price}`}
+                      {ev.price_per_person ? ` · £${(ev.price_per_person / 100).toFixed(2)} per person` : ` · Free`}
                     </p>
+                    {ev.price_per_person && (
+                      <p className="text-xs mt-1" style={{ color: "#193c47" }}>
+                        {bookingCounts[ev.id] || 0}{ev.capacity ? ` / ${ev.capacity}` : ""} booked
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {!ev.published && <span style={{ fontSize: "10px", backgroundColor: "#eceae4", color: "#777777", border: "1px solid #d8d6d0", padding: "2px 8px", borderRadius: "3px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Draft</span>}
