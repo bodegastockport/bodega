@@ -30,12 +30,12 @@ export default function EventsManager() {
       .order('date', { ascending: false });
     setEvents(data || []);
 
-    const ticketedIds = (data || []).filter((e) => e.price_per_person).map((e) => e.id);
-    if (ticketedIds.length > 0) {
+    const allIds = (data || []).map((e) => e.id);
+    if (allIds.length > 0) {
       const { data: bookingsData } = await supabase
         .from('event_bookings')
         .select('event_id, party_size')
-        .in('event_id', ticketedIds)
+        .in('event_id', allIds)
         .eq('status', 'confirmed');
 
       const counts = {};
@@ -255,8 +255,9 @@ export default function EventsManager() {
           {events.map((ev) => {
             const isTicketed = !!ev.price_per_person;
             const isExpanded = expandedEventId === ev.id;
-            const otherUpcomingTicketed = events.filter(
-              (e) => e.id !== ev.id && e.price_per_person && isAfter(parseISO(e.date), today)
+            const hasBookingActivity = !!bookingCounts[ev.id] || !!ev.capacity;
+            const otherUpcomingBookable = events.filter(
+              (e) => e.id !== ev.id && isAfter(parseISO(e.date), today)
             );
 
             return (
@@ -272,7 +273,7 @@ export default function EventsManager() {
                           {ev.time && ` · ${ev.time}`}
                           {isTicketed ? ` · £${(ev.price_per_person / 100).toFixed(2)} per person` : ` · Free`}
                         </p>
-                        {isTicketed && (
+                        {hasBookingActivity && (
                           <button
                             onClick={() => toggleExpand(ev.id)}
                             style={{ display: "inline-flex", alignItems: "center", gap: "4px", marginTop: "6px", background: "none", border: "none", cursor: "pointer", padding: 0, color: "#193c47", fontFamily: "'Courier New', Courier, monospace", fontSize: "12px" }}
@@ -324,7 +325,7 @@ export default function EventsManager() {
                                 )}
                               </div>
                               <div>
-                                {otherUpcomingTicketed.length > 0 ? (
+                                {otherUpcomingBookable.length > 0 ? (
                                   <select
                                     disabled={reschedulingId === b.id}
                                     value=""
@@ -334,14 +335,14 @@ export default function EventsManager() {
                                     <option value="" disabled>
                                       {reschedulingId === b.id ? "Rescheduling..." : "Reschedule to..."}
                                     </option>
-                                    {otherUpcomingTicketed.map((opt) => (
+                                    {otherUpcomingBookable.map((opt) => (
                                       <option key={opt.id} value={opt.id}>
                                         {opt.title} — {format(parseISO(opt.date), "d MMM yyyy")}
                                       </option>
                                     ))}
                                   </select>
                                 ) : (
-                                  <p className="text-xs" style={{ color: "#777777" }}>No other ticketed events to reschedule to</p>
+                                  <p className="text-xs" style={{ color: "#777777" }}>No other upcoming events to reschedule to</p>
                                 )}
                               </div>
                             </div>
