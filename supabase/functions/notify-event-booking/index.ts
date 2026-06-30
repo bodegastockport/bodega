@@ -64,8 +64,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const qrData = `BODEGA EVENT TICKET\nBooking: ${booking.id}\nEvent: ${eventRow.title}\nGuest: ${booking.guest_name}\nParty: ${booking.party_size}`;
-    const encodedQrData = encodeURIComponent(qrData);
+    const scanUrl = `https://bodegawine.co.uk/scan-event/${booking.id}`;
+    const encodedQrData = encodeURIComponent(scanUrl);
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodedQrData}&size=240x240&margin=10`;
 
     const formattedDate = new Date(eventRow.date).toLocaleDateString("en-GB", {

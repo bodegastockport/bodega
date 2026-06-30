@@ -27,6 +27,7 @@ import CellarClub from "./pages/CellarClub";
 import CellarClubTerms from "./pages/CellarClubTerms";
 import CellarClubSuccess from "./pages/CellarClubSuccess";
 import ScanBottle from "./pages/ScanBottle";
+import ScanEvent from "./pages/ScanEvent";
 import ComingSoon from "./pages/ComingSoon";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
@@ -82,6 +83,7 @@ const AppRoutes = () => {
         <Route path="/auth/confirm" element={<AuthConfirm />} />
         <Route path="/my-cellar" element={<MyCellar />} />
         <Route path="/scan/:id" element={<ScanBottle />} />
+        <Route path="/scan-event/:id" element={<ScanEvent />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
 
