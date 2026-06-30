@@ -12,11 +12,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-      apiVersion: "2024-04-10",
-      httpClient: Stripe.createFetchHttpClient(),
-    });
-
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SERVICE_ROLE_KEY")!
@@ -42,20 +37,13 @@ Deno.serve(async (req) => {
 
     const { data: event, error: eventError } = await supabase
       .from("events")
-      .select("id, title, date, price_per_person, capacity, requires_booking")
+      .select("id, title, date, price_per_person, capacity")
       .eq("id", event_id)
       .maybeSingle();
 
     if (eventError || !event) {
       return new Response(JSON.stringify({ error: "Event not found" }), {
         status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (!event.price_per_person) {
-      return new Response(JSON.stringify({ error: "This event does not require booking" }), {
-        status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -87,6 +75,55 @@ Deno.serve(async (req) => {
         });
       }
     }
+
+    const isFree = !event.price_per_person;
+
+    if (isFree) {
+      const { data: newBooking, error: bookingErr } = await supabase
+        .from("event_bookings")
+        .insert({
+          event_id,
+          guest_name,
+          email,
+          phone,
+          party_size: requestedPartySize,
+          dietary_requirements: dietary_requirements || null,
+          status: "confirmed",
+        })
+        .select("id")
+        .single();
+
+      if (bookingErr || !newBooking) {
+        console.error("Error creating free event booking:", bookingErr);
+        return new Response(JSON.stringify({ error: "Failed to create booking" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      try {
+        const functionsUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/notify-event-booking`;
+        await fetch(functionsUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${Deno.env.get("SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ booking_id: newBooking.id }),
+        });
+      } catch (notifyErr) {
+        console.error("Error triggering notify-event-booking for free booking:", notifyErr);
+      }
+
+      return new Response(JSON.stringify({ free: true, booking_id: newBooking.id }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
+      apiVersion: "2024-04-10",
+      httpClient: Stripe.createFetchHttpClient(),
+    });
 
     const amount = event.price_per_person * requestedPartySize;
 
