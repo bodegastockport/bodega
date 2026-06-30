@@ -22,6 +22,7 @@ export default function EventsManager() {
   const [bookings, setBookings] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [reschedulingId, setReschedulingId] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
 
   const load = async () => {
     const { data } = await supabase
@@ -127,7 +128,7 @@ export default function EventsManager() {
     setBookingsLoading(true);
     const { data, error } = await supabase
       .from('event_bookings')
-      .select('id, guest_name, email, phone, party_size, dietary_requirements, attended, event_id, created_at')
+      .select('id, guest_name, email, phone, party_size, dietary_requirements, attended, event_id, created_at, stripe_payment_intent_id')
       .eq('event_id', eventId)
       .eq('status', 'confirmed')
       .order('created_at', { ascending: true });
@@ -167,6 +168,30 @@ export default function EventsManager() {
 
     setReschedulingId(null);
     setBookings((prev) => prev.filter((b) => b.id !== bookingId));
+    await load();
+  };
+
+  const handleCancel = async (booking) => {
+    const confirmed = window.confirm(
+      `Cancel ${booking.guest_name}'s booking?${booking.stripe_payment_intent_id ? " This will refund them via Stripe." : ""}`
+    );
+    if (!confirmed) return;
+
+    setCancellingId(booking.id);
+
+    const { data, error: fnErr } = await supabase.functions.invoke('cancel-event-booking', {
+      body: { booking_id: booking.id },
+    });
+
+    setCancellingId(null);
+
+    if (fnErr || data?.error) {
+      toast.error(data?.error || "Failed to cancel booking");
+      return;
+    }
+
+    toast.success(data?.refunded ? "Booking cancelled and refunded" : "Booking cancelled");
+    setBookings((prev) => prev.filter((b) => b.id !== booking.id));
     await load();
   };
 
@@ -321,10 +346,10 @@ export default function EventsManager() {
                                   <p className="text-xs mt-1" style={{ color: "#777777" }}>Dietary: {b.dietary_requirements}</p>
                                 )}
                               </div>
-                              <div>
+                              <div className="flex items-center gap-2">
                                 {otherUpcomingBookable.length > 0 ? (
                                   <select
-                                    disabled={reschedulingId === b.id}
+                                    disabled={reschedulingId === b.id || cancellingId === b.id}
                                     value=""
                                     onChange={(e) => handleReschedule(b.id, e.target.value)}
                                     style={{ ...inputStyle, padding: "6px 8px", fontSize: "11px", width: "auto" }}
@@ -341,6 +366,14 @@ export default function EventsManager() {
                                 ) : (
                                   <p className="text-xs" style={{ color: "#777777" }}>No other upcoming events to reschedule to</p>
                                 )}
+                                <button
+                                  onClick={() => handleCancel(b)}
+                                  disabled={cancellingId === b.id || reschedulingId === b.id}
+                                  style={{ padding: "6px 10px", backgroundColor: "transparent", color: "#c0392b", border: "1px solid #c0392b", borderRadius: "4px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", cursor: cancellingId === b.id ? "not-allowed" : "pointer", opacity: cancellingId === b.id ? 0.6 : 1, display: "inline-flex", alignItems: "center", gap: "4px" }}
+                                >
+                                  {cancellingId === b.id ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                                  {cancellingId === b.id ? "Cancelling..." : "Cancel"}
+                                </button>
                               </div>
                             </div>
                           </div>
