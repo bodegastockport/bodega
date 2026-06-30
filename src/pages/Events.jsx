@@ -78,6 +78,12 @@ export default function Events() {
   const [modalOpen, setModalOpen] = useState(false);
   const [page, setPage] = useState(0);
 
+  const [bookingEvent, setBookingEvent] = useState(null);
+  const [bookingForm, setBookingForm] = useState({ guest_name: "", email: "", phone: "", party_size: "1", dietary_requirements: "" });
+  const [bookingSubmitting, setBookingSubmitting] = useState(false);
+  const [bookingError, setBookingError] = useState(null);
+  const [bookingFocused, setBookingFocused] = useState(null);
+
   useEffect(() => {
     const loadEvents = async () => {
       const { data } = await supabase
@@ -91,13 +97,13 @@ export default function Events() {
   }, []);
 
   useEffect(() => {
-    if (modalOpen) {
+    if (modalOpen || bookingEvent) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
     }
     return () => { document.body.style.overflow = ""; };
-  }, [modalOpen]);
+  }, [modalOpen, bookingEvent]);
 
   const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
   const isValid = form.name && form.email && form.event_type && form.message;
@@ -124,9 +130,57 @@ export default function Events() {
     setError(null);
   };
 
+  const openBooking = (event) => {
+    setBookingForm({ guest_name: "", email: "", phone: "", party_size: "1", dietary_requirements: "" });
+    setBookingError(null);
+    setBookingEvent(event);
+  };
+
+  const closeBooking = () => {
+    setBookingEvent(null);
+    setBookingError(null);
+  };
+
+  const updateBooking = (k, v) => setBookingForm((p) => ({ ...p, [k]: v }));
+  const isBookingValid = bookingForm.guest_name && bookingForm.email && bookingForm.phone && bookingForm.party_size;
+
+  const handleBookingSubmit = async (e) => {
+    e.preventDefault();
+    if (!isBookingValid || !bookingEvent) return;
+    setBookingSubmitting(true);
+    setBookingError(null);
+
+    const { data, error: fnErr } = await supabase.functions.invoke("create-event-checkout", {
+      body: {
+        event_id: bookingEvent.id,
+        guest_name: bookingForm.guest_name,
+        email: bookingForm.email,
+        phone: bookingForm.phone,
+        party_size: parseInt(bookingForm.party_size, 10),
+        dietary_requirements: bookingForm.dietary_requirements,
+      },
+    });
+
+    setBookingSubmitting(false);
+
+    if (fnErr || data?.error) {
+      setBookingError(data?.error || "Something went wrong. Please try again.");
+      return;
+    }
+
+    if (data?.url) {
+      window.location.href = data.url;
+    }
+  };
+
   const getInputStyle = (field) => ({
     ...inputStyle,
     borderColor: focused === field ? "#1E4D5A" : "#d8d6d0",
+  });
+
+  const getBookingInputStyle = (field) => ({
+    ...inputStyle,
+    borderColor: bookingFocused === field ? "#1E4D5A" : "#d8d6d0",
   });
 
   const totalPages = Math.ceil(events.length / PER_PAGE);
@@ -155,41 +209,47 @@ export default function Events() {
             ) : (
               <>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "24px" }}>
-                  {visibleEvents.map((event) => (
-                    <div key={event.id} style={{ borderBottom: "1px solid #d8d6d0", paddingBottom: "16px" }}>
-                      {event.image_url && (
-                        <div style={{ aspectRatio: "4 / 5", overflow: "hidden", marginBottom: "12px" }}>
-                          <img
-                            src={getOptimisedImageUrl(event.image_url, 400, 75)}
-                            alt={event.title}
-                            width="400"
-                            height="500"
-                            loading="lazy"
-                            decoding="async"
-                            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                            onError={(eventObject) => useOriginalIfOptimisedFails(eventObject, event.image_url)}
-                          />
-                        </div>
-                      )}
-                      <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px", color: "#0A242C" }}>
-                        {new Date(event.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
-                      </p>
-                      {(event.time || event.price) && (
-                        <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px", color: "#777777" }}>
-                          {event.time && <span>{event.time}</span>}
-                          {event.time && event.price && <span> · </span>}
-                          {event.price && <span>{event.price}</span>}
+                  {visibleEvents.map((event) => {
+                    const isTicketed = !!event.price_per_person;
+                    return (
+                      <div key={event.id} style={{ borderBottom: "1px solid #d8d6d0", paddingBottom: "16px" }}>
+                        {event.image_url && (
+                          <div style={{ aspectRatio: "4 / 5", overflow: "hidden", marginBottom: "12px" }}>
+                            <img
+                              src={getOptimisedImageUrl(event.image_url, 400, 75)}
+                              alt={event.title}
+                              width="400"
+                              height="500"
+                              loading="lazy"
+                              decoding="async"
+                              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                              onError={(eventObject) => useOriginalIfOptimisedFails(eventObject, event.image_url)}
+                            />
+                          </div>
+                        )}
+                        <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px", color: "#0A242C" }}>
+                          {new Date(event.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                         </p>
-                      )}
-                      <p style={{ fontSize: "12px", marginBottom: "4px", color: "#1E4D5A", fontWeight: 400 }}>{event.title}</p>
-                      <p style={{ fontSize: "11px", lineHeight: "1.5", marginBottom: "10px", color: "#0A242C" }}>{event.description}</p>
-                      <button
-                        style={{ fontSize: "10px", color: "#1E4D5A", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0, borderBottom: "1px solid #1E4D5A", paddingBottom: "1px" }}
-                      >
-                        Book a place →
-                      </button>
-                    </div>
-                  ))}
+                        {(event.time || isTicketed) && (
+                          <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px", color: "#777777" }}>
+                            {event.time && <span>{event.time}</span>}
+                            {event.time && isTicketed && <span> · </span>}
+                            {isTicketed && <span>£{(event.price_per_person / 100).toFixed(2)} per person</span>}
+                          </p>
+                        )}
+                        <p style={{ fontSize: "12px", marginBottom: "4px", color: "#1E4D5A", fontWeight: 400 }}>{event.title}</p>
+                        <p style={{ fontSize: "11px", lineHeight: "1.5", marginBottom: "10px", color: "#0A242C" }}>{event.description}</p>
+                        {isTicketed && (
+                          <button
+                            onClick={() => openBooking(event)}
+                            style={{ fontSize: "10px", color: "#1E4D5A", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0, borderBottom: "1px solid #1E4D5A", paddingBottom: "1px" }}
+                          >
+                            Book a place →
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {totalPages > 1 && (
@@ -393,6 +453,105 @@ export default function Events() {
                     </button>
                   </form>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {bookingEvent && (
+          <div
+            style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(10, 36, 44, 0.6)" }}
+            onClick={(e) => { if (e.target === e.currentTarget) closeBooking(); }}
+          >
+            <div style={{ backgroundColor: "#1E4D5A", width: "100%", maxWidth: "560px", maxHeight: "90vh", overflowY: "auto", margin: "16px", position: "relative" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "28px 28px 0 28px" }}>
+                <div>
+                  <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#f3f2ee", opacity: 0.6 }}>Book a place</p>
+                  <h2 className="text-xl" style={{ color: "#f3f2ee", fontWeight: 400 }}>{bookingEvent.title}</h2>
+                  <p className="text-xs mt-1" style={{ color: "#f3f2ee", opacity: 0.7 }}>
+                    {new Date(bookingEvent.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                    {bookingEvent.time && ` · ${bookingEvent.time}`}
+                    {" · £"}{(bookingEvent.price_per_person / 100).toFixed(2)} per person
+                  </p>
+                </div>
+                <button
+                  onClick={closeBooking}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "#f3f2ee", opacity: 0.7, padding: "4px", marginTop: "2px" }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div style={{ padding: "20px 28px 28px 28px" }}>
+                <form onSubmit={handleBookingSubmit} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label style={{ ...labelStyle, color: "#f3f2ee", opacity: 0.7 }}>Your name</label>
+                      <input
+                        style={{ ...getBookingInputStyle("guest_name"), backgroundColor: "rgba(243,242,238,0.1)", borderColor: bookingFocused === "guest_name" ? "#f3f2ee" : "rgba(243,242,238,0.25)", color: "#f3f2ee" }}
+                        placeholder="Full name"
+                        value={bookingForm.guest_name}
+                        onChange={e => updateBooking("guest_name", e.target.value)}
+                        onFocus={() => setBookingFocused("guest_name")}
+                        onBlur={() => setBookingFocused(null)}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ ...labelStyle, color: "#f3f2ee", opacity: 0.7 }}>Email</label>
+                      <input
+                        type="email"
+                        style={{ ...getBookingInputStyle("email"), backgroundColor: "rgba(243,242,238,0.1)", borderColor: bookingFocused === "email" ? "#f3f2ee" : "rgba(243,242,238,0.25)", color: "#f3f2ee" }}
+                        placeholder="your@email.com"
+                        value={bookingForm.email}
+                        onChange={e => updateBooking("email", e.target.value)}
+                        onFocus={() => setBookingFocused("email")}
+                        onBlur={() => setBookingFocused(null)}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ ...labelStyle, color: "#f3f2ee", opacity: 0.7 }}>Phone</label>
+                      <input
+                        style={{ ...getBookingInputStyle("phone"), backgroundColor: "rgba(243,242,238,0.1)", borderColor: bookingFocused === "phone" ? "#f3f2ee" : "rgba(243,242,238,0.25)", color: "#f3f2ee" }}
+                        placeholder="07XXX XXXXXX"
+                        value={bookingForm.phone}
+                        onChange={e => updateBooking("phone", e.target.value)}
+                        onFocus={() => setBookingFocused("phone")}
+                        onBlur={() => setBookingFocused(null)}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ ...labelStyle, color: "#f3f2ee", opacity: 0.7 }}>Party size</label>
+                      <input
+                        type="number"
+                        min="1"
+                        style={{ ...getBookingInputStyle("party_size"), backgroundColor: "rgba(243,242,238,0.1)", borderColor: bookingFocused === "party_size" ? "#f3f2ee" : "rgba(243,242,238,0.25)", color: "#f3f2ee" }}
+                        value={bookingForm.party_size}
+                        onChange={e => updateBooking("party_size", e.target.value)}
+                        onFocus={() => setBookingFocused("party_size")}
+                        onBlur={() => setBookingFocused(null)}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ ...labelStyle, color: "#f3f2ee", opacity: 0.7 }}>Dietary requirements</label>
+                    <textarea
+                      style={{ ...getBookingInputStyle("dietary_requirements"), backgroundColor: "rgba(243,242,238,0.1)", borderColor: bookingFocused === "dietary_requirements" ? "#f3f2ee" : "rgba(243,242,238,0.25)", color: "#f3f2ee", minHeight: "60px", resize: "none" }}
+                      placeholder="Optional — let us know of any allergies or dietary needs"
+                      value={bookingForm.dietary_requirements}
+                      onChange={e => updateBooking("dietary_requirements", e.target.value)}
+                      onFocus={() => setBookingFocused("dietary_requirements")}
+                      onBlur={() => setBookingFocused(null)}
+                    />
+                  </div>
+                  {bookingError && <p style={{ fontSize: "12px", color: "#f3f2ee", opacity: 0.8 }}>{bookingError}</p>}
+                  <button
+                    type="submit"
+                    disabled={!isBookingValid || bookingSubmitting}
+                    style={{ padding: "8px 20px", backgroundColor: "#f3f2ee", color: "#1E4D5A", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: isBookingValid && !bookingSubmitting ? "pointer" : "not-allowed", opacity: !isBookingValid || bookingSubmitting ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px" }}
+                  >
+                    {bookingSubmitting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Redirecting to payment...</> : "Continue to payment"}
+                  </button>
+                </form>
               </div>
             </div>
           </div>

@@ -17,6 +17,7 @@ import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
 import Events from "./pages/Events";
+import EventBookingSuccess from "./pages/EventBookingSuccess";
 import Menu from "./pages/Menu";
 import Contact from "./pages/Contact";
 import Gallery from "./pages/Gallery";
@@ -30,7 +31,7 @@ import ComingSoon from "./pages/ComingSoon";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 
-const BYPASS_PATHS = ["/cellar-club/success", "/cellar-club/terms", "/login", "/my-cellar", "/scan", "/reset-password", "/auth/confirm"];
+const BYPASS_PATHS = ["/cellar-club/success", "/cellar-club/terms", "/login", "/my-cellar", "/scan", "/reset-password", "/auth/confirm", "/events/success"];
 
 const Spinner = () => (
   <div className="fixed inset-0 flex items-center justify-center" style={{ backgroundColor: "#f3f2ee" }}>
@@ -68,6 +69,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/events" element={<Events />} />
+        <Route path="/events/success" element={<EventBookingSuccess />} />
         <Route path="/menu" element={<Menu />} />
         <Route path="/cellar-club" element={<CellarClub />} />
         <Route path="/cellar-club/terms" element={<CellarClubTerms />} />
