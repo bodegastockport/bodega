@@ -83,6 +83,9 @@ export default function Events() {
   const [bookingSubmitting, setBookingSubmitting] = useState(false);
   const [bookingError, setBookingError] = useState(null);
   const [bookingFocused, setBookingFocused] = useState(null);
+  const [bookingConfirmed, setBookingConfirmed] = useState(false);
+
+  const [bookingCounts, setBookingCounts] = useState({});
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -92,6 +95,21 @@ export default function Events() {
         .eq("published", true)
         .order("date", { ascending: true });
       setEvents(data || []);
+
+      const cappedIds = (data || []).filter((e) => e.capacity).map((e) => e.id);
+      if (cappedIds.length > 0) {
+        const { data: bookingsData } = await supabase
+          .from("event_bookings")
+          .select("event_id, party_size")
+          .in("event_id", cappedIds)
+          .eq("status", "confirmed");
+
+        const counts = {};
+        (bookingsData || []).forEach((b) => {
+          counts[b.event_id] = (counts[b.event_id] || 0) + (b.party_size || 0);
+        });
+        setBookingCounts(counts);
+      }
     };
     loadEvents();
   }, []);
@@ -133,12 +151,14 @@ export default function Events() {
   const openBooking = (event) => {
     setBookingForm({ guest_name: "", email: "", phone: "", party_size: "1", dietary_requirements: "" });
     setBookingError(null);
+    setBookingConfirmed(false);
     setBookingEvent(event);
   };
 
   const closeBooking = () => {
     setBookingEvent(null);
     setBookingError(null);
+    setBookingConfirmed(false);
   };
 
   const updateBooking = (k, v) => setBookingForm((p) => ({ ...p, [k]: v }));
@@ -170,6 +190,11 @@ export default function Events() {
 
     if (data?.url) {
       window.location.href = data.url;
+      return;
+    }
+
+    if (data?.free) {
+      setBookingConfirmed(true);
     }
   };
 
@@ -211,6 +236,7 @@ export default function Events() {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "24px" }}>
                   {visibleEvents.map((event) => {
                     const isTicketed = !!event.price_per_person;
+                    const isSoldOut = event.capacity && (bookingCounts[event.id] || 0) >= event.capacity;
                     return (
                       <div key={event.id} style={{ borderBottom: "1px solid #d8d6d0", paddingBottom: "16px" }}>
                         {event.image_url && (
@@ -239,14 +265,13 @@ export default function Events() {
                         )}
                         <p style={{ fontSize: "12px", marginBottom: "4px", color: "#1E4D5A", fontWeight: 400 }}>{event.title}</p>
                         <p style={{ fontSize: "11px", lineHeight: "1.5", marginBottom: "10px", color: "#0A242C" }}>{event.description}</p>
-                        {isTicketed && (
-                          <button
-                            onClick={() => openBooking(event)}
-                            style={{ fontSize: "10px", color: "#1E4D5A", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0, borderBottom: "1px solid #1E4D5A", paddingBottom: "1px" }}
-                          >
-                            Book a place →
-                          </button>
-                        )}
+                        <button
+                          onClick={() => !isSoldOut && openBooking(event)}
+                          disabled={isSoldOut}
+                          style={{ fontSize: "10px", color: isSoldOut ? "#777777" : "#1E4D5A", textTransform: "uppercase", letterSpacing: "0.08em", background: "none", border: "none", cursor: isSoldOut ? "default" : "pointer", fontFamily: "'Courier New', Courier, monospace", padding: 0, borderBottom: isSoldOut ? "1px solid #777777" : "1px solid #1E4D5A", paddingBottom: "1px" }}
+                        >
+                          {isSoldOut ? "Sold out" : "Book a place →"}
+                        </button>
                       </div>
                     );
                   })}
@@ -471,7 +496,9 @@ export default function Events() {
                   <p className="text-xs mt-1" style={{ color: "#f3f2ee", opacity: 0.7 }}>
                     {new Date(bookingEvent.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                     {bookingEvent.time && ` · ${bookingEvent.time}`}
-                    {" · £"}{(bookingEvent.price_per_person / 100).toFixed(2)} per person
+                    {bookingEvent.price_per_person
+                      ? ` · £${(bookingEvent.price_per_person / 100).toFixed(2)} per person`
+                      : " · Free"}
                   </p>
                 </div>
                 <button
@@ -483,6 +510,20 @@ export default function Events() {
               </div>
 
               <div style={{ padding: "20px 28px 28px 28px" }}>
+                {bookingConfirmed ? (
+                  <div>
+                    <p className="text-sm mb-2" style={{ color: "#f3f2ee" }}>Booking confirmed</p>
+                    <p className="text-xs mb-6 leading-relaxed" style={{ color: "#f3f2ee", opacity: 0.8 }}>
+                      Thanks, {bookingForm.guest_name}. Check your email for confirmation and your QR ticket — show it on arrival.
+                    </p>
+                    <button
+                      onClick={closeBooking}
+                      style={{ padding: "8px 20px", backgroundColor: "transparent", color: "#f3f2ee", border: "1px solid rgba(243,242,238,0.4)", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer" }}
+                    >
+                      Close
+                    </button>
+                  </div>
+                ) : (
                 <form onSubmit={handleBookingSubmit} className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -549,9 +590,12 @@ export default function Events() {
                     disabled={!isBookingValid || bookingSubmitting}
                     style={{ padding: "8px 20px", backgroundColor: "#f3f2ee", color: "#1E4D5A", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: isBookingValid && !bookingSubmitting ? "pointer" : "not-allowed", opacity: !isBookingValid || bookingSubmitting ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px" }}
                   >
-                    {bookingSubmitting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Redirecting to payment...</> : "Continue to payment"}
+                    {bookingSubmitting
+                      ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {bookingEvent.price_per_person ? "Redirecting to payment..." : "Confirming..."}</>
+                      : (bookingEvent.price_per_person ? "Continue to payment" : "Confirm booking")}
                   </button>
                 </form>
+                )}
               </div>
             </div>
           </div>
