@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Loader2, Plus, Pencil, Trash2, Upload, X } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { Loader2, Plus, Pencil, Trash2, Upload, X, ChevronDown, ChevronUp, Mail, Phone, Users } from "lucide-react";
+import { format, parseISO, isAfter, startOfDay } from "date-fns";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 
@@ -18,6 +18,11 @@ export default function EventsManager() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  const [expandedEventId, setExpandedEventId] = useState(null);
+  const [bookings, setBookings] = useState([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [reschedulingId, setReschedulingId] = useState(null);
+
   const load = async () => {
     const { data } = await supabase
       .from('events')
@@ -27,14 +32,14 @@ export default function EventsManager() {
 
     const ticketedIds = (data || []).filter((e) => e.price_per_person).map((e) => e.id);
     if (ticketedIds.length > 0) {
-      const { data: bookings } = await supabase
+      const { data: bookingsData } = await supabase
         .from('event_bookings')
         .select('event_id, party_size')
         .in('event_id', ticketedIds)
         .eq('status', 'confirmed');
 
       const counts = {};
-      (bookings || []).forEach((b) => {
+      (bookingsData || []).forEach((b) => {
         counts[b.event_id] = (counts[b.event_id] || 0) + (b.party_size || 0);
       });
       setBookingCounts(counts);
@@ -112,9 +117,64 @@ export default function EventsManager() {
     if (!error) { setEvents((p) => p.filter((e) => e.id !== id)); toast.success("Event deleted"); }
   };
 
+  const toggleExpand = async (eventId) => {
+    if (expandedEventId === eventId) {
+      setExpandedEventId(null);
+      setBookings([]);
+      return;
+    }
+    setExpandedEventId(eventId);
+    setBookingsLoading(true);
+    const { data, error } = await supabase
+      .from('event_bookings')
+      .select('id, guest_name, email, phone, party_size, dietary_requirements, attended, event_id, created_at')
+      .eq('event_id', eventId)
+      .eq('status', 'confirmed')
+      .order('created_at', { ascending: true });
+    if (error) {
+      toast.error("Failed to load bookings");
+      setBookings([]);
+    } else {
+      setBookings(data || []);
+    }
+    setBookingsLoading(false);
+  };
+
+  const handleReschedule = async (bookingId, newEventId) => {
+    if (!newEventId) return;
+    setReschedulingId(bookingId);
+
+    const { error: updateErr } = await supabase
+      .from('event_bookings')
+      .update({ event_id: newEventId })
+      .eq('id', bookingId);
+
+    if (updateErr) {
+      toast.error("Failed to reschedule booking");
+      setReschedulingId(null);
+      return;
+    }
+
+    const { error: notifyErr } = await supabase.functions.invoke('notify-event-booking', {
+      body: { booking_id: bookingId },
+    });
+
+    if (notifyErr) {
+      toast.error("Booking moved, but the new confirmation email failed to send");
+    } else {
+      toast.success("Booking rescheduled and new confirmation sent");
+    }
+
+    setReschedulingId(null);
+    setBookings((prev) => prev.filter((b) => b.id !== bookingId));
+    await load();
+  };
+
   if (loading) return <div className="flex justify-center py-16"><Loader2 className="h-5 w-5 animate-spin" style={{ color: "#193c47" }} /></div>;
 
   const btnPrimary = { padding: "8px 16px", backgroundColor: "#193c47", color: "#f3f2ee", border: "none", borderRadius: "6px", fontFamily: "'Courier New', Courier, monospace", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" };
+
+  const today = startOfDay(new Date());
 
   return (
     <div className="space-y-6" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
@@ -192,34 +252,108 @@ export default function EventsManager() {
         </div>
       ) : (
         <div className="space-y-2">
-          {events.map((ev) => (
-            <div key={ev.id} style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", borderRadius: "6px", padding: "16px" }} className="flex gap-4 items-start">
-              {ev.image_url && <img src={ev.image_url} alt="" className="h-14 w-20 object-cover shrink-0" style={{ borderRadius: "4px", border: "1px solid #d8d6d0" }} />}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-sm" style={{ color: "#2e282a" }}>{ev.title}</p>
-                    <p className="text-xs mt-0.5" style={{ color: "#777777" }}>
-                      {format(parseISO(ev.date), "EEE d MMM yyyy")}
-                      {ev.time && ` · ${ev.time}`}
-                      {ev.price_per_person ? ` · £${(ev.price_per_person / 100).toFixed(2)} per person` : ` · Free`}
-                    </p>
-                    {ev.price_per_person && (
-                      <p className="text-xs mt-1" style={{ color: "#193c47" }}>
-                        {bookingCounts[ev.id] || 0}{ev.capacity ? ` / ${ev.capacity}` : ""} booked
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {!ev.published && <span style={{ fontSize: "10px", backgroundColor: "#eceae4", color: "#777777", border: "1px solid #d8d6d0", padding: "2px 8px", borderRadius: "3px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Draft</span>}
-                    <button onClick={() => openEdit(ev)} style={{ padding: "4px 8px", backgroundColor: "transparent", border: "1px solid #d8d6d0", borderRadius: "4px", cursor: "pointer", color: "#777777" }}><Pencil className="h-3.5 w-3.5" /></button>
-                    <button onClick={() => handleDelete(ev.id)} style={{ padding: "4px 8px", backgroundColor: "transparent", border: "1px solid #d8d6d0", borderRadius: "4px", cursor: "pointer", color: "#777777" }}><Trash2 className="h-3.5 w-3.5" /></button>
+          {events.map((ev) => {
+            const isTicketed = !!ev.price_per_person;
+            const isExpanded = expandedEventId === ev.id;
+            const otherUpcomingTicketed = events.filter(
+              (e) => e.id !== ev.id && e.price_per_person && isAfter(parseISO(e.date), today)
+            );
+
+            return (
+              <div key={ev.id} style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", borderRadius: "6px" }}>
+                <div style={{ padding: "16px" }} className="flex gap-4 items-start">
+                  {ev.image_url && <img src={ev.image_url} alt="" className="h-14 w-20 object-cover shrink-0" style={{ borderRadius: "4px", border: "1px solid #d8d6d0" }} />}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-sm" style={{ color: "#2e282a" }}>{ev.title}</p>
+                        <p className="text-xs mt-0.5" style={{ color: "#777777" }}>
+                          {format(parseISO(ev.date), "EEE d MMM yyyy")}
+                          {ev.time && ` · ${ev.time}`}
+                          {isTicketed ? ` · £${(ev.price_per_person / 100).toFixed(2)} per person` : ` · Free`}
+                        </p>
+                        {isTicketed && (
+                          <button
+                            onClick={() => toggleExpand(ev.id)}
+                            style={{ display: "inline-flex", alignItems: "center", gap: "4px", marginTop: "6px", background: "none", border: "none", cursor: "pointer", padding: 0, color: "#193c47", fontFamily: "'Courier New', Courier, monospace", fontSize: "12px" }}
+                          >
+                            {bookingCounts[ev.id] || 0}{ev.capacity ? ` / ${ev.capacity}` : ""} booked
+                            {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {!ev.published && <span style={{ fontSize: "10px", backgroundColor: "#eceae4", color: "#777777", border: "1px solid #d8d6d0", padding: "2px 8px", borderRadius: "3px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Draft</span>}
+                        <button onClick={() => openEdit(ev)} style={{ padding: "4px 8px", backgroundColor: "transparent", border: "1px solid #d8d6d0", borderRadius: "4px", cursor: "pointer", color: "#777777" }}><Pencil className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => handleDelete(ev.id)} style={{ padding: "4px 8px", backgroundColor: "transparent", border: "1px solid #d8d6d0", borderRadius: "4px", cursor: "pointer", color: "#777777" }}><Trash2 className="h-3.5 w-3.5" /></button>
+                      </div>
+                    </div>
+                    <p className="text-xs mt-1 line-clamp-2" style={{ color: "#777777" }}>{ev.description}</p>
                   </div>
                 </div>
-                <p className="text-xs mt-1 line-clamp-2" style={{ color: "#777777" }}>{ev.description}</p>
+
+                {isExpanded && (
+                  <div style={{ borderTop: "1px solid #d8d6d0", padding: "16px" }}>
+                    {bookingsLoading ? (
+                      <div className="flex justify-center py-6">
+                        <Loader2 className="h-4 w-4 animate-spin" style={{ color: "#193c47" }} />
+                      </div>
+                    ) : bookings.length === 0 ? (
+                      <p className="text-xs" style={{ color: "#777777" }}>No bookings yet for this event.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {bookings.map((b) => (
+                          <div key={b.id} style={{ backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", borderRadius: "6px", padding: "12px" }}>
+                            <div className="flex items-start justify-between gap-3 flex-wrap">
+                              <div>
+                                <p className="text-sm" style={{ color: "#2e282a" }}>
+                                  {b.guest_name}
+                                  {b.attended && (
+                                    <span style={{ marginLeft: "8px", fontSize: "9px", backgroundColor: "#193c47", color: "#f3f2ee", padding: "2px 6px", borderRadius: "3px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                      Attended
+                                    </span>
+                                  )}
+                                </p>
+                                <div className="flex items-center gap-3 mt-1 flex-wrap">
+                                  <span className="text-xs flex items-center gap-1" style={{ color: "#777777" }}><Mail className="h-3 w-3" />{b.email}</span>
+                                  <span className="text-xs flex items-center gap-1" style={{ color: "#777777" }}><Phone className="h-3 w-3" />{b.phone}</span>
+                                  <span className="text-xs flex items-center gap-1" style={{ color: "#777777" }}><Users className="h-3 w-3" />{b.party_size}</span>
+                                </div>
+                                {b.dietary_requirements && (
+                                  <p className="text-xs mt-1" style={{ color: "#777777" }}>Dietary: {b.dietary_requirements}</p>
+                                )}
+                              </div>
+                              <div>
+                                {otherUpcomingTicketed.length > 0 ? (
+                                  <select
+                                    disabled={reschedulingId === b.id}
+                                    value=""
+                                    onChange={(e) => handleReschedule(b.id, e.target.value)}
+                                    style={{ ...inputStyle, padding: "6px 8px", fontSize: "11px", width: "auto" }}
+                                  >
+                                    <option value="" disabled>
+                                      {reschedulingId === b.id ? "Rescheduling..." : "Reschedule to..."}
+                                    </option>
+                                    {otherUpcomingTicketed.map((opt) => (
+                                      <option key={opt.id} value={opt.id}>
+                                        {opt.title} — {format(parseISO(opt.date), "d MMM yyyy")}
+                                      </option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  <p className="text-xs" style={{ color: "#777777" }}>No other ticketed events to reschedule to</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
