@@ -15,9 +15,9 @@ const schema = {
     "email": "hello@bodegawine.co.uk",
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "Engine Room, Weir Mill",
+      "streetAddress": "Unit 12, Weir Mill, 3 Woodhead Lane",
       "addressLocality": "Stockport",
-      "postalCode": "SK3 0AG",
+      "postalCode": "SK3 0GR",
       "addressCountry": "GB"
     },
     "openingHoursSpecification": [
@@ -80,7 +80,7 @@ export default function Contact() {
     <>
       <SEO
         title="Contact Bodega — Wine Bar, Weir Mill, Stockport"
-        description="Get in touch with Bodega. Find us at Engine Room, Weir Mill, Stockport, SK3 0AG. Open Tuesday to Sunday from 2pm."
+        description="Get in touch with Bodega. Find us at Unit 12, Weir Mill, Stockport, SK3 0GR. Open Tuesday to Sunday from 2pm."
         canonical="/contact"
         schema={schema}
       />
@@ -96,7 +96,7 @@ export default function Contact() {
               <div className="space-y-5 mb-8">
                 <div>
                   <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>Address</p>
-                  <p className="text-sm" style={{ color: "#0A242C" }}>Engine Room<br />Weir Mill<br />Stockport, SK3 0AG</p>
+                  <p className="text-sm" style={{ color: "#0A242C" }}>Unit 12, Weir Mill<br />3 Woodhead Lane<br />Stockport, SK3 0GR</p>
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>Telephone</p>
