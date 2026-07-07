@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
                 <tr>
                   <td>
                     <p style="margin:0 0 2px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#777777;">Location</p>
-                    <p style="margin:0;font-size:13px;color:#0A242C;">Bodega, Weir Mill, Stockport, SK3 0AG</p>
+                    <p style="margin:0;font-size:13px;color:#0A242C;">Bodega, Unit 12, Weir Mill, 3 Woodhead Lane, Stockport, SK3 0GR</p>
                   </td>
                 </tr>
               </table>

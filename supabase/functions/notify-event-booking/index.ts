@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
         </div>
 
         <div style="border-top: 1px solid #d8d6d0; padding-top: 24px; margin-top: 8px;">
-          <p style="font-size: 12px; color: #666; margin-bottom: 0;">Bodega, Weir Mill, Stockport, SK3 0AG</p>
+          <p style="font-size: 12px; color: #666; margin-bottom: 0;">Bodega, Unit 12, Weir Mill, 3 Woodhead Lane, Stockport, SK3 0GR</p>
         </div>
       </div>
     `;

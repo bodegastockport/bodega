@@ -186,7 +186,7 @@ export default function Layout() {
                 </p>
               </div>
               <div className="flex items-center gap-3 mt-6">
-                <a href="https://www.instagram.com/bodega_stockport/" target="_blank" rel="noopener noreferrer" style={{ color: "#1E4D5A", display: "flex" }} onMouseEnter={e => e.currentTarget.style.opacity = "0.7"} onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
+                <a href="https://www.instagram.com/bodega_wines/" target="_blank" rel="noopener noreferrer" style={{ color: "#1E4D5A", display: "flex" }} onMouseEnter={e => e.currentTarget.style.opacity = "0.7"} onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none"/></svg>
                 </a>
                 <a href="https://www.tiktok.com/@bodgea_stockport" target="_blank" rel="noopener noreferrer" style={{ color: "#1E4D5A", display: "flex" }} onMouseEnter={e => e.currentTarget.style.opacity = "0.7"} onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
@@ -204,9 +204,9 @@ export default function Layout() {
             <div>
               <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#0A242C" }}>Find us</p>
               <div className="text-sm space-y-1" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
-                <p>Engine Room</p>
-                <p>Weir Mill</p>
-                <p>Stockport, SK3 0AG</p>
+                <p>Unit 12, Weir Mill</p>
+                <p>3 Woodhead Lane</p>
+                <p>Stockport, SK3 0GR</p>
                 <p className="mt-3">0161 826 0168</p>
                 <p className="mt-1">
                   <a href="mailto:hello@bodegawine.co.uk" style={{ color: "#0A242C" }}>hello@bodegawine.co.uk</a>
@@ -288,7 +288,7 @@ export default function Layout() {
               </button>
             </div>
             <div className="flex items-center gap-4">
-              <a
+              
                 href="https://www.rolke.studio"
                 target="_blank"
                 rel="noopener noreferrer"

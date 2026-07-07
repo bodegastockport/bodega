@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
             <p style="font-size: 12px; line-height: 1.7; color: #666; margin-bottom: 8px;">Drop-offs must be arranged at least 24 hours in advance and are by appointment only, between 2–6pm Tuesday to Thursday and 2–4pm Friday to Sunday. Please note that wine cannot be consumed on the same day it is dropped off. Reply to this email to arrange your first drop-off.</p>
             <p style="font-size: 12px; line-height: 1.7; color: #666; margin-bottom: 8px;">Only you as the named member may deposit and consume wine from your vault. We may request photographic ID at any time.</p>
             <p style="font-size: 12px; line-height: 1.7; color: #666; margin-bottom: 8px;">A corkage charge applies each time you open a bottle. Current rates are available at the bar.</p>
-            <p style="font-size: 12px; color: #666; margin-bottom: 0;">Bodega, Weir Mill, Stockport, SK3 0AG</p>
+            <p style="font-size: 12px; color: #666; margin-bottom: 0;">Bodega, Unit 12, Weir Mill, 3 Woodhead Lane, Stockport, SK3 0GR</p>
           </div>
         </div>
       `;
@@ -215,7 +215,7 @@ Deno.serve(async (req) => {
             <p style="font-size: 12px; line-height: 1.7; color: #666; margin-bottom: 8px;">Only authorised users registered against your membership may deposit and consume wine from your vault. We may request photographic ID from any authorised user at any time.</p>
             <p style="font-size: 12px; line-height: 1.7; color: #666; margin-bottom: 8px;">To add or remove authorised users, please contact us in writing at hello@bodegawine.co.uk. Changes take effect once confirmed by Bodega.</p>
             <p style="font-size: 12px; line-height: 1.7; color: #666; margin-bottom: 8px;">A corkage charge applies each time a bottle is opened. Current rates are available at the bar.</p>
-            <p style="font-size: 12px; color: #666; margin-bottom: 0;">Bodega, Weir Mill, Stockport, SK3 0AG</p>
+            <p style="font-size: 12px; color: #666; margin-bottom: 0;">Bodega, Unit 12, Weir Mill, 3 Woodhead Lane, Stockport, SK3 0GR</p>
           </div>
         </div>
       `;
