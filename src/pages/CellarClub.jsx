@@ -601,9 +601,6 @@ export default function CellarClub() {
                       </div>
                     ))}
                   </div>
-                  <p style={{ fontSize: "10px", color: "#0A242C", opacity: 0.45, marginTop: "20px", letterSpacing: "-0.01em", lineHeight: "1.6" }}>
-                    Prices increase annually in line with RPI on your membership anniversary date. 30 days notice always given.
-                  </p>
                   <div className="flex items-center gap-3 mt-8">
                     <button
                       onClick={() => setView("about")}
@@ -650,9 +647,6 @@ export default function CellarClub() {
                       </div>
                     ))}
                   </div>
-                  <p style={{ fontSize: "10px", color: "rgba(243,242,238,0.45)", marginTop: "20px", letterSpacing: "-0.01em", lineHeight: "1.6" }}>
-                    Corporate memberships include additional authorised users. Contact us to discuss bespoke arrangements.
-                  </p>
                 </div>
               </div>
 
