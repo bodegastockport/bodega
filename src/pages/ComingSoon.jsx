@@ -32,8 +32,8 @@ const GoogleIcon = () => (
 );
 
 const socialLinks = [
-  { label: "Instagram", href: "https://www.instagram.com/bodega_wines/", icon: <InstagramIcon /> },
-  { label: "TikTok", href: "https://www.tiktok.com/@bodgea_stockport", icon: <TikTokIcon /> },
+  { label: "Instagram", href: "https://www.instagram.com/bodega_wines", icon: <InstagramIcon /> },
+  { label: "TikTok", href: "https://www.tiktok.com/@bodega_stockport", icon: <TikTokIcon /> },
   { label: "Facebook", href: "https://www.facebook.com/people/Bodega-Stockport/61589380284909/", icon: <FacebookIcon /> },
   { label: "Google", href: "https://share.google/X1JWnEC68dFBvxR3k", icon: <GoogleIcon /> },
 ];
@@ -177,7 +177,7 @@ export default function ComingSoon() {
 
             <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginTop: "40px" }}>
               {socialLinks.map(({ label, href, icon }) => (
-                
+                <a
                   key={label}
                   href={href}
                   target="_blank"
