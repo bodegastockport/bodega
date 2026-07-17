@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 const CONSENT_KEY = "bodega_cookie_consent";
 
-const GA4_ID = "G-XXXXXXXXXX";
+const GA4_ID = "G-M85D4YVWSZ";
 const META_PIXEL_ID = "0000000000000000";
 
 const loadGA4 = () => {
