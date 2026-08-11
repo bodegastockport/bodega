@@ -100,46 +100,44 @@ function SectionGrid({ section, slots, selected, onSelect }) {
   };
 
   return (
-    <div style={{ overflowX: "auto" }}>
-      <div style={{ display: "inline-block", minWidth: "fit-content" }}>
-        <div style={{ display: "flex", marginBottom: "2px", marginLeft: "24px", gap: "2px" }}>
-          {cols.map(col => (
-            <div key={col} style={{ width: "22px", textAlign: "center", fontSize: "8px", color: "#aaa", fontFamily: "'Courier New', Courier, monospace", flexShrink: 0 }}>
-              {col}
-            </div>
-          ))}
-        </div>
-
-        {ROWS.map(row => (
-          <div key={row} style={{ display: "flex", alignItems: "center", gap: "2px", marginBottom: "2px" }}>
-            <div style={{ width: "20px", fontSize: "9px", color: "#aaa", fontFamily: "'Courier New', Courier, monospace", flexShrink: 0, textAlign: "right", paddingRight: "4px" }}>
-              {row}
-            </div>
-            {cols.map(col => {
-              const slot = slotMap[`${row}-${col}`];
-              const isSelected = selected?.row_label === row && selected?.column_number === col;
-              return (
-                <div
-                  key={col}
-                  onClick={() => slot && onSelect(slot)}
-                  title={slotLabel(row, col)}
-                  style={{
-                    width: "22px",
-                    height: "22px",
-                    backgroundColor: getColor(slot),
-                    border: isSelected ? "2px solid #0A242C" : "1px solid rgba(0,0,0,0.06)",
-                    cursor: slot ? "pointer" : "default",
-                    flexShrink: 0,
-                    transition: "opacity 0.1s",
-                  }}
-                  onMouseEnter={e => { if (slot) e.currentTarget.style.opacity = "0.75"; }}
-                  onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
-                />
-              );
-            })}
+    <div style={{ display: "inline-block", minWidth: "fit-content" }}>
+      <div style={{ display: "flex", marginBottom: "2px", marginLeft: "24px", gap: "2px" }}>
+        {cols.map(col => (
+          <div key={col} style={{ width: "22px", textAlign: "center", fontSize: "8px", color: "#aaa", fontFamily: "'Courier New', Courier, monospace", flexShrink: 0 }}>
+            {col}
           </div>
         ))}
       </div>
+
+      {ROWS.map(row => (
+        <div key={row} style={{ display: "flex", alignItems: "center", gap: "2px", marginBottom: "2px" }}>
+          <div style={{ width: "20px", fontSize: "9px", color: "#aaa", fontFamily: "'Courier New', Courier, monospace", flexShrink: 0, textAlign: "right", paddingRight: "4px" }}>
+            {row}
+          </div>
+          {cols.map(col => {
+            const slot = slotMap[`${row}-${col}`];
+            const isSelected = selected?.row_label === row && selected?.column_number === col;
+            return (
+              <div
+                key={col}
+                onClick={() => slot && onSelect(slot)}
+                title={slotLabel(row, col)}
+                style={{
+                  width: "22px",
+                  height: "22px",
+                  backgroundColor: getColor(slot),
+                  border: isSelected ? "2px solid #0A242C" : "1px solid rgba(0,0,0,0.06)",
+                  cursor: slot ? "pointer" : "default",
+                  flexShrink: 0,
+                  transition: "opacity 0.1s",
+                }}
+                onMouseEnter={e => { if (slot) e.currentTarget.style.opacity = "0.75"; }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+              />
+            );
+          })}
+        </div>
+      ))}
     </div>
   );
 }
@@ -239,9 +237,9 @@ export default function VaultMap() {
         ))}
       </div>
 
-      <div className="space-y-8">
+      <div style={{ display: "flex", gap: "32px", overflowX: "auto", paddingBottom: "8px" }}>
         {["L", "B", "R"].map(section => (
-          <div key={section}>
+          <div key={section} style={{ flexShrink: 0 }}>
             <p style={{ fontSize: "10px", color: "#777777", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "10px", borderBottom: "1px solid #d8d6d0", paddingBottom: "6px" }}>
               {SECTION_LABELS[section]}
             </p>
