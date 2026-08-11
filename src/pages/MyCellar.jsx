@@ -24,7 +24,7 @@ const labelStyle = {
 };
 
 function slotLabel(slot) {
-  return `${slot.section}-${slot.row_label}${String(slot.column_number).padStart(2, "0")}`;
+  return `${slot.column_number}${slot.row_label}`;
 }
 
 function ImageLightbox({ url, label, onClose }) {
@@ -78,7 +78,7 @@ export default function MyCellar() {
 
       const [{ data: bottles }, { data: slots }, { data: authUsers }] = await Promise.all([
         supabase.from("cellar_bottles").select().eq("member_id", m.id),
-        supabase.from("vault_slots").select("id, section, row_label, column_number, status").eq("member_id", m.id).eq("status", "assigned").order("row_label", { ascending: true }).order("column_number", { ascending: true }),
+        supabase.from("vault_slots").select("id, section, row_label, column_number, status").eq("member_id", m.id).eq("status", "assigned").order("column_number", { ascending: true }).order("row_label", { ascending: true }),
         supabase.from("cellar_authorised_users").select().eq("member_id", m.id).order("added_at", { ascending: true }),
       ]);
 
