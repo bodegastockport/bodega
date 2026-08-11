@@ -3,11 +3,11 @@ import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 
 const ROWS = "ABCDEFGHIJKLMNOPQRSTUVWX".split("");
-const SECTION_COLS = { L: 20, B: 8, R: 20 };
+const SECTION_COL_RANGES = { L: [1, 20], B: [21, 28], R: [29, 48] };
 const SECTION_LABELS = { L: "Left Wall", B: "Back Wall", R: "Right Wall" };
 
-function slotLabel(section, rowLabel, colNum) {
-  return `${section}-${rowLabel}${String(colNum).padStart(2, "0")}`;
+function slotLabel(rowLabel, colNum) {
+  return `${colNum}${rowLabel}`;
 }
 
 function SlotPopover({ slot, onClose }) {
@@ -39,7 +39,7 @@ function SlotPopover({ slot, onClose }) {
       }}
     >
       <div className="flex items-center justify-between mb-4">
-        <p style={{ fontSize: "13px", color: "#1E4D5A", fontWeight: 500 }}>{slotLabel(slot.section, slot.row_label, slot.column_number)}</p>
+        <p style={{ fontSize: "13px", color: "#1E4D5A", fontWeight: 500 }}>{slotLabel(slot.row_label, slot.column_number)}</p>
         <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#777777", fontSize: "16px", lineHeight: 1 }}>×</button>
       </div>
 
@@ -86,7 +86,8 @@ function SlotPopover({ slot, onClose }) {
 }
 
 function SectionGrid({ section, slots, selected, onSelect }) {
-  const cols = Array.from({ length: SECTION_COLS[section] }, (_, i) => i + 1);
+  const [colStart, colEnd] = SECTION_COL_RANGES[section];
+  const cols = Array.from({ length: colEnd - colStart + 1 }, (_, i) => colStart + i);
   const slotMap = {};
   for (const s of slots) slotMap[`${s.row_label}-${s.column_number}`] = s;
 
@@ -116,12 +117,12 @@ function SectionGrid({ section, slots, selected, onSelect }) {
             </div>
             {cols.map(col => {
               const slot = slotMap[`${row}-${col}`];
-              const isSelected = selected?.section === section && selected?.row_label === row && selected?.column_number === col;
+              const isSelected = selected?.row_label === row && selected?.column_number === col;
               return (
                 <div
                   key={col}
                   onClick={() => slot && onSelect(slot)}
-                  title={slotLabel(section, row, col)}
+                  title={slotLabel(row, col)}
                   style={{
                     width: "22px",
                     height: "22px",
@@ -160,7 +161,7 @@ export default function VaultMap() {
         { count: availableCount },
         { count: pendingCount },
       ] = await Promise.all([
-        supabase.from("vault_slots").select("id, section, row_label, column_number, status, member_id").order("section").order("row_label").order("column_number").range(0, 1999),
+        supabase.from("vault_slots").select("id, section, row_label, column_number, status, member_id").order("section").order("column_number").order("row_label").range(0, 1999),
         supabase.from("cellar_members").select("id, name, membership_tier"),
         supabase.from("cellar_bottles").select("id, slot_id, wine_name, vintage, type, notes, image_front_url, status").eq("status", "stored"),
         supabase.from("vault_slots").select("*", { count: "exact", head: true }),
