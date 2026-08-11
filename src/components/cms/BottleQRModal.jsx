@@ -1,22 +1,27 @@
-import { Printer, X } from "lucide-react";
+import { useRef, useState } from "react";
+import { Printer, Download, X } from "lucide-react";
+import html2canvas from "html2canvas";
 
 export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
+  const labelRef = useRef(null);
+  const [downloading, setDownloading] = useState(false);
+
   const scanUrl = `${window.location.origin}/scan/${bottle.id}`;
   const encoded = encodeURIComponent(scanUrl);
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encoded}&size=200x200&margin=10&bgcolor=f3f2ee&color=1E4D5A`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encoded}&size=400x400&margin=10&bgcolor=ffffff&color=000000`;
 
   const handlePrint = () => {
     const printWin = window.open("", "_blank", "width=400,height=580");
     printWin.document.write(`
       <!DOCTYPE html><html><head><title>Bottle Label – ${bottle.wine_name}</title>
       <style>
-        body { font-family: 'Courier New', Courier, monospace; margin: 0; padding: 24px; text-align: center; background: #f3f2ee; color: #0A242C; }
-        .label { border: 1px solid #d8d6d0; padding: 24px; display: inline-block; max-width: 300px; background: #eceae4; }
+        body { font-family: 'Courier New', Courier, monospace; margin: 0; padding: 24px; text-align: center; background: #ffffff; color: #000000; }
+        .label { border: 1px solid #d8d6d0; padding: 24px; display: inline-block; max-width: 300px; background: #ffffff; }
         h1 { font-size: 14px; margin: 0 0 4px; font-weight: 400; }
-        p { font-size: 11px; margin: 3px 0; color: #0A242C; }
+        p { font-size: 11px; margin: 3px 0; color: #000000; }
         img { margin: 12px 0; }
-        .tag { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #777777; margin-bottom: 8px; }
-        .location { font-size: 13px; font-weight: bold; color: #1E4D5A; margin: 8px 0; }
+        .tag { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #444444; margin-bottom: 8px; }
+        .location { font-size: 13px; font-weight: bold; color: #000000; margin: 8px 0; }
       </style></head><body>
       <div class="label">
         <p class="tag">Bodega Wine Bar — Cellar Club</p>
@@ -34,6 +39,31 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
     printWin.document.close();
   };
 
+  const handleDownload = async () => {
+    if (!labelRef.current) return;
+    setDownloading(true);
+    try {
+      const canvas = await html2canvas(labelRef.current, {
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        scale: 2,
+      });
+      const dataUrl = canvas.toDataURL("image/png");
+      const filenameBase = bottle.wine_name
+        ? bottle.wine_name.replace(/[^a-z0-9]+/gi, "_").toLowerCase()
+        : "bottle";
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = `${filenameBase}-label.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Label download failed:", err);
+    }
+    setDownloading(false);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(10,36,44,0.6)" }}>
       <div style={{ backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", padding: "24px", width: "100%", maxWidth: "280px", fontFamily: "'Courier New', Courier, monospace" }}>
@@ -47,7 +77,7 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
 
         <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "16px", textAlign: "center" }}>
           <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#777777" }}>Bodega Cellar Club</p>
-          <img src={qrUrl} alt="QR code" style={{ width: "140px", height: "140px", margin: "0 auto", display: "block" }} />
+          <img src={qrUrl} alt="QR code" crossOrigin="anonymous" style={{ width: "140px", height: "140px", margin: "0 auto", display: "block" }} />
           <p className="text-sm mt-3" style={{ color: "#0A242C" }}>{bottle.wine_name}</p>
           {bottle.vintage && <p className="text-xs mt-0.5" style={{ color: "#777777" }}>{bottle.vintage}</p>}
           {bottle.type && <p className="text-xs" style={{ color: "#777777" }}>{bottle.type}</p>}
@@ -64,14 +94,41 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
           <p className="text-xs mt-2" style={{ color: "#aaaaaa" }}>Scan to check out</p>
         </div>
 
-        <button
-          onClick={handlePrint}
-          style={{ marginTop: "16px", width: "100%", padding: "10px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "background-color 0.15s" }}
-          onMouseEnter={e => e.currentTarget.style.backgroundColor = "#0A242C"}
-          onMouseLeave={e => e.currentTarget.style.backgroundColor = "#1E4D5A"}
-        >
-          <Printer className="h-3.5 w-3.5" /> Print label
-        </button>
+        <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
+          <button
+            onClick={handlePrint}
+            style={{ flex: 1, padding: "10px", backgroundColor: "#1E4D5A", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", transition: "background-color 0.15s" }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = "#0A242C"}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = "#1E4D5A"}
+          >
+            <Printer className="h-3.5 w-3.5" /> Print
+          </button>
+          <button
+            onClick={handleDownload}
+            disabled={downloading}
+            style={{ flex: 1, padding: "10px", backgroundColor: "#0A242C", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: downloading ? "not-allowed" : "pointer", opacity: downloading ? 0.6 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
+          >
+            <Download className="h-3.5 w-3.5" /> {downloading ? "Saving..." : "Download"}
+          </button>
+        </div>
+
+        <div style={{ position: "fixed", left: "-9999px", top: 0 }}>
+          <div
+            ref={labelRef}
+            style={{ fontFamily: "'Courier New', Courier, monospace", backgroundColor: "#ffffff", color: "#000000", padding: "24px", width: "300px", textAlign: "center", border: "1px solid #d8d6d0" }}
+          >
+            <p style={{ fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.1em", color: "#444444", marginBottom: "8px" }}>
+              Bodega Wine Bar — Cellar Club
+            </p>
+            <img src={qrUrl} alt="QR code" crossOrigin="anonymous" width="160" height="160" style={{ margin: "0 auto 12px", display: "block" }} />
+            <h1 style={{ fontSize: "14px", margin: "0 0 4px", fontWeight: 400, color: "#000000" }}>{bottle.wine_name}</h1>
+            {bottle.vintage && <p style={{ fontSize: "11px", margin: "3px 0", color: "#000000" }}>Vintage: {bottle.vintage}</p>}
+            {bottle.type && <p style={{ fontSize: "11px", margin: "3px 0", color: "#000000" }}>Type: {bottle.type}</p>}
+            {slotLabel && <p style={{ fontSize: "13px", fontWeight: "bold", margin: "8px 0", color: "#000000" }}>Vault slot: {slotLabel}</p>}
+            {member?.name && <p style={{ fontSize: "11px", margin: "3px 0", color: "#000000" }}>Member: {member.name}</p>}
+            {bottle.notes && <p style={{ fontSize: "11px", margin: "3px 0", color: "#000000" }}>{bottle.notes}</p>}
+          </div>
+        </div>
       </div>
     </div>
   );
