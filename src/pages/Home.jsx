@@ -7,7 +7,7 @@ const schema = {
   "@context": "https://schema.org",
   "@type": ["BarOrClub", "LocalBusiness"],
   "name": "Bodega Wine Vault",
-  "description": "A neighbourhood wine bar in the heart of Stockport. Great bottles, cold lager, proper boards. No lectures, no pretence — just good taste.",
+  "description": "A neighbourhood wine bar in the heart of Stockport. Great bottles, cold draught beers, proper boards. No lectures, no pretence — just good taste.",
   "url": "https://bodegawine.co.uk",
   "telephone": "01618260168",
   "email": "hello@bodegawine.co.uk",
@@ -52,7 +52,7 @@ export default function Home() {
     <>
       <SEO
         title="Bodega — Wine Bar & Cellar Club, Stockport"
-        description="Bodega is a neighbourhood wine bar in the heart of Stockport. Great bottles, cold lager, proper boards. No lectures, no pretence — just good taste."
+        description="Bodega is a neighbourhood wine bar in the heart of Stockport. Great bottles, cold draught beers, proper boards. No lectures, no pretence — just good taste."
         canonical="/"
         schema={schema}
       />
@@ -78,7 +78,7 @@ export default function Home() {
                 Wine without the waffle.
               </h1>
               <p style={{ fontSize: "14px", color: "#0A242C", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.7", marginBottom: "32px", letterSpacing: "-0.02em" }}>
-                Great bottles. Cold lager. Proper boards. No lectures, no pretence – just good taste.
+                Great bottles. Cold draught beers. Proper boards. No lectures, no pretence – just good taste.
               </p>
               <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
                 <button
@@ -122,7 +122,7 @@ export default function Home() {
             Wine without the waffle.
           </h1>
           <p style={{ fontSize: "13px", color: "#0A242C", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.7", marginBottom: "24px", letterSpacing: "-0.02em" }}>
-            Great bottles. Cold lager. Proper boards. No lectures, no pretence – just good taste.
+            Great bottles. Cold draught beers. Proper boards. No lectures, no pretence – just good taste.
           </p>
           <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
             <button
