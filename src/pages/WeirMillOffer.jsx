@@ -223,7 +223,7 @@ export default function WeirMillOffer() {
             <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#0A242C", opacity: 0.5 }}>Exclusively for Weir Mill residents</p>
             <h1 className="text-2xl mb-4" style={{ color: "#1E4D5A", fontWeight: 400 }}>Your welcome offer.</h1>
             <p className="text-xs leading-relaxed mb-4" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
-              As a Weir Mill resident, you can join Bodega's Cellar Club on a Cellar 6 membership for £15 a month — your own space in our temperature and humidity-controlled wine vault, right downstairs.
+              As a Weir Mill resident, you get a Cellar 6 membership at Bodega for £15 a month. Your own space in our temperature and humidity-controlled wine vault, right here at Weir Mill.
             </p>
             <p className="text-xs leading-relaxed mb-6" style={{ color: "#0A242C", letterSpacing: "-0.02em" }}>
               Store up to 6 bottles, and drink your own wine here whenever you like for a small corkage fee.
