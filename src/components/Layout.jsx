@@ -12,6 +12,7 @@ const NAV = [
   { to: "/gallery",     label: "Gallery" },
   { to: "/menu",        label: "Menu" },
   { to: "/cellar-club", label: "Cellar Club" },
+  { to: "/gift-cards",  label: "Gift Cards" },
   { to: "/events",      label: "What's On" },
   { to: "/contact",     label: "Contact" },
 ];
