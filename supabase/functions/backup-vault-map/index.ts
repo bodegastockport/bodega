@@ -87,8 +87,8 @@ serve(async (req) => {
       .from("vault_slots")
       .select("id, section, row_label, column_number, status, member_id")
       .order("section")
-      .order("row_label")
       .order("column_number")
+      .order("row_label")
       .range(0, 1999);
 
     if (error) throw error;
@@ -111,12 +111,12 @@ serve(async (req) => {
 
     const rows = "ABCDEFGHIJKLMNOPQRSTUVWX".split("");
 
-    const buildGrid = (section: string, cols: number): string[][] => {
-      const header = ["", ...Array.from({ length: cols }, (_, i) => String(i + 1))];
+    const buildGrid = (section: string, colStart: number, colEnd: number): string[][] => {
+      const header = ["", ...Array.from({ length: colEnd - colStart + 1 }, (_, i) => String(colStart + i))];
       const grid: string[][] = [header];
       for (const row of rows) {
         const rowData: string[] = [row];
-        for (let col = 1; col <= cols; col++) {
+        for (let col = colStart; col <= colEnd; col++) {
           const slot = (slots || []).find(
             (s) => s.section === section && s.row_label === row && s.column_number === col
           );
@@ -137,13 +137,13 @@ serve(async (req) => {
 
     const allRows = [
       [["LEFT WALL"]],
-      buildGrid("L", 20),
+      buildGrid("L", 1, 20),
       [[""]],
       [["BACK WALL"]],
-      buildGrid("B", 8),
+      buildGrid("B", 21, 28),
       [[""]],
       [["RIGHT WALL"]],
-      buildGrid("R", 20),
+      buildGrid("R", 29, 48),
     ].flat();
 
     const saKey = JSON.parse(Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY")!);
