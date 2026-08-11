@@ -26,6 +26,7 @@ import MyCellar from "./pages/MyCellar";
 import CellarClub from "./pages/CellarClub";
 import CellarClubTerms from "./pages/CellarClubTerms";
 import CellarClubSuccess from "./pages/CellarClubSuccess";
+import WeirMillOffer from "./pages/WeirMillOffer";
 import ScanBottle from "./pages/ScanBottle";
 import ScanEvent from "./pages/ScanEvent";
 import ComingSoon from "./pages/ComingSoon";
@@ -75,6 +76,7 @@ const AppRoutes = () => {
         <Route path="/cellar-club" element={<CellarClub />} />
         <Route path="/cellar-club/terms" element={<CellarClubTerms />} />
         <Route path="/cellar-club/success" element={<CellarClubSuccess />} />
+        <Route path="/weir-mill" element={<WeirMillOffer />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
