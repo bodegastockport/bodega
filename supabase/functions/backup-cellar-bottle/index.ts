@@ -86,7 +86,7 @@ function resolveSlotReference(slotId: string | null, slots: Array<{ id: string; 
   if (!slotId) return "";
   const slot = slots.find((s) => s.id === slotId);
   if (!slot) return "";
-  return `${slot.row_label}-${String(slot.column_number).padStart(2, "0")}`;
+  return `${slot.column_number}${slot.row_label}`;
 }
 
 serve(async (req) => {
@@ -111,7 +111,7 @@ serve(async (req) => {
         .eq("id", bottle.slot_id)
         .single();
       if (slotData) {
-        slotReference = `${slotData.row_label}-${String(slotData.column_number).padStart(2, "0")}`;
+        slotReference = `${slotData.column_number}${slotData.row_label}`;
       }
     }
 
