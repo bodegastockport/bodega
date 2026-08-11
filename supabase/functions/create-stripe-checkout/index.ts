@@ -36,6 +36,8 @@ const PRICE_IDS: Record<string, Record<string, string>> = {
   },
 };
 
+const WEIR_MILL_PRICE_ID = "";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -48,7 +50,7 @@ Deno.serve(async (req) => {
     });
 
     const body = await req.json();
-    const { name, email, phone, dob, tier, interval, address_line1, postcode, how_heard, marketing, agreed_terms } = body;
+    const { name, email, phone, dob, tier, interval, source, address_line1, postcode, how_heard, marketing, agreed_terms } = body;
 
     if (!name || !email || !tier || !address_line1 || !postcode || !agreed_terms) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -57,22 +59,35 @@ Deno.serve(async (req) => {
       });
     }
 
-    const billingInterval = interval === "year" ? "year" : "month";
+    const signupSource = source === "weir_mill_welcome" ? "weir_mill_welcome" : "standard";
+    const billingInterval = signupSource === "weir_mill_welcome" ? "month" : (interval === "year" ? "year" : "month");
 
-    const tierPrices = PRICE_IDS[tier];
-    if (!tierPrices) {
-      return new Response(JSON.stringify({ error: "Invalid membership tier" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    let priceId: string;
 
-    const priceId = tierPrices[billingInterval];
-    if (!priceId) {
-      return new Response(JSON.stringify({ error: "Invalid membership tier or interval" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (signupSource === "weir_mill_welcome") {
+      if (!WEIR_MILL_PRICE_ID) {
+        return new Response(JSON.stringify({ error: "Weir Mill offer price not yet configured" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      priceId = WEIR_MILL_PRICE_ID;
+    } else {
+      const tierPrices = PRICE_IDS[tier];
+      if (!tierPrices) {
+        return new Response(JSON.stringify({ error: "Invalid membership tier" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const tierPriceId = tierPrices[billingInterval];
+      if (!tierPriceId) {
+        return new Response(JSON.stringify({ error: "Invalid membership tier or interval" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      priceId = tierPriceId;
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -81,7 +96,7 @@ Deno.serve(async (req) => {
       customer_email: email,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: "https://bodegawine.co.uk/cellar-club/success?session_id={CHECKOUT_SESSION_ID}",
-      cancel_url: "https://bodegawine.co.uk/cellar-club",
+      cancel_url: signupSource === "weir_mill_welcome" ? "https://bodegawine.co.uk/weir-mill" : "https://bodegawine.co.uk/cellar-club",
       allow_promotion_codes: true,
       metadata: {
         name,
@@ -91,6 +106,7 @@ Deno.serve(async (req) => {
         tier,
         interval: billingInterval,
         price_id: priceId,
+        source: signupSource,
         address_line1,
         postcode,
         how_heard: how_heard || "",
