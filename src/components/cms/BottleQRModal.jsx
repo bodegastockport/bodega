@@ -74,7 +74,6 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
         </div>
 
         <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "16px", textAlign: "center" }}>
-          <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#000000", fontWeight: 700 }}>Bodega Cellar Club</p>
           <img src={qrUrl} alt="QR code" crossOrigin="anonymous" style={{ width: "140px", height: "140px", margin: "0 auto", display: "block" }} />
           <p className="text-sm mt-3" style={{ color: "#000000", fontWeight: 700 }}>{bottle.wine_name}</p>
           {(bottle.vintage || bottle.type) && (
