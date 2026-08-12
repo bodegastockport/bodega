@@ -83,11 +83,11 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
         <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "16px", textAlign: "center" }}>
           <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#777777" }}>Bodega Cellar Club</p>
           <img src={qrUrl} alt="QR code" crossOrigin="anonymous" style={{ width: "140px", height: "140px", margin: "0 auto", display: "block" }} />
-          <p className="text-sm mt-3" style={{ color: "#0A242C" }}>{bottle.wine_name}</p>
+          <p className="text-sm mt-3" style={{ color: "#000000" }}>{bottle.wine_name}</p>
           {bottle.vintage && <p className="text-xs mt-0.5" style={{ color: "#777777" }}>{bottle.vintage}</p>}
           {bottle.type && <p className="text-xs" style={{ color: "#777777" }}>{bottle.type}</p>}
           {slotLabel && (
-            <p className="text-xs font-bold mt-2" style={{ color: "#1E4D5A" }}>
+            <p className="text-xs font-bold mt-2" style={{ color: "#000000" }}>
               Vault slot: {slotLabel}
             </p>
           )}
