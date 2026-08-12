@@ -16,17 +16,19 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
     printWin.document.write(`
       <!DOCTYPE html><html><head><title>Bottle Label – ${bottle.wine_name}</title>
       <style>
-        body { font-family: 'Courier New', Courier, monospace; margin: 0; padding: 24px; text-align: center; background: #ffffff; color: #000000; }
-        .label { border: 1px solid #d8d6d0; padding: 24px; display: inline-block; width: 220px; background: #ffffff; }
-        h1 { font-size: 30px; margin: 0 0 8px; font-weight: 700; }
-        p { font-size: 22px; margin: 6px 0; color: #000000; font-weight: 700; }
-        img { margin: 18px 0; }
-        .tag { font-size: 16px; text-transform: uppercase; letter-spacing: 0.06em; color: #000000; margin-bottom: 12px; font-weight: 700; }
-        .location { font-size: 26px; font-weight: 700; color: #000000; margin: 12px 0; }
+        @page { margin: 0; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+        body { font-family: 'Courier New', Courier, monospace; text-align: center; background: #ffffff; color: #000000; display: flex; align-items: center; justify-content: center; }
+        .label { width: 100%; height: 100%; padding: 6% 8%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #ffffff; }
+        h1 { font-size: 8vw; margin: 0 0 2vw; font-weight: 700; line-height: 1.1; }
+        p { font-size: 6vw; margin: 1.5vw 0; color: #000000; font-weight: 700; line-height: 1.1; }
+        img { margin: 4vw 0; width: 50%; height: auto; max-width: 300px; }
+        .tag { font-size: 4vw; text-transform: uppercase; letter-spacing: 0.05em; color: #000000; margin-bottom: 3vw; font-weight: 700; }
+        .location { font-size: 9vw; font-weight: 700; color: #000000; margin: 3vw 0; }
       </style></head><body>
       <div class="label">
         <p class="tag">Bodega Wine Bar — Cellar Club</p>
-        <img src="${qrUrl}" width="220" height="220" />
+        <img src="${qrUrl}" />
         <h1>${bottle.wine_name}</h1>
         ${bottle.vintage ? `<p>Vintage: ${bottle.vintage}</p>` : ""}
         ${bottle.type ? `<p>Type: ${bottle.type}</p>` : ""}
@@ -78,22 +80,22 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
         </div>
 
         <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "16px", textAlign: "center" }}>
-          <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#777777" }}>Bodega Cellar Club</p>
+          <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#000000", fontWeight: 700 }}>Bodega Cellar Club</p>
           <img src={qrUrl} alt="QR code" crossOrigin="anonymous" style={{ width: "140px", height: "140px", margin: "0 auto", display: "block" }} />
-          <p className="text-sm mt-3" style={{ color: "#000000" }}>{bottle.wine_name}</p>
-          {bottle.vintage && <p className="text-xs mt-0.5" style={{ color: "#777777" }}>{bottle.vintage}</p>}
-          {bottle.type && <p className="text-xs" style={{ color: "#777777" }}>{bottle.type}</p>}
+          <p className="text-sm mt-3" style={{ color: "#000000", fontWeight: 700 }}>{bottle.wine_name}</p>
+          {bottle.vintage && <p className="text-xs mt-0.5" style={{ color: "#000000", fontWeight: 700 }}>{bottle.vintage}</p>}
+          {bottle.type && <p className="text-xs" style={{ color: "#000000", fontWeight: 700 }}>{bottle.type}</p>}
           {slotLabel && (
             <p className="text-xs font-bold mt-2" style={{ color: "#000000" }}>
               Vault slot: {slotLabel}
             </p>
           )}
           {member?.name && (
-            <p className="text-xs mt-2 pt-2" style={{ color: "#777777", borderTop: "1px solid #d8d6d0" }}>
+            <p className="text-xs mt-2 pt-2" style={{ color: "#000000", fontWeight: 700, borderTop: "1px solid #d8d6d0" }}>
               {member.name}
             </p>
           )}
-          <p className="text-xs mt-2" style={{ color: "#aaaaaa" }}>Scan to check out</p>
+          <p className="text-xs mt-2" style={{ color: "#000000", fontWeight: 700 }}>Scan to check out</p>
         </div>
 
         <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
@@ -117,18 +119,18 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
         <div style={{ position: "fixed", left: "-9999px", top: 0 }}>
           <div
             ref={labelRef}
-            style={{ fontFamily: "'Courier New', Courier, monospace", backgroundColor: "#ffffff", color: "#000000", padding: "24px", width: "300px", textAlign: "center", border: "1px solid #d8d6d0" }}
+            style={{ fontFamily: "'Courier New', Courier, monospace", backgroundColor: "#ffffff", color: "#000000", padding: "28px", width: "340px", textAlign: "center", border: "1px solid #d8d6d0" }}
           >
-            <p style={{ fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.1em", color: "#444444", marginBottom: "8px" }}>
+            <p style={{ fontSize: "18px", textTransform: "uppercase", letterSpacing: "0.05em", color: "#000000", marginBottom: "14px", fontWeight: 700 }}>
               Bodega Wine Bar — Cellar Club
             </p>
-            <img src={qrUrl} alt="QR code" crossOrigin="anonymous" width="160" height="160" style={{ margin: "0 auto 12px", display: "block" }} />
-            <h1 style={{ fontSize: "14px", margin: "0 0 4px", fontWeight: 400, color: "#000000" }}>{bottle.wine_name}</h1>
-            {bottle.vintage && <p style={{ fontSize: "11px", margin: "3px 0", color: "#000000" }}>Vintage: {bottle.vintage}</p>}
-            {bottle.type && <p style={{ fontSize: "11px", margin: "3px 0", color: "#000000" }}>Type: {bottle.type}</p>}
-            {slotLabel && <p style={{ fontSize: "13px", fontWeight: "bold", margin: "8px 0", color: "#000000" }}>Vault slot: {slotLabel}</p>}
-            {member?.name && <p style={{ fontSize: "11px", margin: "3px 0", color: "#000000" }}>Member: {member.name}</p>}
-            {bottle.notes && <p style={{ fontSize: "11px", margin: "3px 0", color: "#000000" }}>{bottle.notes}</p>}
+            <img src={qrUrl} alt="QR code" crossOrigin="anonymous" width="300" height="300" style={{ margin: "0 auto 20px", display: "block" }} />
+            <h1 style={{ fontSize: "40px", margin: "0 0 10px", fontWeight: 700, color: "#000000" }}>{bottle.wine_name}</h1>
+            {bottle.vintage && <p style={{ fontSize: "28px", margin: "8px 0", color: "#000000", fontWeight: 700 }}>Vintage: {bottle.vintage}</p>}
+            {bottle.type && <p style={{ fontSize: "28px", margin: "8px 0", color: "#000000", fontWeight: 700 }}>Type: {bottle.type}</p>}
+            {slotLabel && <p style={{ fontSize: "34px", fontWeight: 700, margin: "14px 0", color: "#000000" }}>Vault slot: {slotLabel}</p>}
+            {member?.name && <p style={{ fontSize: "28px", margin: "8px 0", color: "#000000", fontWeight: 700 }}>Member: {member.name}</p>}
+            {bottle.notes && <p style={{ fontSize: "28px", margin: "8px 0", color: "#000000", fontWeight: 700 }}>{bottle.notes}</p>}
           </div>
         </div>
       </div>
