@@ -7,7 +7,7 @@ const SECTION_COL_RANGES = { L: [1, 20], B: [21, 28], R: [29, 48] };
 const SECTION_LABELS = { L: "Left Wall", B: "Back Wall", R: "Right Wall" };
 
 function slotLabel(rowLabel, colNum) {
-  return `${colNum}${rowLabel}`;
+  return `${rowLabel}${colNum}`;
 }
 
 function SlotPopover({ slot, onClose }) {
@@ -101,17 +101,17 @@ function SectionGrid({ section, slots, selected, onSelect }) {
 
   return (
     <div style={{ display: "inline-block", minWidth: "fit-content" }}>
-      <div style={{ display: "flex", marginBottom: "2px", marginLeft: "24px", gap: "2px" }}>
+      <div style={{ display: "flex", marginBottom: "2px", marginLeft: "18px", gap: "1px" }}>
         {cols.map(col => (
-          <div key={col} style={{ width: "22px", textAlign: "center", fontSize: "8px", color: "#aaa", fontFamily: "'Courier New', Courier, monospace", flexShrink: 0 }}>
+          <div key={col} style={{ width: "17px", textAlign: "center", fontSize: "7px", color: "#aaa", fontFamily: "'Courier New', Courier, monospace", flexShrink: 0 }}>
             {col}
           </div>
         ))}
       </div>
 
       {ROWS.map(row => (
-        <div key={row} style={{ display: "flex", alignItems: "center", gap: "2px", marginBottom: "2px" }}>
-          <div style={{ width: "20px", fontSize: "9px", color: "#aaa", fontFamily: "'Courier New', Courier, monospace", flexShrink: 0, textAlign: "right", paddingRight: "4px" }}>
+        <div key={row} style={{ display: "flex", alignItems: "center", gap: "1px", marginBottom: "1px" }}>
+          <div style={{ width: "14px", fontSize: "8px", color: "#aaa", fontFamily: "'Courier New', Courier, monospace", flexShrink: 0, textAlign: "right", paddingRight: "4px" }}>
             {row}
           </div>
           {cols.map(col => {
@@ -123,8 +123,8 @@ function SectionGrid({ section, slots, selected, onSelect }) {
                 onClick={() => slot && onSelect(slot)}
                 title={slotLabel(row, col)}
                 style={{
-                  width: "22px",
-                  height: "22px",
+                  width: "17px",
+                  height: "17px",
                   backgroundColor: getColor(slot),
                   border: isSelected ? "2px solid #0A242C" : "1px solid rgba(0,0,0,0.06)",
                   cursor: slot ? "pointer" : "default",
@@ -237,20 +237,22 @@ export default function VaultMap() {
         ))}
       </div>
 
-      <div style={{ display: "flex", gap: "32px", overflowX: "auto", paddingBottom: "8px" }}>
-        {["L", "B", "R"].map(section => (
-          <div key={section} style={{ flexShrink: 0 }}>
-            <p style={{ fontSize: "10px", color: "#777777", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "10px", borderBottom: "1px solid #d8d6d0", paddingBottom: "6px" }}>
-              {SECTION_LABELS[section]}
-            </p>
-            <SectionGrid
-              section={section}
-              slots={slots.filter(s => s.section === section)}
-              selected={selected}
-              onSelect={setSelected}
-            />
-          </div>
-        ))}
+      <div style={{ width: "100vw", position: "relative", left: "50%", right: "50%", marginLeft: "-50vw", marginRight: "-50vw", overflowX: "auto", paddingBottom: "8px" }}>
+        <div style={{ display: "flex", gap: "24px", justifyContent: "center", padding: "0 16px" }}>
+          {["L", "B", "R"].map(section => (
+            <div key={section} style={{ flexShrink: 0 }}>
+              <p style={{ fontSize: "10px", color: "#777777", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "10px", borderBottom: "1px solid #d8d6d0", paddingBottom: "6px" }}>
+                {SECTION_LABELS[section]}
+              </p>
+              <SectionGrid
+                section={section}
+                slots={slots.filter(s => s.section === section)}
+                selected={selected}
+                onSelect={setSelected}
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
       {stats.pending > 0 && (
