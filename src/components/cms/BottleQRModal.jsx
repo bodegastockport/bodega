@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Printer, Download, X } from "lucide-react";
 import html2canvas from "html2canvas";
+import { toast } from "sonner";
 
 export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
   const labelRef = useRef(null);
@@ -16,12 +17,12 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
       <!DOCTYPE html><html><head><title>Bottle Label – ${bottle.wine_name}</title>
       <style>
         body { font-family: 'Courier New', Courier, monospace; margin: 0; padding: 24px; text-align: center; background: #ffffff; color: #000000; }
-        .label { border: 1px solid #d8d6d0; padding: 24px; display: inline-block; max-width: 300px; background: #ffffff; }
-        h1 { font-size: 14px; margin: 0 0 4px; font-weight: 400; }
-        p { font-size: 11px; margin: 3px 0; color: #000000; }
-        img { margin: 12px 0; }
-        .tag { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #444444; margin-bottom: 8px; }
-        .location { font-size: 13px; font-weight: bold; color: #000000; margin: 8px 0; }
+        .label { border: 1px solid #d8d6d0; padding: 24px; display: inline-block; max-width: 340px; background: #ffffff; }
+        h1 { font-size: 22px; margin: 0 0 6px; font-weight: 700; }
+        p { font-size: 16px; margin: 4px 0; color: #000000; font-weight: 700; }
+        img { margin: 14px 0; }
+        .tag { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #000000; margin-bottom: 10px; font-weight: 700; }
+        .location { font-size: 19px; font-weight: 700; color: #000000; margin: 10px 0; }
       </style></head><body>
       <div class="label">
         <p class="tag">Bodega Wine Bar — Cellar Club</p>
@@ -41,6 +42,7 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
 
   const handleDownload = async () => {
     if (!labelRef.current) return;
+    const newTab = window.open("", "_blank");
     setDownloading(true);
     try {
       const canvas = await html2canvas(labelRef.current, {
@@ -49,17 +51,20 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
         scale: 2,
       });
       const dataUrl = canvas.toDataURL("image/png");
-      const filenameBase = bottle.wine_name
-        ? bottle.wine_name.replace(/[^a-z0-9]+/gi, "_").toLowerCase()
-        : "bottle";
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = `${filenameBase}-label.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      if (newTab) {
+        newTab.document.write(
+          `<!DOCTYPE html><html><head><title>${bottle.wine_name} label</title></head>` +
+          `<body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh;">` +
+          `<img src="${dataUrl}" style="max-width:100%;height:auto;" /></body></html>`
+        );
+        newTab.document.close();
+      } else {
+        toast.error("Please allow pop-ups to save the label image");
+      }
     } catch (err) {
       console.error("Label download failed:", err);
+      if (newTab) newTab.close();
+      toast.error("Couldn't generate the label image. Please try again.");
     }
     setDownloading(false);
   };
@@ -108,7 +113,7 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
             disabled={downloading}
             style={{ flex: 1, padding: "10px", backgroundColor: "#0A242C", color: "#f3f2ee", border: "none", fontFamily: "'Courier New', Courier, monospace", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: downloading ? "not-allowed" : "pointer", opacity: downloading ? 0.6 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
           >
-            <Download className="h-3.5 w-3.5" /> {downloading ? "Saving..." : "Download"}
+            <Download className="h-3.5 w-3.5" /> {downloading ? "Saving..." : "Download label"}
           </button>
         </div>
 
