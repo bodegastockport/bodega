@@ -25,8 +25,7 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
       <div class="label">
         <img src="${qrUrl}" />
         <h1>${bottle.wine_name}</h1>
-        ${bottle.vintage ? `<p>${bottle.vintage}</p>` : ""}
-        ${bottle.type ? `<p>${bottle.type}</p>` : ""}
+        ${bottle.vintage || bottle.type ? `<p>${[bottle.vintage, bottle.type].filter(Boolean).join(" · ")}</p>` : ""}
         ${slotLabel ? `<p class="location">Vault slot: ${slotLabel}</p>` : ""}
         ${member?.name ? `<p>${member.name}</p>` : ""}
         ${bottle.notes ? `<p>${bottle.notes}</p>` : ""}
@@ -78,8 +77,11 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
           <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#000000", fontWeight: 700 }}>Bodega Cellar Club</p>
           <img src={qrUrl} alt="QR code" crossOrigin="anonymous" style={{ width: "140px", height: "140px", margin: "0 auto", display: "block" }} />
           <p className="text-sm mt-3" style={{ color: "#000000", fontWeight: 700 }}>{bottle.wine_name}</p>
-          {bottle.vintage && <p className="text-xs mt-0.5" style={{ color: "#000000", fontWeight: 700 }}>{bottle.vintage}</p>}
-          {bottle.type && <p className="text-xs" style={{ color: "#000000", fontWeight: 700 }}>{bottle.type}</p>}
+          {(bottle.vintage || bottle.type) && (
+            <p className="text-xs mt-0.5" style={{ color: "#000000", fontWeight: 700 }}>
+              {[bottle.vintage, bottle.type].filter(Boolean).join(" · ")}
+            </p>
+          )}
           {slotLabel && (
             <p className="text-xs font-bold mt-2" style={{ color: "#000000" }}>
               Vault slot: {slotLabel}
@@ -118,8 +120,11 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
           >
             <img src={qrUrl} alt="QR code" crossOrigin="anonymous" width="280" height="280" style={{ margin: "14px auto", display: "block" }} />
             <h1 style={{ fontSize: "36px", margin: "2px 0", fontWeight: 700, color: "#000000", lineHeight: 1.15 }}>{bottle.wine_name}</h1>
-            {bottle.vintage && <p style={{ fontSize: "36px", margin: "2px 0", color: "#000000", fontWeight: 700, lineHeight: 1.15 }}>{bottle.vintage}</p>}
-            {bottle.type && <p style={{ fontSize: "36px", margin: "2px 0", color: "#000000", fontWeight: 700, lineHeight: 1.15 }}>{bottle.type}</p>}
+            {(bottle.vintage || bottle.type) && (
+              <p style={{ fontSize: "36px", margin: "2px 0", color: "#000000", fontWeight: 700, lineHeight: 1.15 }}>
+                {[bottle.vintage, bottle.type].filter(Boolean).join(" · ")}
+              </p>
+            )}
             {slotLabel && <p style={{ fontSize: "36px", fontWeight: 700, margin: "2px 0", color: "#000000", lineHeight: 1.15 }}>Vault slot: {slotLabel}</p>}
             {member?.name && <p style={{ fontSize: "36px", margin: "2px 0", color: "#000000", fontWeight: 700, lineHeight: 1.15 }}>{member.name}</p>}
             {bottle.notes && <p style={{ fontSize: "36px", margin: "2px 0", color: "#000000", fontWeight: 700, lineHeight: 1.15 }}>{bottle.notes}</p>}
