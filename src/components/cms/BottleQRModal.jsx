@@ -17,7 +17,7 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
       <!DOCTYPE html><html><head><title>Bottle Label – ${bottle.wine_name}</title>
       <style>
         body { font-family: 'Courier New', Courier, monospace; margin: 0; padding: 24px; text-align: center; background: #ffffff; color: #000000; }
-        .label { border: 1px solid #d8d6d0; padding: 32px; display: inline-block; max-width: 440px; background: #ffffff; }
+        .label { border: 1px solid #d8d6d0; padding: 24px; display: inline-block; width: 220px; background: #ffffff; }
         h1 { font-size: 30px; margin: 0 0 8px; font-weight: 700; }
         p { font-size: 22px; margin: 6px 0; color: #000000; font-weight: 700; }
         img { margin: 18px 0; }
