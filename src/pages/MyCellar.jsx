@@ -24,7 +24,7 @@ const labelStyle = {
 };
 
 function slotLabel(slot) {
-  return `${slot.column_number}${slot.row_label}`;
+  return `${slot.row_label}${slot.column_number}`;
 }
 
 function ImageLightbox({ url, label, onClose }) {
