@@ -13,7 +13,7 @@ const inputStyle = { backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0", bo
 const labelStyle = { display: "block", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#777777", marginBottom: "4px", fontFamily: "'Courier New', Courier, monospace" };
 
 function slotLabel(slot) {
-  return `${slot.column_number}${slot.row_label}`;
+  return `${slot.row_label}${slot.column_number}`;
 }
 
 function PhotoUploadField({ label, file, previewUrl, onChange, required = false }) {
