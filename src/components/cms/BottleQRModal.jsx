@@ -17,16 +17,16 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
       <!DOCTYPE html><html><head><title>Bottle Label – ${bottle.wine_name}</title>
       <style>
         body { font-family: 'Courier New', Courier, monospace; margin: 0; padding: 24px; text-align: center; background: #ffffff; color: #000000; }
-        .label { border: 1px solid #d8d6d0; padding: 24px; display: inline-block; max-width: 340px; background: #ffffff; }
-        h1 { font-size: 22px; margin: 0 0 6px; font-weight: 700; }
-        p { font-size: 16px; margin: 4px 0; color: #000000; font-weight: 700; }
-        img { margin: 14px 0; }
-        .tag { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #000000; margin-bottom: 10px; font-weight: 700; }
-        .location { font-size: 19px; font-weight: 700; color: #000000; margin: 10px 0; }
+        .label { border: 1px solid #d8d6d0; padding: 32px; display: inline-block; max-width: 440px; background: #ffffff; }
+        h1 { font-size: 30px; margin: 0 0 8px; font-weight: 700; }
+        p { font-size: 22px; margin: 6px 0; color: #000000; font-weight: 700; }
+        img { margin: 18px 0; }
+        .tag { font-size: 16px; text-transform: uppercase; letter-spacing: 0.06em; color: #000000; margin-bottom: 12px; font-weight: 700; }
+        .location { font-size: 26px; font-weight: 700; color: #000000; margin: 12px 0; }
       </style></head><body>
       <div class="label">
         <p class="tag">Bodega Wine Bar — Cellar Club</p>
-        <img src="${qrUrl}" width="160" height="160" />
+        <img src="${qrUrl}" width="220" height="220" />
         <h1>${bottle.wine_name}</h1>
         ${bottle.vintage ? `<p>Vintage: ${bottle.vintage}</p>` : ""}
         ${bottle.type ? `<p>Type: ${bottle.type}</p>` : ""}
@@ -50,14 +50,11 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
         backgroundColor: "#ffffff",
         scale: 2,
       });
-      const dataUrl = canvas.toDataURL("image/png");
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+      if (!blob) throw new Error("Canvas produced no image data");
+      const blobUrl = URL.createObjectURL(blob);
       if (newTab) {
-        newTab.document.write(
-          `<!DOCTYPE html><html><head><title>${bottle.wine_name} label</title></head>` +
-          `<body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh;">` +
-          `<img src="${dataUrl}" style="max-width:100%;height:auto;" /></body></html>`
-        );
-        newTab.document.close();
+        newTab.location.href = blobUrl;
       } else {
         toast.error("Please allow pop-ups to save the label image");
       }
