@@ -160,11 +160,8 @@ export default function Menu() {
             <div style={{ width: "100%", maxWidth: "520px", padding: "48px 64px" }}>
               <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#0A242C" }}>What we pour</p>
               <h1 className="text-2xl mb-4 leading-snug" style={{ color: "#1E4D5A", fontWeight: 400 }}>Good wine, no waffle.</h1>
-              <p className="text-sm leading-relaxed mb-3" style={{ color: "#0A242C" }}>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
-              </p>
               <p className="text-sm leading-relaxed mb-8" style={{ color: "#0A242C" }}>
-                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt.
+                Our wine list changes regularly, paired with proper charcuterie and cheese boards.
               </p>
               <DownloadBtn />
             </div>
@@ -199,11 +196,8 @@ export default function Menu() {
           <div style={{ padding: "32px 24px" }}>
             <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#0A242C" }}>What we pour</p>
             <h1 style={{ fontSize: "22px", color: "#1E4D5A", fontWeight: 400, marginBottom: "12px" }}>Good wine, no waffle.</h1>
-            <p className="text-sm leading-relaxed mb-3" style={{ color: "#0A242C" }}>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
-            </p>
             <p className="text-sm leading-relaxed mb-8" style={{ color: "#0A242C" }}>
-              Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt.
+              Our wine list changes regularly, paired with proper charcuterie and cheese boards.
             </p>
             <DownloadBtn />
           </div>
