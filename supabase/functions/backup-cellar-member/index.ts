@@ -104,7 +104,6 @@ serve(async (req) => {
     const sheetId        = Deno.env.get("GOOGLE_SHEET_ID") || "";
 
     const token = await getAccessToken(serviceAccount);
-    const rows  = await getSheetValues(token, sheetId);
 
     const rowValues = [
       member.id                     || "",  // A
@@ -126,12 +125,19 @@ serve(async (req) => {
       member.updated_at             || "",  // Q
     ];
 
+    const rows = await getSheetValues(token, sheetId);
     const existingIndex = rows.slice(1).findIndex((r) => r[0] === member.id);
 
     if (existingIndex >= 0) {
       await updateRow(token, sheetId, existingIndex + 1, rowValues);
     } else {
-      await appendRow(token, sheetId, rowValues);
+      const recheckRows = await getSheetValues(token, sheetId);
+      const recheckIndex = recheckRows.slice(1).findIndex((r) => r[0] === member.id);
+      if (recheckIndex >= 0) {
+        await updateRow(token, sheetId, recheckIndex + 1, rowValues);
+      } else {
+        await appendRow(token, sheetId, rowValues);
+      }
     }
 
     return new Response(JSON.stringify({ success: true }), {
