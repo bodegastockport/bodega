@@ -109,14 +109,14 @@ serve(async (req) => {
       }
     }
 
-    const rows = "ABCDEFGHIJKLMNOPQRSTUVWX".split("");
+    const rows = "ABCDEFGHIJKLMNOPQRSTUVWX".split("").reverse();
 
     const buildGrid = (section: string, colStart: number, colEnd: number): string[][] => {
-      const header = ["", ...Array.from({ length: colEnd - colStart + 1 }, (_, i) => String(colStart + i))];
+      const header = ["", ...Array.from({ length: colEnd - colStart + 1 }, (_, i) => String(colEnd - i))];
       const grid: string[][] = [header];
       for (const row of rows) {
         const rowData: string[] = [row];
-        for (let col = colStart; col <= colEnd; col++) {
+        for (let col = colEnd; col >= colStart; col--) {
           const slot = (slots || []).find(
             (s) => s.section === section && s.row_label === row && s.column_number === col
           );
