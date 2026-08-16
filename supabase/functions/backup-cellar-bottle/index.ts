@@ -151,7 +151,13 @@ serve(async (req) => {
       if (existingIndex >= 0) {
         await updateRow(token, sheetId, existingIndex + 1, rowValues);
       } else {
-        await appendRow(token, sheetId, rowValues);
+        const recheckRows = await getSheetValues(token, sheetId);
+        const recheckIndex = recheckRows.slice(1).findIndex((r) => r[0] === bottle.id);
+        if (recheckIndex >= 0) {
+          await updateRow(token, sheetId, recheckIndex + 1, rowValues);
+        } else {
+          await appendRow(token, sheetId, rowValues);
+        }
       }
     }
 
