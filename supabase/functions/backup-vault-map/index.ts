@@ -137,13 +137,13 @@ serve(async (req) => {
 
     const allRows = [
       [["LEFT WALL"]],
-      buildGrid("L", 1, 20),
+      buildGrid("L", 29, 48),
       [[""]],
       [["BACK WALL"]],
       buildGrid("B", 21, 28),
       [[""]],
       [["RIGHT WALL"]],
-      buildGrid("R", 29, 48),
+      buildGrid("R", 1, 20),
     ].flat();
 
     const saKey = JSON.parse(Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY")!);
