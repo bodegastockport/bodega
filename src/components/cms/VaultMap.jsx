@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 
 const ROWS = "ABCDEFGHIJKLMNOPQRSTUVWX".split("");
-const SECTION_COL_RANGES = { L: [1, 20], B: [21, 28], R: [29, 48] };
+const SECTION_COL_RANGES = { L: [29, 48], B: [21, 28], R: [1, 20] };
 const SECTION_LABELS = { L: "Left Wall", B: "Back Wall", R: "Right Wall" };
 
 function slotLabel(rowLabel, colNum) {
