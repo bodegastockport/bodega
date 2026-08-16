@@ -161,7 +161,7 @@ export default function VaultMap() {
       ] = await Promise.all([
         supabase.from("vault_slots").select("id, section, row_label, column_number, status, member_id").order("section").order("column_number").order("row_label").range(0, 1999),
         supabase.from("cellar_members").select("id, name, membership_tier"),
-        supabase.from("cellar_bottles").select("id, slot_id, wine_name, vintage, type, notes, image_front_url, status").eq("status", "stored"),
+        supabase.from("cellar_bottles").select("id, slot_id, member_id, wine_name, vintage, type, notes, image_front_url, status").eq("status", "stored"),
         supabase.from("vault_slots").select("*", { count: "exact", head: true }),
         supabase.from("vault_slots").select("*", { count: "exact", head: true }).eq("status", "assigned"),
         supabase.from("vault_slots").select("*", { count: "exact", head: true }).eq("status", "available"),
@@ -174,13 +174,17 @@ export default function VaultMap() {
       const bottleMap = {};
       for (const b of bottles || []) if (b.slot_id) bottleMap[b.slot_id] = b;
 
-      const assignedWithBottle = (slotData || []).filter(s => s.status === "assigned" && bottleMap[s.id]).length;
+      const enriched = (slotData || []).map(s => {
+        const candidateBottle = bottleMap[s.id] || null;
+        const bottle = candidateBottle && candidateBottle.member_id === s.member_id ? candidateBottle : null;
+        return {
+          ...s,
+          member: s.member_id ? memberMap[s.member_id] || null : null,
+          bottle,
+        };
+      });
 
-      const enriched = (slotData || []).map(s => ({
-        ...s,
-        member: s.member_id ? memberMap[s.member_id] || null : null,
-        bottle: bottleMap[s.id] || null,
-      }));
+      const assignedWithBottle = enriched.filter(s => s.status === "assigned" && s.bottle).length;
 
       setSlots(enriched);
       setStats({
