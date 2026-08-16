@@ -87,7 +87,7 @@ function SlotPopover({ slot, onClose }) {
 
 function SectionGrid({ section, slots, selected, onSelect }) {
   const [colStart, colEnd] = SECTION_COL_RANGES[section];
-  const cols = Array.from({ length: colEnd - colStart + 1 }, (_, i) => colStart + i);
+  const cols = Array.from({ length: colEnd - colStart + 1 }, (_, i) => colEnd - i);
   const slotMap = {};
   for (const s of slots) slotMap[`${s.row_label}-${s.column_number}`] = s;
 
