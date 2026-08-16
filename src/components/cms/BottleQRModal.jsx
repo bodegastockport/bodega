@@ -4,6 +4,7 @@ import html2canvas from "html2canvas";
 import { toast } from "sonner";
 
 export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
+  const formattedSlotLabel = slotLabel ? slotLabel.replace(/^([A-Za-z]+)(\d+)$/, "$1-$2") : slotLabel;
   const labelRef = useRef(null);
   const [downloading, setDownloading] = useState(false);
 
@@ -26,7 +27,7 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
         <img src="${qrUrl}" />
         <h1>${bottle.wine_name}</h1>
         ${bottle.vintage || bottle.type ? `<p>${[bottle.vintage, bottle.type].filter(Boolean).join(" · ")}</p>` : ""}
-        ${slotLabel ? `<p class="location">Vault slot: ${slotLabel}</p>` : ""}
+        ${formattedSlotLabel ? `<p class="location">Vault slot: ${formattedSlotLabel}</p>` : ""}
         ${member?.name ? `<p>${member.name}</p>` : ""}
         ${bottle.notes ? `<p>${bottle.notes}</p>` : ""}
       </div>
@@ -81,9 +82,9 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
               {[bottle.vintage, bottle.type].filter(Boolean).join(" · ")}
             </p>
           )}
-          {slotLabel && (
+          {formattedSlotLabel && (
             <p className="text-xs font-bold mt-2" style={{ color: "#000000" }}>
-              Vault slot: {slotLabel}
+              Vault slot: {formattedSlotLabel}
             </p>
           )}
           {member?.name && (
@@ -124,7 +125,7 @@ export default function BottleQRModal({ bottle, member, slotLabel, onClose }) {
                 {[bottle.vintage, bottle.type].filter(Boolean).join(" · ")}
               </p>
             )}
-            {slotLabel && <p style={{ fontSize: "36px", fontWeight: 700, margin: "2px 0", color: "#000000", lineHeight: 1.15 }}>Vault slot: {slotLabel}</p>}
+            {formattedSlotLabel && <p style={{ fontSize: "36px", fontWeight: 700, margin: "2px 0", color: "#000000", lineHeight: 1.15 }}>Vault slot: {formattedSlotLabel}</p>}
             {member?.name && <p style={{ fontSize: "36px", margin: "2px 0", color: "#000000", fontWeight: 700, lineHeight: 1.15 }}>{member.name}</p>}
             {bottle.notes && <p style={{ fontSize: "36px", margin: "2px 0", color: "#000000", fontWeight: 700, lineHeight: 1.15 }}>{bottle.notes}</p>}
           </div>
