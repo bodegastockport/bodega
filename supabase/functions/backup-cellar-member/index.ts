@@ -64,6 +64,14 @@ async function getAccessToken(key: Record<string, string>): Promise<string> {
   return data.access_token;
 }
 
+async function getSheetMeta(token: string, sheetId: string): Promise<{ sheetIdNum: number }> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets(properties(sheetId,title))`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  const data = await res.json();
+  const sheet = (data.sheets || []).find((s: any) => s.properties.title === "Members");
+  return { sheetIdNum: sheet?.properties.sheetId ?? 0 };
+}
+
 async function getSheetValues(token: string, sheetId: string): Promise<string[][]> {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Members!A:Q`;
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -92,6 +100,47 @@ async function appendRow(token: string, sheetId: string, values: string[]) {
   if (!res.ok) throw new Error(`Append failed: ${await res.text()}`);
 }
 
+async function deleteRows(token: string, sheetId: string, sheetIdNum: number, rowIndexes: number[]) {
+  if (rowIndexes.length === 0) return;
+  const requests = rowIndexes
+    .sort((a, b) => b - a)
+    .map((rowIndex) => ({
+      deleteDimension: {
+        range: {
+          sheetId: sheetIdNum,
+          dimension: "ROWS",
+          startIndex: rowIndex + 1,
+          endIndex: rowIndex + 2,
+        },
+      },
+    }));
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ requests }),
+  });
+  if (!res.ok) throw new Error(`Delete rows failed: ${await res.text()}`);
+}
+
+async function dedupeMemberRows(token: string, sheetId: string, sheetIdNum: number, memberId: string) {
+  const rows = await getSheetValues(token, sheetId);
+  const matches: number[] = [];
+  rows.slice(1).forEach((r, i) => { if (r[0] === memberId) matches.push(i); });
+
+  if (matches.length <= 1) return;
+
+  let latestIndex = matches[0];
+  for (const idx of matches) {
+    const currentUpdatedAt = rows[idx + 1][16] || "";
+    const latestUpdatedAt = rows[latestIndex + 1][16] || "";
+    if (currentUpdatedAt > latestUpdatedAt) latestIndex = idx;
+  }
+
+  const toDelete = matches.filter((idx) => idx !== latestIndex);
+  await deleteRows(token, sheetId, sheetIdNum, toDelete);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -104,6 +153,7 @@ serve(async (req) => {
     const sheetId        = Deno.env.get("GOOGLE_SHEET_ID") || "";
 
     const token = await getAccessToken(serviceAccount);
+    const { sheetIdNum } = await getSheetMeta(token, sheetId);
 
     const rowValues = [
       member.id                     || "",  // A
@@ -131,14 +181,10 @@ serve(async (req) => {
     if (existingIndex >= 0) {
       await updateRow(token, sheetId, existingIndex + 1, rowValues);
     } else {
-      const recheckRows = await getSheetValues(token, sheetId);
-      const recheckIndex = recheckRows.slice(1).findIndex((r) => r[0] === member.id);
-      if (recheckIndex >= 0) {
-        await updateRow(token, sheetId, recheckIndex + 1, rowValues);
-      } else {
-        await appendRow(token, sheetId, rowValues);
-      }
+      await appendRow(token, sheetId, rowValues);
     }
+
+    await dedupeMemberRows(token, sheetId, sheetIdNum, member.id);
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
