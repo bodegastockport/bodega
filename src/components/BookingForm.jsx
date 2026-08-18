@@ -8,6 +8,8 @@ import { supabase } from "@/lib/supabase";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const WALKIN_CAP_SEATS = 14;
+const FALLBACK_INTERVAL = 30;
+const FALLBACK_DURATION = 30;
 
 const inputStyle = {
   backgroundColor: "#f3f2ee",
@@ -32,18 +34,32 @@ const labelStyle = {
   fontFamily: "'Courier New', Courier, monospace",
 };
 
-function generateTimeSlots(from, to, slotDuration) {
+function timeToMinutes(t) {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function generateStartTimes(from, to, interval, holdDuration) {
   const slots = [];
   const [fromH, fromM] = from.split(":").map(Number);
   const [toH, toM] = to.split(":").map(Number);
   const fromMins = fromH * 60 + fromM;
   const toMins = toH * 60 + toM;
-  for (let m = fromMins; m <= toMins; m += slotDuration) {
+  const lastStart = toMins - holdDuration;
+  for (let m = fromMins; m <= lastStart; m += interval) {
     const h = Math.floor(m / 60).toString().padStart(2, "0");
     const min = (m % 60).toString().padStart(2, "0");
     slots.push(`${h}:${min}`);
   }
   return slots;
+}
+
+function isOverlapping(existingStart, proposedStart, durationMins) {
+  const existingStartMins = timeToMinutes(existingStart);
+  const existingEndMins = existingStartMins + durationMins;
+  const proposedStartMins = timeToMinutes(proposedStart);
+  const proposedEndMins = proposedStartMins + durationMins;
+  return existingStartMins < proposedEndMins && proposedStartMins < existingEndMins;
 }
 
 export default function BookingForm({ onSuccess, member = null, bottleOptions = [] }) {
@@ -58,14 +74,14 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
   const [focused, setFocused] = useState(null);
 
   const [openDays, setOpenDays] = useState({});
-  const [slotDuration, setSlotDuration] = useState(30);
+  const [bookingInterval, setBookingInterval] = useState(FALLBACK_INTERVAL);
+  const [slotDuration, setSlotDuration] = useState(FALLBACK_DURATION);
   const [bookingLeadDays, setBookingLeadDays] = useState(28);
   const [walkinCapEnabled, setWalkinCapEnabled] = useState(false);
   const [minNoticeHours, setMinNoticeHours] = useState(0);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
-  const [availableSlots, setAvailableSlots] = useState([]);
-  const [maxPartySize, setMaxPartySize] = useState(10);
+  const [timeSlots, setTimeSlots] = useState([]);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
 
   useEffect(() => {
@@ -75,7 +91,8 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
         const map = {};
         data.forEach((r) => { map[r.key] = r.value; });
         if (map.open_days) { try { setOpenDays(JSON.parse(map.open_days)); } catch {} }
-        if (map.slot_duration) setSlotDuration(parseInt(map.slot_duration));
+        setBookingInterval(map.booking_interval ? parseInt(map.booking_interval) : FALLBACK_INTERVAL);
+        setSlotDuration(map.slot_duration ? parseInt(map.slot_duration) : FALLBACK_DURATION);
         if (map.booking_lead_days) setBookingLeadDays(parseInt(map.booking_lead_days));
         if (map.walkin_cap_enabled) setWalkinCapEnabled(map.walkin_cap_enabled === "true");
         if (map.min_notice_hours) setMinNoticeHours(parseInt(map.min_notice_hours));
@@ -100,7 +117,7 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
     if (!form.date || !settingsLoaded) return;
     const checkAvailability = async () => {
       setCheckingAvailability(true);
-      setAvailableSlots([]);
+      setTimeSlots([]);
       setForm(p => ({ ...p, time: "", party_size: "" }));
 
       const dayName = DAYS[form.date.getDay()];
@@ -117,49 +134,43 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
       const overriddenIds = (overrides || []).map(o => o.table_id);
       const tables = (allTables || []).filter(t => !overriddenIds.includes(t.id));
 
-      if (!tables.length) { setCheckingAvailability(false); return; }
-
       const { data: existingReservations } = await supabase
         .from('reservations')
         .select('table_id, time, party_size')
         .eq('date', dateStr)
         .in('status', ['confirmed']);
 
-      const slots = generateTimeSlots(dayConfig.from, dayConfig.to, slotDuration);
-      const availableSlotSet = new Set();
-      let maxAvailableCapacity = 0;
+      const baseTimes = generateStartTimes(dayConfig.from, dayConfig.to, bookingInterval, slotDuration);
 
-      slots.forEach(slot => {
+      const slotsInfo = baseTimes.map(slot => {
         if (minNoticeHours > 0) {
           const [slotH, slotM] = slot.split(":").map(Number);
           const slotDateTime = new Date(form.date);
           slotDateTime.setHours(slotH, slotM, 0, 0);
           const cutoff = new Date(now.getTime() + minNoticeHours * 60 * 60 * 1000);
-          if (slotDateTime <= cutoff) return;
+          if (slotDateTime <= cutoff) return { time: slot, available: false, maxCapacity: 0 };
         }
 
-        const slotReservations = (existingReservations || []).filter(r => r.time === slot);
-        const bookedTableIds = slotReservations.map(r => r.table_id);
+        const overlappingReservations = (existingReservations || []).filter(r => isOverlapping(r.time, slot, slotDuration));
+        const bookedTableIds = overlappingReservations.map(r => r.table_id);
         const freeTables = tables.filter(t => !bookedTableIds.includes(t.id));
 
-        if (freeTables.length === 0) return;
+        if (freeTables.length === 0) return { time: slot, available: false, maxCapacity: 0 };
 
         if (walkinCapEnabled) {
-          const seatsBooked = slotReservations.reduce((sum, r) => sum + (r.party_size || 0), 0);
-          if (seatsBooked >= WALKIN_CAP_SEATS) return;
+          const seatsBooked = overlappingReservations.reduce((sum, r) => sum + (r.party_size || 0), 0);
+          if (seatsBooked >= WALKIN_CAP_SEATS) return { time: slot, available: false, maxCapacity: 0 };
         }
 
-        availableSlotSet.add(slot);
         const maxCap = Math.max(...freeTables.map(t => t.capacity));
-        if (maxCap > maxAvailableCapacity) maxAvailableCapacity = maxCap;
+        return { time: slot, available: true, maxCapacity: maxCap };
       });
 
-      setAvailableSlots([...availableSlotSet]);
-      setMaxPartySize(maxAvailableCapacity);
+      setTimeSlots(slotsInfo);
       setCheckingAvailability(false);
     };
     checkAvailability();
-  }, [form.date, settingsLoaded, openDays, slotDuration, walkinCapEnabled, minNoticeHours]);
+  }, [form.date, settingsLoaded, openDays, bookingInterval, slotDuration, walkinCapEnabled, minNoticeHours]);
 
   const isDateDisabled = (date) => {
     if (isBefore(date, startOfToday())) return true;
@@ -170,6 +181,11 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
 
   const update = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
   const isValid = form.guest_name && form.email && form.phone && form.date && form.time && form.party_size;
+
+  const selectedSlot = timeSlots.find(s => s.time === form.time);
+  const maxPartySize = selectedSlot?.maxCapacity || 10;
+  const partySizes = Array.from({ length: maxPartySize }, (_, i) => i + 1);
+  const noAvailability = timeSlots.length === 0 || timeSlots.every(s => !s.available);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -196,12 +212,13 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
     const overriddenIds = (overrides || []).map(o => o.table_id);
 
     const { data: tables } = await supabase.from('tables').select().eq('active', true).gte('capacity', partySize).order('capacity', { ascending: true });
-    const { data: bookedAtSlot } = await supabase.from('reservations').select('table_id, party_size').eq('date', dateStr).eq('time', form.time).in('status', ['confirmed']);
+    const { data: allReservationsForDate } = await supabase.from('reservations').select('table_id, party_size, time').eq('date', dateStr).in('status', ['confirmed']);
 
-    const bookedIds = (bookedAtSlot || []).map(r => r.table_id);
+    const bookedAtSlot = (allReservationsForDate || []).filter(r => isOverlapping(r.time, form.time, slotDuration));
+    const bookedIds = bookedAtSlot.map(r => r.table_id);
 
     if (walkinCapEnabled) {
-      const seatsBooked = (bookedAtSlot || []).reduce((sum, r) => sum + (r.party_size || 0), 0);
+      const seatsBooked = bookedAtSlot.reduce((sum, r) => sum + (r.party_size || 0), 0);
       if (seatsBooked >= WALKIN_CAP_SEATS) {
         setError("Sorry, that slot is no longer available. Please choose another time.");
         setSubmitting(false);
@@ -254,7 +271,6 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
   };
 
   const getInputStyle = (field) => ({ ...inputStyle, borderColor: focused === field ? "#1E4D5A" : "#d8d6d0" });
-  const partySizes = Array.from({ length: maxPartySize }, (_, i) => i + 1);
 
   if (!settingsLoaded) return (
     <div className="flex justify-center py-8">
@@ -283,12 +299,16 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
 
         <div>
           <label style={labelStyle}>Time</label>
-          <Select value={form.time} onValueChange={(v) => update("time", v)} disabled={!form.date || checkingAvailability || availableSlots.length === 0}>
+          <Select value={form.time} onValueChange={(v) => update("time", v)} disabled={!form.date || checkingAvailability || timeSlots.length === 0}>
             <SelectTrigger style={getInputStyle("time")} onFocus={() => setFocused("time")} onBlur={() => setFocused(null)}>
               {checkingAvailability ? <Loader2 className="h-3 w-3 animate-spin" /> : <SelectValue placeholder={form.date ? "Time" : "Date first"} />}
             </SelectTrigger>
             <SelectContent>
-              {availableSlots.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              {timeSlots.map((s) => (
+                <SelectItem key={s.time} value={s.time} disabled={!s.available}>
+                  {s.time}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -306,7 +326,7 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
         </div>
       </div>
 
-      {form.date && !checkingAvailability && availableSlots.length === 0 && (
+      {form.date && !checkingAvailability && noAvailability && (
         <p style={{ fontSize: "12px", color: "#c0392b" }}>No availability on this date. Please try another day.</p>
       )}
 

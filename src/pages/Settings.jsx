@@ -8,6 +8,7 @@ const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
 
 const DEFAULT_SETTINGS = {
   slot_duration: "30",
+  booking_interval: "30",
   booking_lead_days: "28",
   min_notice_hours: "2",
   walkin_cap_enabled: "false",
@@ -321,7 +322,8 @@ export default function Settings() {
           <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777", borderBottom: "1px solid #d8d6d0", paddingBottom: "10px" }}>Booking config</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
             {[
-              { key: "slot_duration", label: "Booking length (mins)", hint: "How long each table booking lasts" },
+              { key: "booking_interval", label: "Booking interval (mins)", hint: "How often a new start time is offered, e.g. every 15 or 30 mins" },
+              { key: "slot_duration", label: "Booking length (mins)", hint: "How long each table booking lasts once made" },
               { key: "booking_lead_days", label: "Bookings open up to (days ahead)", hint: "How far in advance customers can book" },
               { key: "min_notice_hours", label: "Minimum notice (hours)", hint: "How far ahead a booking must be made" },
             ].map(({ key, label, hint }) => (
@@ -336,7 +338,7 @@ export default function Settings() {
             <div>
               <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>Walk-in cap</p>
               <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>
-                When on, online bookings stop accepting once 14 seats are taken per time slot, keeping the remainder free for walk-ins.
+                When on, online bookings stop accepting once 14 seats are taken at any point in time, keeping the remainder free for walk-ins.
               </p>
             </div>
             <Switch
