@@ -79,7 +79,8 @@ const schema = {
         "@type": "UnitPriceSpecification",
         "price": "21.00",
         "priceCurrency": "GBP",
-        "unitCode": "MON"
+        "unitCode": "MON",
+        "valueAddedTaxIncluded": true
       }
     },
     {
@@ -92,7 +93,8 @@ const schema = {
         "@type": "UnitPriceSpecification",
         "price": "33.50",
         "priceCurrency": "GBP",
-        "unitCode": "MON"
+        "unitCode": "MON",
+        "valueAddedTaxIncluded": true
       }
     },
     {
@@ -105,7 +107,8 @@ const schema = {
         "@type": "UnitPriceSpecification",
         "price": "47.00",
         "priceCurrency": "GBP",
-        "unitCode": "MON"
+        "unitCode": "MON",
+        "valueAddedTaxIncluded": true
       }
     }
   ]
@@ -178,15 +181,15 @@ const WaitlistForm = ({ inputSt, labelSt }) => {
           <select style={{ ...inputSt, appearance: "none", WebkitAppearance: "none" }} value={form.requested_tier} onChange={e => f("requested_tier", e.target.value)}>
             <option value="" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Select...</option>
             <optgroup label="Individual" style={{ color: "#0A242C", backgroundColor: "#fff" }}>
-              <option value="Cellar 6" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Cellar 6 — £21.00/mo</option>
-              <option value="Cellar 12" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Cellar 12 — £33.50/mo</option>
-              <option value="Cellar 18" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Cellar 18 — £47.00/mo</option>
+              <option value="Cellar 6" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Cellar 6 — £21.00/mo inc. VAT</option>
+              <option value="Cellar 12" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Cellar 12 — £33.50/mo inc. VAT</option>
+              <option value="Cellar 18" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Cellar 18 — £47.00/mo inc. VAT</option>
             </optgroup>
             <optgroup label="Corporate" style={{ color: "#0A242C", backgroundColor: "#fff" }}>
-              <option value="Corporate 6" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Corporate 6 — £31.50/mo</option>
-              <option value="Corporate 12" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Corporate 12 — £50.50/mo</option>
-              <option value="Corporate 18" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Corporate 18 — £70.50/mo</option>
-              <option value="Corporate 24" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Corporate 24 — £91.75/mo</option>
+              <option value="Corporate 6" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Corporate 6 — £31.50/mo inc. VAT</option>
+              <option value="Corporate 12" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Corporate 12 — £50.50/mo inc. VAT</option>
+              <option value="Corporate 18" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Corporate 18 — £70.50/mo inc. VAT</option>
+              <option value="Corporate 24" style={{ color: "#0A242C", backgroundColor: "#fff" }}>Corporate 24 — £91.75/mo inc. VAT</option>
             </optgroup>
           </select>
         </div>
@@ -304,6 +307,9 @@ const JoinForm = ({
             {corporateTiers.map(t => <option key={t.name} value={t.name} style={{ color: "#0A242C", backgroundColor: "#fff" }}>{tierLabel(t)}</option>)}
           </optgroup>
         </select>
+        <p style={{ fontSize: "10px", color: "rgba(243,242,238,0.5)", marginTop: "4px", letterSpacing: "0.02em" }}>
+          All prices include VAT.
+        </p>
       </div>
       <div>
         <label style={labelSt}>How did you hear about us?</label>
@@ -472,7 +478,7 @@ export default function CellarClub() {
     <>
       <SEO
         title="Cellar Club — Private Wine Storage, Stockport | Bodega"
-        description="Store your wine in Bodega's temperature-controlled vault in Stockport. Simple membership, your own space, drink your bottles here whenever you like."
+        description="Store your wine in Bodega's temperature-controlled vault in Stockport. Simple membership, your own space, drink your bottles here whenever you like. All prices include VAT."
         canonical="/cellar-club"
         schema={schema}
       />
@@ -586,7 +592,10 @@ export default function CellarClub() {
               <div className="flex flex-col justify-center items-center" style={{ borderRight: "1px solid #d8d6d0" }}>
                 <div style={{ width: "100%", maxWidth: "420px", padding: "48px 36px" }}>
                   <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C", opacity: 0.5 }}>Individual pricing</p>
-                  <h2 className="text-2xl mb-8" style={{ color: "#1E4D5A", fontWeight: 400 }}>For personal collections.</h2>
+                  <h2 className="text-2xl mb-2" style={{ color: "#1E4D5A", fontWeight: 400 }}>For personal collections.</h2>
+                  <p style={{ fontSize: "10px", color: "#0A242C", opacity: 0.5, letterSpacing: "0.02em", marginBottom: "24px" }}>
+                    All prices shown include VAT.
+                  </p>
                   <div style={{ borderTop: "1px solid #d8d6d0" }}>
                     {individualTiers.map((tier) => (
                       <div key={tier.name} className="flex items-center justify-between py-5" style={{ borderBottom: "1px solid #d8d6d0" }}>
@@ -594,10 +603,13 @@ export default function CellarClub() {
                           <p style={{ fontSize: "13px", color: "#0A242C", marginBottom: "3px" }}>{tier.name}</p>
                           <p style={{ fontSize: "11px", color: "#0A242C", opacity: 0.45, letterSpacing: "-0.01em" }}>Up to {tier.bottles} bottles</p>
                         </div>
-                        <p style={{ fontSize: "13px", color: "#1E4D5A" }}>
-                          {billingInterval === "year" ? tier.annualPrice : tier.price}
-                          <span style={{ fontSize: "11px", color: "#0A242C", opacity: 0.45 }}>{billingInterval === "year" ? "/yr" : "/mo"}</span>
-                        </p>
+                        <div style={{ textAlign: "right" }}>
+                          <p style={{ fontSize: "13px", color: "#1E4D5A" }}>
+                            {billingInterval === "year" ? tier.annualPrice : tier.price}
+                            <span style={{ fontSize: "11px", color: "#0A242C", opacity: 0.45 }}>{billingInterval === "year" ? "/yr" : "/mo"}</span>
+                          </p>
+                          <p style={{ fontSize: "9px", color: "#0A242C", opacity: 0.4 }}>inc. VAT</p>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -632,7 +644,10 @@ export default function CellarClub() {
               <div className="flex flex-col justify-center items-center" style={{ backgroundColor: "#1E4D5A" }}>
                 <div style={{ width: "100%", maxWidth: "420px", padding: "48px 36px" }}>
                   <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(243,242,238,0.5)" }}>Corporate entity pricing</p>
-                  <h2 className="text-2xl mb-8" style={{ color: "#f3f2ee", fontWeight: 400 }}>For businesses and teams.</h2>
+                  <h2 className="text-2xl mb-2" style={{ color: "#f3f2ee", fontWeight: 400 }}>For businesses and teams.</h2>
+                  <p style={{ fontSize: "10px", color: "rgba(243,242,238,0.5)", letterSpacing: "0.02em", marginBottom: "24px" }}>
+                    All prices shown include VAT.
+                  </p>
                   <div style={{ borderTop: "1px solid rgba(243,242,238,0.18)" }}>
                     {corporateTiers.map((tier) => (
                       <div key={tier.name} className="flex items-center justify-between py-5" style={{ borderBottom: "1px solid rgba(243,242,238,0.18)" }}>
@@ -640,10 +655,13 @@ export default function CellarClub() {
                           <p style={{ fontSize: "13px", color: "#f3f2ee", marginBottom: "3px" }}>{tier.name}</p>
                           <p style={{ fontSize: "11px", color: "rgba(243,242,238,0.5)", letterSpacing: "-0.01em" }}>Up to {tier.bottles} bottles</p>
                         </div>
-                        <p style={{ fontSize: "13px", color: "#f3f2ee" }}>
-                          {billingInterval === "year" ? tier.annualPrice : tier.price}
-                          <span style={{ fontSize: "11px", color: "rgba(243,242,238,0.5)" }}>{billingInterval === "year" ? "/yr" : "/mo"}</span>
-                        </p>
+                        <div style={{ textAlign: "right" }}>
+                          <p style={{ fontSize: "13px", color: "#f3f2ee" }}>
+                            {billingInterval === "year" ? tier.annualPrice : tier.price}
+                            <span style={{ fontSize: "11px", color: "rgba(243,242,238,0.5)" }}>{billingInterval === "year" ? "/yr" : "/mo"}</span>
+                          </p>
+                          <p style={{ fontSize: "9px", color: "rgba(243,242,238,0.4)" }}>inc. VAT</p>
+                        </div>
                       </div>
                     ))}
                   </div>
