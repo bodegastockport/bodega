@@ -3,32 +3,38 @@ import { supabase } from "@/lib/supabase";
 import { Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
+const MENU_TYPES = [
+  { key: "drinks", fileName: "drinks-menu.pdf", label: "Drinks Menu" },
+  { key: "food", fileName: "food-menu.pdf", label: "Food Menu" },
+];
+
 export default function MenuManager() {
-  const [menuUrl, setMenuUrl] = useState(null);
-  const [menuFileName, setMenuFileName] = useState(null);
+  const [menus, setMenus] = useState({});
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const fileInputRef = useRef(null);
+  const [uploadingKey, setUploadingKey] = useState(null);
+  const [deletingKey, setDeletingKey] = useState(null);
+  const fileInputRefs = useRef({});
 
   const load = async () => {
     setLoading(true);
     const { data } = await supabase.storage.from("menu").list("");
-    if (data && data.length > 0) {
-      const file = data.find(f => f.name.endsWith(".pdf")) || data[0];
-      const { data: urlData } = supabase.storage.from("menu").getPublicUrl(file.name);
-      setMenuUrl(urlData.publicUrl);
-      setMenuFileName(file.name);
-    } else {
-      setMenuUrl(null);
-      setMenuFileName(null);
-    }
+    const next = {};
+    MENU_TYPES.forEach(({ key, fileName }) => {
+      const file = data?.find(f => f.name === fileName);
+      if (file) {
+        const { data: urlData } = supabase.storage.from("menu").getPublicUrl(fileName);
+        next[key] = { url: urlData.publicUrl, fileName };
+      } else {
+        next[key] = null;
+      }
+    });
+    setMenus(next);
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
 
-  const handleUpload = async (e) => {
+  const handleUpload = async (key, fileName, e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.type !== "application/pdf") {
@@ -36,16 +42,11 @@ export default function MenuManager() {
       return;
     }
 
-    setUploading(true);
-
-    // Delete existing file first if there is one
-    if (menuFileName) {
-      await supabase.storage.from("menu").remove([menuFileName]);
-    }
+    setUploadingKey(key);
 
     const { error } = await supabase.storage
       .from("menu")
-      .upload("menu.pdf", file, { upsert: true, contentType: "application/pdf" });
+      .upload(fileName, file, { upsert: true, contentType: "application/pdf" });
 
     if (error) {
       toast.error("Upload failed. Please try again.");
@@ -53,30 +54,21 @@ export default function MenuManager() {
       toast.success("Menu uploaded successfully");
       await load();
     }
-    setUploading(false);
-    // Reset input so same file can be re-uploaded
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    setUploadingKey(null);
+    if (fileInputRefs.current[key]) fileInputRefs.current[key].value = "";
   };
 
-  const handleDelete = async () => {
-    if (!menuFileName) return;
-    if (!window.confirm("Are you sure you want to remove the menu PDF?")) return;
-    setDeleting(true);
-    const { error } = await supabase.storage.from("menu").remove([menuFileName]);
+  const handleDelete = async (key, fileName, label) => {
+    if (!window.confirm(`Are you sure you want to remove the ${label}?`)) return;
+    setDeletingKey(key);
+    const { error } = await supabase.storage.from("menu").remove([fileName]);
     if (error) {
       toast.error("Failed to remove menu");
     } else {
       toast.success("Menu removed");
-      setMenuUrl(null);
-      setMenuFileName(null);
+      setMenus(prev => ({ ...prev, [key]: null }));
     }
-    setDeleting(false);
-  };
-
-  const inputStyle = {
-    backgroundColor: "#f3f2ee", border: "1px solid #d8d6d0",
-    fontFamily: "'Courier New', Courier, monospace", fontSize: "13px",
-    padding: "8px 11px", color: "#0A242C", width: "100%", outline: "none",
+    setDeletingKey(null);
   };
 
   if (loading) return (
@@ -88,68 +80,71 @@ export default function MenuManager() {
   return (
     <div style={{ fontFamily: "'Courier New', Courier, monospace", maxWidth: "600px" }}>
       <div style={{ borderBottom: "1px solid #d8d6d0", paddingBottom: "10px", marginBottom: "24px" }}>
-        <p className="text-xs uppercase tracking-widest" style={{ color: "#777777" }}>Menu PDF</p>
+        <p className="text-xs uppercase tracking-widest" style={{ color: "#777777" }}>Menu PDFs</p>
       </div>
 
-      {/* Current menu */}
-      {menuUrl ? (
-        <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "16px", marginBottom: "20px" }}>
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>Current menu</p>
-              <p className="text-sm" style={{ color: "#0A242C" }}>{menuFileName}</p>
-            </div>
-            <div className="flex gap-2">
-              <a
-                href={menuUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ padding: "7px 14px", backgroundColor: "transparent", color: "#1E4D5A", border: "1px solid #1E4D5A", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "5px" }}
-              >
-                View ↗
-              </a>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                style={{ padding: "7px 10px", backgroundColor: "transparent", color: "#777777", border: "1px solid #d8d6d0", cursor: "pointer", display: "inline-flex", alignItems: "center" }}
-              >
-                {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-              </button>
-            </div>
-          </div>
-          {/* Preview */}
-          <iframe
-            src={menuUrl}
-            title="Menu preview"
-            style={{ width: "100%", height: "400px", border: "1px solid #d8d6d0" }}
-          />
-        </div>
-      ) : (
-        <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px", marginBottom: "20px", textAlign: "center" }}>
-          <p className="text-xs" style={{ color: "#777777" }}>No menu uploaded yet.</p>
-        </div>
-      )}
+      <div className="space-y-8">
+        {MENU_TYPES.map(({ key, fileName, label }) => {
+          const menu = menus[key];
+          const isUploading = uploadingKey === key;
+          const isDeleting = deletingKey === key;
 
-      {/* Upload */}
-      <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "20px" }}>
-        <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>
-          {menuUrl ? "Replace menu" : "Upload menu"}
-        </p>
-        <p className="text-xs mb-4" style={{ color: "#777777" }}>PDF files only. Uploading a new file will replace the existing one.</p>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="application/pdf"
-          onChange={handleUpload}
-          style={{ display: "none" }}
-          id="menu-upload"
-        />
-        <label
-          htmlFor="menu-upload"
-          style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "8px 20px", backgroundColor: uploading ? "#0A242C" : "#1E4D5A", color: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: uploading ? "not-allowed" : "pointer", opacity: uploading ? 0.7 : 1, transition: "background-color 0.15s" }}
-        >
-          {uploading ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Uploading...</> : <><Upload className="h-3.5 w-3.5" /> {menuUrl ? "Replace PDF" : "Upload PDF"}</>}
-        </label>
+          return (
+            <div key={key}>
+              <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#0A242C" }}>{label}</p>
+
+              {menu ? (
+                <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "16px", marginBottom: "12px" }}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#777777" }}>Current file</p>
+                      <p className="text-sm" style={{ color: "#0A242C" }}>{menu.fileName}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <a
+                        href={menu.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ padding: "7px 14px", backgroundColor: "transparent", color: "#1E4D5A", border: "1px solid #1E4D5A", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "5px" }}
+                      >
+                        View ↗
+                      </a>
+                      <button
+                        onClick={() => handleDelete(key, fileName, label)}
+                        disabled={isDeleting}
+                        style={{ padding: "7px 10px", backgroundColor: "transparent", color: "#777777", border: "1px solid #d8d6d0", cursor: "pointer", display: "inline-flex", alignItems: "center" }}
+                      >
+                        {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "20px", marginBottom: "12px", textAlign: "center" }}>
+                  <p className="text-xs" style={{ color: "#777777" }}>No {label.toLowerCase()} uploaded yet.</p>
+                </div>
+              )}
+
+              <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "16px" }}>
+                <p className="text-xs mb-3" style={{ color: "#777777" }}>PDF files only. Uploading a new file will replace the existing one.</p>
+                <input
+                  ref={el => (fileInputRefs.current[key] = el)}
+                  type="file"
+                  accept="application/pdf"
+                  onChange={e => handleUpload(key, fileName, e)}
+                  style={{ display: "none" }}
+                  id={`menu-upload-${key}`}
+                />
+                <label
+                  htmlFor={`menu-upload-${key}`}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "8px 20px", backgroundColor: isUploading ? "#0A242C" : "#1E4D5A", color: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", cursor: isUploading ? "not-allowed" : "pointer", opacity: isUploading ? 0.7 : 1, transition: "background-color 0.15s" }}
+                >
+                  {isUploading ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Uploading...</> : <><Upload className="h-3.5 w-3.5" /> {menu ? "Replace PDF" : "Upload PDF"}</>}
+                </label>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

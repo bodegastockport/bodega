@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 import SEO from "../components/SEO";
 
-const PDFJS_CDN = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
-const PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+const MENU_TYPES = [
+  { key: "drinks", fileName: "drinks-menu.pdf", label: "Drinks Menu" },
+  { key: "food", fileName: "food-menu.pdf", label: "Food Menu" },
+];
 
 const schema = {
   "@context": "https://schema.org",
@@ -36,72 +38,28 @@ const schema = {
   }
 }
 
-function loadPdfJs() {
-  return new Promise((resolve, reject) => {
-    if (window.pdfjsLib) { resolve(window.pdfjsLib); return; }
-    const script = document.createElement("script");
-    script.src = PDFJS_CDN;
-    script.onload = () => {
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
-      resolve(window.pdfjsLib);
-    };
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
-}
-
 export default function Menu() {
-  const [menuUrl, setMenuUrl] = useState(null);
+  const [menus, setMenus] = useState({});
   const [loading, setLoading] = useState(true);
-  const [rendering, setRendering] = useState(false);
-  const [renderError, setRenderError] = useState(false);
-  const desktopCanvasRef = useRef(null);
-  const mobileCanvasRef = useRef(null);
 
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase.storage.from("menu").list("");
-      if (data && data.length > 0) {
-        const file = data.find(f => f.name.endsWith(".pdf")) || data[0];
-        const { data: urlData } = supabase.storage.from("menu").getPublicUrl(file.name);
-        setMenuUrl(urlData.publicUrl);
-      }
+      const next = {};
+      MENU_TYPES.forEach(({ key, fileName }) => {
+        const file = data?.find(f => f.name === fileName);
+        if (file) {
+          const { data: urlData } = supabase.storage.from("menu").getPublicUrl(fileName);
+          next[key] = urlData.publicUrl;
+        } else {
+          next[key] = null;
+        }
+      });
+      setMenus(next);
       setLoading(false);
     };
     load();
   }, []);
-
-  useEffect(() => {
-    if (!menuUrl) return;
-    const render = async () => {
-      setRendering(true);
-      setRenderError(false);
-      try {
-        const pdfjsLib = await loadPdfJs();
-        const pdf = await pdfjsLib.getDocument(menuUrl).promise;
-        const page = await pdf.getPage(1);
-
-        const renderToCanvas = async (canvas) => {
-          if (!canvas) return;
-          const containerWidth = canvas.parentElement?.clientWidth || 600;
-          const viewport = page.getViewport({ scale: 1 });
-          const scale = containerWidth / viewport.width;
-          const scaled = page.getViewport({ scale });
-          canvas.width = scaled.width;
-          canvas.height = scaled.height;
-          await page.render({ canvasContext: canvas.getContext("2d"), viewport: scaled }).promise;
-        };
-
-        await renderToCanvas(desktopCanvasRef.current);
-        await renderToCanvas(mobileCanvasRef.current);
-      } catch (e) {
-        console.error("PDF render failed:", e);
-        setRenderError(true);
-      }
-      setRendering(false);
-    };
-    render();
-  }, [menuUrl]);
 
   if (loading) {
     return (
@@ -111,39 +69,24 @@ export default function Menu() {
     );
   }
 
-  const DownloadBtn = () => menuUrl ? (
+  const MenuButton = ({ url, label }) => url ? (
     <a
-      href={menuUrl}
+      href={url}
       target="_blank"
       rel="noopener noreferrer"
-      style={{ display: "inline-block", padding: "7px 16px", backgroundColor: "#1E4D5A", color: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", textDecoration: "none" }}
+      style={{ display: "inline-block", padding: "10px 22px", backgroundColor: "#1E4D5A", color: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.08em", textDecoration: "none" }}
       onMouseEnter={e => e.currentTarget.style.backgroundColor = "#0A242C"}
       onMouseLeave={e => e.currentTarget.style.backgroundColor = "#1E4D5A"}
     >
-      View menu ↗
+      {label} ↗
     </a>
-  ) : null;
-
-  const NoMenu = () => (
-    <div className="flex items-center justify-center" style={{ flex: 1, minHeight: "300px" }}>
-      <p className="text-xs" style={{ color: "#0A242C" }}>Menu coming soon.</p>
-    </div>
+  ) : (
+    <span
+      style={{ display: "inline-block", padding: "10px 22px", backgroundColor: "transparent", color: "#777777", border: "1px solid #d8d6d0", fontFamily: "'Courier New', Courier, monospace", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.08em" }}
+    >
+      {label} — coming soon
+    </span>
   );
-
-  const PDFContent = ({ canvasRef }) => {
-    if (rendering) return (
-      <div className="flex items-center justify-center" style={{ flex: 1 }}>
-        <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#1E4D5A" }} />
-      </div>
-    );
-    if (renderError) return (
-      <div className="flex flex-col items-center justify-center gap-4" style={{ flex: 1, minHeight: "300px" }}>
-        <p className="text-xs" style={{ color: "#0A242C" }}>Unable to display PDF.</p>
-        <DownloadBtn />
-      </div>
-    );
-    return <canvas ref={canvasRef} style={{ width: "100%", display: "block" }} />;
-  };
 
   return (
     <>
@@ -163,7 +106,10 @@ export default function Menu() {
               <p className="text-sm leading-relaxed mb-8" style={{ color: "#0A242C" }}>
                 Our wine list changes regularly, paired with proper charcuterie and cheese boards.
               </p>
-              <DownloadBtn />
+              <div className="flex gap-3 flex-wrap">
+                <MenuButton url={menus.drinks} label="Drinks Menu" />
+                <MenuButton url={menus.food} label="Food Menu" />
+              </div>
             </div>
           </div>
           <div style={{ position: "relative" }}>
@@ -199,7 +145,10 @@ export default function Menu() {
             <p className="text-sm leading-relaxed mb-8" style={{ color: "#0A242C" }}>
               Our wine list changes regularly, paired with proper charcuterie and cheese boards.
             </p>
-            <DownloadBtn />
+            <div className="flex gap-3 flex-wrap">
+              <MenuButton url={menus.drinks} label="Drinks Menu" />
+              <MenuButton url={menus.food} label="Food Menu" />
+            </div>
           </div>
         </div>
       </div>
