@@ -18,6 +18,9 @@ export default function CellarClubCancellation() {
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -47,8 +50,14 @@ export default function CellarClubCancellation() {
     : null;
   const withinCoolingOff = daysSinceStart !== null && daysSinceStart <= 14;
 
+  const today = format(new Date(), "d MMMM yyyy");
+  const orderedOn = member?.membership_start ? format(parseISO(member.membership_start), "d MMMM yyyy") : "";
+
+  const formValid = name.trim().length > 0 && address.trim().length > 0 && confirmed;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formValid) return;
     setSubmitting(true);
     setError(null);
 
@@ -56,7 +65,8 @@ export default function CellarClubCancellation() {
       .from("cellar_cancellation_requests")
       .insert({
         member_id: member.id,
-        name: member.name,
+        name,
+        address,
         email: member.email,
         membership_tier: member.membership_tier,
         membership_start: member.membership_start,
@@ -93,7 +103,7 @@ export default function CellarClubCancellation() {
       <div style={{ maxWidth: "560px", margin: "0 auto", padding: "64px 36px" }}>
 
         <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#0A242C", opacity: 0.5 }}>Cellar Club</p>
-        <h1 className="text-2xl mb-6" style={{ color: "#1E4D5A", fontWeight: 400 }}>14-Day Cancellation Request</h1>
+        <h1 className="text-2xl mb-6" style={{ color: "#1E4D5A", fontWeight: 400 }}>Model Cancellation Form</h1>
 
         {submitted ? (
           <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
@@ -122,39 +132,68 @@ export default function CellarClubCancellation() {
           </div>
         ) : (
           <>
-            <p className="text-sm leading-relaxed mb-6" style={{ color: "#0A242C" }}>
-              As you're within your first 14 days of membership, you're entitled to cancel and receive a full
-              refund under clause 11.1 of the Cellar Club Terms & Conditions. Submitting this form will notify
-              Bodega of your decision to cancel — you don't need to do anything else.
-            </p>
-
-            <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "20px", marginBottom: "20px" }}>
-              <div className="space-y-3">
-                <div>
-                  <label style={labelStyle}>Name</label>
-                  <p className="text-sm" style={{ color: "#0A242C" }}>{member.name}</p>
-                </div>
-                <div>
-                  <label style={labelStyle}>Email</label>
-                  <p className="text-sm" style={{ color: "#0A242C" }}>{member.email}</p>
-                </div>
-                <div>
-                  <label style={labelStyle}>Membership tier</label>
-                  <p className="text-sm" style={{ color: "#0A242C" }}>{member.membership_tier || "—"}</p>
-                </div>
-                <div>
-                  <label style={labelStyle}>Membership start</label>
-                  <p className="text-sm" style={{ color: "#0A242C" }}>
-                    {member.membership_start ? format(parseISO(member.membership_start), "d MMMM yyyy") : "—"}
-                  </p>
-                </div>
-              </div>
+            <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "20px", marginBottom: "24px" }}>
+              <p className="text-xs italic mb-4" style={{ color: "#777777" }}>
+                (Complete and return this form only if you wish to withdraw from the contract)
+              </p>
+              <p className="text-sm mb-3" style={{ color: "#0A242C" }}>To Bodega Wine Vault Limited</p>
+              <p className="text-sm leading-relaxed mb-3" style={{ color: "#0A242C" }}>
+                I/We hereby give notice that I/We cancel my/our contract for the supply of the Cellar Club
+                Membership service ({member.membership_tier || "—"}).
+              </p>
+              <p className="text-sm" style={{ color: "#0A242C" }}>Ordered on / received on: {orderedOn}</p>
             </div>
 
             <form onSubmit={handleSubmit}>
+              <div className="space-y-4 mb-5">
+                <div>
+                  <label style={labelStyle}>Name of consumer(s) *</label>
+                  <input
+                    style={inputStyle}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Type your full name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Address of consumer(s) *</label>
+                  <textarea
+                    style={{ ...inputStyle, minHeight: "64px", resize: "none" }}
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Type your full address"
+                    required
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Date</label>
+                  <p className="text-sm" style={{ color: "#0A242C" }}>{today}</p>
+                </div>
+              </div>
+
+              <p className="text-xs mb-5" style={{ color: "#777777" }}>
+                Signature of consumer(s) is only required if this form is notified on paper. As you are
+                submitting this online, please confirm the statement below instead.
+              </p>
+
+              <div className="flex items-start gap-2 mb-6">
+                <input
+                  type="checkbox"
+                  id="confirm"
+                  checked={confirmed}
+                  onChange={(e) => setConfirmed(e.target.checked)}
+                  style={{ marginTop: "2px" }}
+                  required
+                />
+                <label htmlFor="confirm" className="text-sm leading-relaxed" style={{ color: "#0A242C", cursor: "pointer" }}>
+                  I confirm that the details above are accurate and that this constitutes my notice of cancellation.
+                </label>
+              </div>
+
               <label style={labelStyle}>Anything you'd like to add? (optional)</label>
               <textarea
-                style={{ ...inputStyle, minHeight: "88px", resize: "none", marginBottom: "16px" }}
+                style={{ ...inputStyle, minHeight: "72px", resize: "none", marginBottom: "16px" }}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Optional message..."
@@ -164,12 +203,13 @@ export default function CellarClubCancellation() {
 
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || !formValid}
                 style={{
                   padding: "9px 22px", backgroundColor: "#1E4D5A", color: "#f3f2ee",
                   border: "none", fontFamily: "'Courier New', Courier, monospace",
                   fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em",
-                  cursor: submitting ? "not-allowed" : "pointer", opacity: submitting ? 0.6 : 1,
+                  cursor: submitting || !formValid ? "not-allowed" : "pointer",
+                  opacity: submitting || !formValid ? 0.5 : 1,
                   display: "inline-flex", alignItems: "center", gap: "6px",
                 }}
               >
