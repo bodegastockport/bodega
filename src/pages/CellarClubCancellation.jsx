@@ -103,7 +103,7 @@ export default function CellarClubCancellation() {
       <div style={{ maxWidth: "560px", margin: "0 auto", padding: "64px 36px" }}>
 
         <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#0A242C", opacity: 0.5 }}>Cellar Club</p>
-        <h1 className="text-2xl mb-6" style={{ color: "#1E4D5A", fontWeight: 400 }}>Model Cancellation Form</h1>
+        <h1 className="text-2xl mb-6" style={{ color: "#1E4D5A", fontWeight: 400 }}>Cancellation Form</h1>
 
         {submitted ? (
           <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
