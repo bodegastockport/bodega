@@ -26,7 +26,6 @@ import MyCellar from "./pages/MyCellar";
 import CellarClub from "./pages/CellarClub";
 import CellarClubTerms from "./pages/CellarClubTerms";
 import CellarClubSuccess from "./pages/CellarClubSuccess";
-import CellarClubCancellation from "./pages/CellarClubCancellation";
 import WeirMillOffer from "./pages/WeirMillOffer";
 import GiftCards from "./pages/GiftCards";
 import ScanBottle from "./pages/ScanBottle";
@@ -35,7 +34,7 @@ import ComingSoon from "./pages/ComingSoon";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 
-const BYPASS_PATHS = ["/cellar-club/success", "/cellar-club/terms", "/cellar-club/cancellation-request", "/login", "/my-cellar", "/scan", "/reset-password", "/auth/confirm", "/events/success"];
+const BYPASS_PATHS = ["/cellar-club/success", "/cellar-club/terms", "/login", "/my-cellar", "/scan", "/reset-password", "/auth/confirm", "/events/success"];
 
 const Spinner = () => (
   <div className="fixed inset-0 flex items-center justify-center" style={{ backgroundColor: "#f3f2ee" }}>
@@ -78,7 +77,6 @@ const AppRoutes = () => {
         <Route path="/cellar-club" element={<CellarClub />} />
         <Route path="/cellar-club/terms" element={<CellarClubTerms />} />
         <Route path="/cellar-club/success" element={<CellarClubSuccess />} />
-        <Route path="/cellar-club/cancellation-request" element={<CellarClubCancellation />} />
         <Route path="/weir-mill" element={<WeirMillOffer />} />
         <Route path="/gift-cards" element={<GiftCards />} />
         <Route path="/gallery" element={<Gallery />} />

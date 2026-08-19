@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Loader2, X } from "lucide-react";
-import { format, parseISO, differenceInDays } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
 import BookingForm from "../components/BookingForm";
 
@@ -118,15 +118,6 @@ export default function MyCellar() {
   const isCorporate = member ? Object.prototype.hasOwnProperty.call(CORPORATE_LIMITS, member.membership_tier) : false;
   const slotLimit = member ? (CORPORATE_LIMITS[member.membership_tier] || 0) : 0;
 
-  const daysSinceStart = member?.membership_start
-    ? differenceInDays(new Date(), parseISO(member.membership_start))
-    : null;
-  const withinCoolingOff = daysSinceStart !== null && daysSinceStart <= 14;
-
-  const termsHref = isCorporate
-    ? "/cellar-club/terms?type=corporate"
-    : `/cellar-club/terms?type=individual&version=${member?.accepted_tc_version || "v1"}`;
-
   const isLocked = (row) => {
     if (!row?.last_changed_at) return false;
     const unlockTime = new Date(row.last_changed_at).getTime() + 28 * 24 * 60 * 60 * 1000;
@@ -239,7 +230,7 @@ export default function MyCellar() {
       };
     });
 
-  const tabs = [["inventory", "My vault"], ["history", "History"], ["membership", "Membership"], ["terms", "Terms & Conditions"]];
+  const tabs = [["inventory", "My vault"], ["history", "History"], ["membership", "Membership"]];
   if (isCorporate) tabs.push(["authorised", "Authorised users"]);
 
   return (
@@ -471,49 +462,6 @@ export default function MyCellar() {
                 </div>
               </>
             )}
-          </div>
-        )}
-
-        {activeTab === "terms" && (
-          <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
-            <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777" }}>Terms & Conditions</p>
-
-            <p className="text-sm leading-relaxed mb-4" style={{ color: "#0A242C" }}>
-              You can view the {isCorporate ? "Corporate" : "Individual"} Cellar Club Terms & Conditions you agreed to below.
-            </p>
-
-            <a
-              href={termsHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ display: "inline-block", padding: "9px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", textDecoration: "none", marginBottom: "28px" }}
-            >
-              View Terms & Conditions →
-            </a>
-
-            <div style={{ borderTop: "1px solid #d8d6d0", paddingTop: "24px" }}>
-              <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#777777" }}>14-day cancellation</p>
-
-              {withinCoolingOff ? (
-                <>
-                  <p className="text-sm leading-relaxed mb-4" style={{ color: "#0A242C" }}>
-                    As you're within your first 14 days of membership, you're entitled to cancel and receive a
-                    full refund. Use the button below to let us know.
-                  </p>
-                  <a
-                    href="/cellar-club/cancellation-request"
-                    style={{ display: "inline-block", padding: "9px 20px", backgroundColor: "transparent", color: "#0A242C", border: "1px solid #0A242C", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", textDecoration: "none" }}
-                  >
-                    Start a cancellation request →
-                  </a>
-                </>
-              ) : (
-                <p className="text-sm leading-relaxed" style={{ color: "#777777" }}>
-                  The 14-day cooling-off period, during which you can cancel and receive a full refund, has now
-                  passed. If you'd like to cancel your membership, you can do this from the Membership tab above.
-                </p>
-              )}
-            </div>
           </div>
         )}
 
