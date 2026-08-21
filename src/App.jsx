@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClientInstance } from "@/lib/query-client";
@@ -31,11 +30,8 @@ import WeirMillOffer from "./pages/WeirMillOffer";
 import GiftCards from "./pages/GiftCards";
 import ScanBottle from "./pages/ScanBottle";
 import ScanEvent from "./pages/ScanEvent";
-import ComingSoon from "./pages/ComingSoon";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
-
-const BYPASS_PATHS = ["/cellar-club/success", "/cellar-club/terms", "/cellar-club/cancellation-request", "/login", "/my-cellar", "/scan", "/reset-password", "/auth/confirm", "/events/success"];
 
 const Spinner = () => (
   <div className="fixed inset-0 flex items-center justify-center" style={{ backgroundColor: "#f3f2ee" }}>
@@ -46,26 +42,8 @@ const Spinner = () => (
 
 const AppRoutes = () => {
   const { isLoadingAuth } = useAuth();
-  const [previewEnabled, setPreviewEnabled] = useState(false);
-  const [checkingPreview, setCheckingPreview] = useState(true);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const preview = params.get("preview");
-    if (preview === "bodega2026") {
-      localStorage.setItem("bodega_preview", "true");
-      setPreviewEnabled(true);
-      setCheckingPreview(false);
-      return;
-    }
-    if (localStorage.getItem("bodega_preview") === "true") setPreviewEnabled(true);
-    setCheckingPreview(false);
-  }, []);
-
-  if (isLoadingAuth || checkingPreview) return <Spinner />;
-
-  const isBypass = BYPASS_PATHS.some(p => window.location.pathname.startsWith(p));
-  if (!previewEnabled && !isBypass) return <ComingSoon />;
+  if (isLoadingAuth) return <Spinner />;
 
   return (
     <Routes>
