@@ -79,7 +79,10 @@ export default function CellarMemberDetail() {
     setEditingField(null);
   };
 
-  const isAdmin = user?.user_metadata?.role === "admin";
+  const role      = user?.user_metadata?.role;
+  const isAdmin   = role === "admin";
+  const isTeam    = role === "team";
+  const hasAccess = isAdmin || isTeam;
   const isCorporate = member ? Object.prototype.hasOwnProperty.call(CORPORATE_LIMITS, member.membership_tier) : false;
   const slotLimit = member ? (CORPORATE_LIMITS[member.membership_tier] || 0) : 0;
 
@@ -149,6 +152,23 @@ export default function CellarMemberDetail() {
     }
     setSavingSlot(false);
   };
+
+  if (!hasAccess) {
+    return (
+      <div style={{ backgroundColor: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 24px" }}>
+        <div style={{ textAlign: "center", maxWidth: "360px" }}>
+          <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: "#777777", marginBottom: "12px" }}>Access denied</p>
+          <h1 style={{ fontSize: "18px", color: "#1E4D5A", fontWeight: 400, marginBottom: "10px" }}>You don't have admin access</h1>
+          <p style={{ fontSize: "12px", color: "#777777", lineHeight: "1.7", marginBottom: "24px" }}>
+            Your account hasn't been granted admin access. Contact the Bodega team if you believe this is an error.
+          </p>
+          <a href="/" style={{ display: "inline-block", padding: "8px 20px", backgroundColor: "transparent", color: "#1E4D5A", border: "1px solid #1E4D5A", borderRadius: "4px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", textDecoration: "none" }}>
+            Back to site
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) return (
     <div className="flex justify-center py-24">
