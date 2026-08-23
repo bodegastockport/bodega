@@ -10,6 +10,7 @@ const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", 
 const WALKIN_CAP_SEATS = 14;
 const FALLBACK_INTERVAL = 30;
 const FALLBACK_DURATION = 30;
+const MIN_BOOKING_MINUTES = 60;
 
 const inputStyle = {
   backgroundColor: "#f3f2ee",
@@ -39,13 +40,13 @@ function timeToMinutes(t) {
   return h * 60 + m;
 }
 
-function generateStartTimes(from, to, interval, holdDuration) {
+function generateStartTimes(from, to, interval, minHoldDuration) {
   const slots = [];
   const [fromH, fromM] = from.split(":").map(Number);
   const [toH, toM] = to.split(":").map(Number);
   const fromMins = fromH * 60 + fromM;
   const toMins = toH * 60 + toM;
-  const lastStart = toMins - holdDuration;
+  const lastStart = toMins - minHoldDuration;
   for (let m = fromMins; m <= lastStart; m += interval) {
     const h = Math.floor(m / 60).toString().padStart(2, "0");
     const min = (m % 60).toString().padStart(2, "0");
@@ -54,12 +55,18 @@ function generateStartTimes(from, to, interval, holdDuration) {
   return slots;
 }
 
-function isOverlapping(existingStart, proposedStart, durationMins) {
-  const existingStartMins = timeToMinutes(existingStart);
-  const existingEndMins = existingStartMins + durationMins;
-  const proposedStartMins = timeToMinutes(proposedStart);
-  const proposedEndMins = proposedStartMins + durationMins;
-  return existingStartMins < proposedEndMins && proposedStartMins < existingEndMins;
+function effectiveDuration(startTime, closingMins, configuredDuration) {
+  const startMins = timeToMinutes(startTime);
+  const remaining = closingMins - startMins;
+  return Math.max(MIN_BOOKING_MINUTES, Math.min(configuredDuration, remaining));
+}
+
+function isOverlapping(startA, durationA, startB, durationB) {
+  const aStart = timeToMinutes(startA);
+  const aEnd = aStart + durationA;
+  const bStart = timeToMinutes(startB);
+  const bEnd = bStart + durationB;
+  return aStart < bEnd && bStart < aEnd;
 }
 
 export default function BookingForm({ onSuccess, member = null, bottleOptions = [] }) {
@@ -127,6 +134,7 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
 
       const dateStr = format(form.date, "yyyy-MM-dd");
       const now = new Date();
+      const closingMins = timeToMinutes(dayConfig.to);
 
       const { data: allTables } = await supabase.from('tables').select().eq('active', true);
       const { data: overrides } = await supabase.from('table_date_overrides').select('table_id').eq('date', dateStr).eq('available', false);
@@ -140,7 +148,7 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
         .eq('date', dateStr)
         .in('status', ['confirmed']);
 
-      const baseTimes = generateStartTimes(dayConfig.from, dayConfig.to, bookingInterval, slotDuration);
+      const baseTimes = generateStartTimes(dayConfig.from, dayConfig.to, bookingInterval, MIN_BOOKING_MINUTES);
 
       const slotsInfo = baseTimes.map(slot => {
         if (minNoticeHours > 0) {
@@ -151,7 +159,12 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
           if (slotDateTime <= cutoff) return { time: slot, available: false, maxCapacity: 0 };
         }
 
-        const overlappingReservations = (existingReservations || []).filter(r => isOverlapping(r.time, slot, slotDuration));
+        const slotDur = effectiveDuration(slot, closingMins, slotDuration);
+
+        const overlappingReservations = (existingReservations || []).filter(r => {
+          const rDur = effectiveDuration(r.time, closingMins, slotDuration);
+          return isOverlapping(r.time, rDur, slot, slotDur);
+        });
         const bookedTableIds = overlappingReservations.map(r => r.table_id);
         const freeTables = tables.filter(t => !bookedTableIds.includes(t.id));
 
@@ -195,6 +208,10 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
 
     const dateStr = format(form.date, "yyyy-MM-dd");
     const partySize = Number(form.party_size);
+    const dayName = DAYS[form.date.getDay()];
+    const dayConfig = openDays[dayName];
+    const closingMins = dayConfig ? timeToMinutes(dayConfig.to) : timeToMinutes(form.time) + slotDuration;
+    const formDur = effectiveDuration(form.time, closingMins, slotDuration);
 
     if (minNoticeHours > 0) {
       const [slotH, slotM] = form.time.split(":").map(Number);
@@ -214,7 +231,10 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
     const { data: tables } = await supabase.from('tables').select().eq('active', true).gte('capacity', partySize).order('capacity', { ascending: true });
     const { data: allReservationsForDate } = await supabase.from('reservations').select('table_id, party_size, time').eq('date', dateStr).in('status', ['confirmed']);
 
-    const bookedAtSlot = (allReservationsForDate || []).filter(r => isOverlapping(r.time, form.time, slotDuration));
+    const bookedAtSlot = (allReservationsForDate || []).filter(r => {
+      const rDur = effectiveDuration(r.time, closingMins, slotDuration);
+      return isOverlapping(r.time, rDur, form.time, formDur);
+    });
     const bookedIds = bookedAtSlot.map(r => r.table_id);
 
     if (walkinCapEnabled) {
