@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { parseISO, isToday, subDays, isAfter, startOfDay } from "date-fns";
-import { Search, Loader2, CalendarDays } from "lucide-react";
+import { Search, Loader2, CalendarDays, Plus } from "lucide-react";
 import ReservationCard from "../components/ReservationCard";
 import AdminCalendarView from "../components/AdminCalendarView";
+import AdminBookingForm from "../components/AdminBookingForm";
 import EventsManager from "../components/cms/EventsManager";
 import GalleryManager from "../components/cms/GalleryManager";
 import HireEnquiriesManager from "../components/cms/HireEnquiriesManager";
@@ -133,6 +134,7 @@ export default function Admin() {
   const [tab, setTab]                   = useState("reservations");
   const [resTab, setResTab]             = useState("upcoming");
   const [view, setView]                 = useState("list");
+  const [showAddForm, setShowAddForm]   = useState(false);
 
   const role      = user?.user_metadata?.role;
   const isAdmin   = role === "admin";
@@ -156,6 +158,11 @@ export default function Admin() {
   };
 
   useEffect(() => { load(); }, []);
+
+  const handleBookingAdded = () => {
+    setShowAddForm(false);
+    load();
+  };
 
   if (!hasAccess) {
     return (
@@ -234,6 +241,12 @@ export default function Admin() {
                 />
               </div>
               <div className="flex gap-2">
+                <button
+                  onClick={() => setShowAddForm((v) => !v)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 14px", backgroundColor: showAddForm ? "#0A242C" : "#1E4D5A", color: "#f3f2ee", border: "1px solid", borderColor: showAddForm ? "#0A242C" : "#1E4D5A", borderRadius: "6px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer", transition: "all 0.15s" }}
+                >
+                  <Plus className="h-3.5 w-3.5" /> Add booking
+                </button>
                 {["list", "calendar"].map((v) => (
                   <button key={v} onClick={() => setView(v)} style={{ padding: "6px 14px", backgroundColor: view === v ? "#1E4D5A" : "transparent", color: view === v ? "#f3f2ee" : "#777777", border: "1px solid", borderColor: view === v ? "#1E4D5A" : "#d8d6d0", borderRadius: "6px", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", cursor: "pointer", transition: "all 0.15s" }}>
                     {v}
@@ -241,6 +254,10 @@ export default function Admin() {
                 ))}
               </div>
             </div>
+
+            {showAddForm && (
+              <AdminBookingForm onAdded={handleBookingAdded} onCancel={() => setShowAddForm(false)} />
+            )}
 
             {view === "calendar" ? (
               <AdminCalendarView reservations={reservations} onUpdate={load} />
