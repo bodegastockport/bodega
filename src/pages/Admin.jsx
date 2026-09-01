@@ -136,7 +136,7 @@ export default function Admin() {
   const [view, setView]                 = useState("list");
   const [showAddForm, setShowAddForm]   = useState(false);
 
-  const role      = user?.user_metadata?.role;
+  const role      = user?.app_metadata?.role;
   const isAdmin   = role === "admin";
   const isTeam    = role === "team";
   const hasAccess = isAdmin || isTeam;

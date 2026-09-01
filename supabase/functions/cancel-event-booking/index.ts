@@ -17,6 +17,34 @@ Deno.serve(async (req) => {
       Deno.env.get("SERVICE_ROLE_KEY")!
     );
 
+    const authHeader = req.headers.get("Authorization") || "";
+    const callerToken = authHeader.replace("Bearer ", "").trim();
+
+    if (!callerToken) {
+      return new Response(JSON.stringify({ error: "Not authenticated" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: callerData, error: callerErr } = await supabase.auth.getUser(callerToken);
+
+    if (callerErr || !callerData?.user) {
+      return new Response(JSON.stringify({ error: "Not authenticated" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const callerRole = callerData.user.user_metadata?.role;
+
+    if (callerRole !== "admin" && callerRole !== "team") {
+      return new Response(JSON.stringify({ error: "Staff access only" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { booking_id } = await req.json();
 
     if (!booking_id) {

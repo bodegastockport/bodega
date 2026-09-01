@@ -91,6 +91,50 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (meta.marketing === "true") {
+      const mailchimpKey = Deno.env.get("MAILCHIMP_API_KEY");
+      const mailchimpAudienceId = Deno.env.get("MAILCHIMP_AUDIENCE_ID");
+
+      if (mailchimpKey && mailchimpAudienceId) {
+        try {
+          const serverPrefix = mailchimpKey.split("-")[1];
+          const isCorporateTier = meta.tier.startsWith("Corporate");
+          const nameParts = meta.name.trim().split(" ");
+          const firstName = nameParts[0] || "";
+          const lastName = nameParts.slice(1).join(" ") || "";
+
+          const mailchimpRes = await fetch(
+            `https://${serverPrefix}.api.mailchimp.com/3.0/lists/${mailchimpAudienceId}/members`,
+            {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${mailchimpKey}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email_address: meta.email,
+                status: "subscribed",
+                merge_fields: {
+                  FNAME: firstName,
+                  LNAME: lastName,
+                },
+                tags: [meta.tier, isCorporateTier ? "Corporate" : "Individual"],
+              }),
+            }
+          );
+
+          if (!mailchimpRes.ok) {
+            const mailchimpErrBody = await mailchimpRes.text();
+            console.error("Mailchimp subscribe failed:", mailchimpRes.status, mailchimpErrBody);
+          }
+        } catch (mailchimpErr) {
+          console.error("Mailchimp subscribe threw:", mailchimpErr);
+        }
+      } else {
+        console.error("Mailchimp secrets missing — skipped subscribe for", meta.email);
+      }
+    }
+
     const resendKey = Deno.env.get("RESEND_API_KEY");
     const notifyEmail = Deno.env.get("BODEGA_NOTIFY_EMAIL");
     const priceId = meta.price_id || "";

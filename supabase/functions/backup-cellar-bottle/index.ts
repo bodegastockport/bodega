@@ -92,6 +92,16 @@ function resolveSlotReference(slotId: string | null, slots: Array<{ id: string; 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const webhookSecret = Deno.env.get("DB_WEBHOOK_SECRET");
+  const providedSecret = req.headers.get("x-webhook-secret");
+
+  if (!webhookSecret || providedSecret !== webhookSecret) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const payload   = await req.json();
     const eventType = payload.type;
@@ -102,6 +112,24 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SERVICE_ROLE_KEY")!
     );
+
+    const dedupeKey = eventType === "DELETE"
+      ? `${bottle.id}:delete`
+      : `${bottle.id}:${bottle.updated_at || bottle.created_at || ""}`;
+
+    const { error: dedupeErr } = await supabase
+      .from("webhook_dedup")
+      .insert({ id: dedupeKey });
+
+    if (dedupeErr) {
+      if (dedupeErr.code === "23505") {
+        return new Response(JSON.stringify({ success: true, skipped: "duplicate" }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      console.error("Dedupe check failed, continuing anyway:", dedupeErr);
+    }
 
     let slotReference = "";
     if (bottle.slot_id) {

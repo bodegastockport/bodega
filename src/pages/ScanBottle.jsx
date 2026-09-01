@@ -16,7 +16,7 @@ export default function ScanBottle() {
   const [done,     setDone]     = useState(false);
   const [error,    setError]    = useState(null);
 
-  const role      = authUser?.user_metadata?.role;
+  const role      = authUser?.app_metadata?.role;
   const hasAccess = role === "admin" || role === "team";
 
   useEffect(() => {

@@ -10,6 +10,7 @@
 // N:stripe_subscription_id | O:notes | P:created_at | Q:updated_at
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -144,10 +145,41 @@ async function dedupeMemberRows(token: string, sheetId: string, sheetIdNum: numb
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const webhookSecret = Deno.env.get("DB_WEBHOOK_SECRET");
+  const providedSecret = req.headers.get("x-webhook-secret");
+
+  if (!webhookSecret || providedSecret !== webhookSecret) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const payload = await req.json();
     const member  = payload.record;
     if (!member) throw new Error("No record in webhook payload");
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SERVICE_ROLE_KEY")!
+    );
+
+    const dedupeKey = `${member.id}:${member.updated_at || member.created_at || ""}`;
+
+    const { error: dedupeErr } = await supabase
+      .from("webhook_dedup")
+      .insert({ id: dedupeKey });
+
+    if (dedupeErr) {
+      if (dedupeErr.code === "23505") {
+        return new Response(JSON.stringify({ success: true, skipped: "duplicate" }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      console.error("Dedupe check failed, continuing anyway:", dedupeErr);
+    }
 
     const serviceAccount = JSON.parse(Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY") || "");
     const sheetId        = Deno.env.get("GOOGLE_SHEET_ID") || "";

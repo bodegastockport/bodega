@@ -45,7 +45,14 @@ Deno.serve(async (req) => {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.CheckoutSession;
-    const meta = session.metadata!;
+    const meta = session.metadata || {};
+
+    if (!meta.event_id) {
+      console.log("Ignoring checkout session, not an event booking:", session.id);
+      return new Response(JSON.stringify({ received: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { data: existing } = await supabase
       .from("event_bookings")

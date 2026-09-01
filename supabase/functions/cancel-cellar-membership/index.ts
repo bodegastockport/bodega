@@ -12,25 +12,37 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { member_id } = await req.json();
-
-    if (!member_id) {
-      return new Response(JSON.stringify({ error: "member_id required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SERVICE_ROLE_KEY")!
     );
 
+    const authHeader = req.headers.get("Authorization") || "";
+    const callerToken = authHeader.replace("Bearer ", "").trim();
+
+    if (!callerToken) {
+      return new Response(JSON.stringify({ error: "Not authenticated" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: callerData, error: callerErr } = await supabase.auth.getUser(callerToken);
+
+    if (callerErr || !callerData?.user?.email) {
+      return new Response(JSON.stringify({ error: "Not authenticated" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const callerEmail = callerData.user.email;
+
     const { data: member, error: fetchErr } = await supabase
       .from("cellar_members")
       .select("id, name, email, stripe_subscription_id, status")
-      .eq("id", member_id)
-      .single();
+      .eq("email", callerEmail)
+      .maybeSingle();
 
     if (fetchErr || !member) {
       return new Response(JSON.stringify({ error: "Member not found" }), {
@@ -38,6 +50,8 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const member_id = member.id;
 
     if (member.stripe_subscription_id) {
       const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
