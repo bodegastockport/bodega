@@ -4,6 +4,8 @@ import { Loader2, X } from "lucide-react";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { toast } from "sonner";
 import BookingForm from "../components/BookingForm";
+import { individualVersions, LATEST_INDIVIDUAL_VERSION, corporateSections, corporateDeclaration } from "@/lib/cellarClubTerms";
+import CellarClubTermsBody from "../components/CellarClubTermsBody";
 
 const CORPORATE_LIMITS = {
   "Corporate 6": 1,
@@ -123,9 +125,10 @@ export default function MyCellar() {
     : null;
   const withinCoolingOff = daysSinceStart !== null && daysSinceStart <= 14;
 
-  const termsHref = isCorporate
-    ? "/cellar-club/terms?type=corporate"
-    : `/cellar-club/terms?type=individual&version=${member?.accepted_tc_version || "v1"}`;
+  const individualContent = individualVersions[member?.accepted_tc_version] || individualVersions[LATEST_INDIVIDUAL_VERSION];
+  const termsSections = isCorporate ? corporateSections : individualContent.sections;
+  const termsDeclaration = isCorporate ? corporateDeclaration : individualContent.declaration;
+  const termsUpdatedLabel = isCorporate ? "June 2026" : individualContent.label;
 
   const isLocked = (row) => {
     if (!row?.last_changed_at) return false;
@@ -476,22 +479,18 @@ export default function MyCellar() {
 
         {activeTab === "terms" && (
           <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "24px" }}>
-            <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777" }}>Terms & Conditions</p>
-
-            <p className="text-sm leading-relaxed mb-4" style={{ color: "#0A242C" }}>
-              You can view the {isCorporate ? "Corporate" : "Individual"} Cellar Club Terms & Conditions you agreed to below.
+            <p className="text-xs uppercase tracking-widest mb-5" style={{ color: "#777777" }}>
+              {isCorporate ? "Corporate" : "Individual"} Terms & Conditions
             </p>
 
-            <a
-              href={termsHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ display: "inline-block", padding: "9px 20px", backgroundColor: "#1E4D5A", color: "#f3f2ee", fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", textDecoration: "none", marginBottom: "28px" }}
-            >
-              View Terms & Conditions →
-            </a>
+            <CellarClubTermsBody
+              sections={termsSections}
+              declaration={termsDeclaration}
+              updatedLabel={termsUpdatedLabel}
+              showContact={false}
+            />
 
-            <div style={{ borderTop: "1px solid #d8d6d0", paddingTop: "24px" }}>
+            <div style={{ borderTop: "1px solid #d8d6d0", paddingTop: "24px", marginTop: "8px" }}>
               <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#777777" }}>14-day cancellation</p>
 
               {withinCoolingOff ? (
