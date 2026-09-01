@@ -4,7 +4,7 @@ import { Loader2, X } from "lucide-react";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { toast } from "sonner";
 import BookingForm from "../components/BookingForm";
-import { individualVersions, LATEST_INDIVIDUAL_VERSION, corporateSections, corporateDeclaration } from "@/lib/cellarClubTerms";
+import { individualVersions, LATEST_INDIVIDUAL_VERSION, corporateVersions, LATEST_CORPORATE_VERSION } from "@/lib/cellarClubTerms";
 import CellarClubTermsBody from "../components/CellarClubTermsBody";
 
 const CORPORATE_LIMITS = {
@@ -126,9 +126,11 @@ export default function MyCellar() {
   const withinCoolingOff = daysSinceStart !== null && daysSinceStart <= 14;
 
   const individualContent = individualVersions[member?.accepted_tc_version] || individualVersions[LATEST_INDIVIDUAL_VERSION];
-  const termsSections = isCorporate ? corporateSections : individualContent.sections;
-  const termsDeclaration = isCorporate ? corporateDeclaration : individualContent.declaration;
-  const termsUpdatedLabel = isCorporate ? "June 2026" : individualContent.label;
+  const corporateContent = corporateVersions[member?.accepted_tc_version] || corporateVersions[LATEST_CORPORATE_VERSION];
+
+  const termsSections = isCorporate ? corporateContent.sections : individualContent.sections;
+  const termsDeclaration = isCorporate ? corporateContent.declaration : individualContent.declaration;
+  const termsUpdatedLabel = isCorporate ? corporateContent.label : individualContent.label;
 
   const isLocked = (row) => {
     if (!row?.last_changed_at) return false;

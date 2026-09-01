@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { individualVersions, LATEST_INDIVIDUAL_VERSION, corporateSections, corporateDeclaration } from "@/lib/cellarClubTerms";
+import { individualVersions, LATEST_INDIVIDUAL_VERSION, corporateVersions, LATEST_CORPORATE_VERSION } from "@/lib/cellarClubTerms";
 import CellarClubTermsBody from "@/components/CellarClubTermsBody";
 
 export default function CellarClubTerms() {
@@ -8,10 +8,13 @@ export default function CellarClubTerms() {
     const params = new URLSearchParams(window.location.search);
     const type = params.get("type") === "corporate" ? "corporate" : "individual";
     const requestedVersion = params.get("version");
-    const version =
-      type === "individual" && requestedVersion && individualVersions[requestedVersion]
-        ? requestedVersion
-        : LATEST_INDIVIDUAL_VERSION;
+
+    if (type === "corporate") {
+      const version = requestedVersion && corporateVersions[requestedVersion] ? requestedVersion : LATEST_CORPORATE_VERSION;
+      return { type, version };
+    }
+
+    const version = requestedVersion && individualVersions[requestedVersion] ? requestedVersion : LATEST_INDIVIDUAL_VERSION;
     return { type, version };
   })();
 
@@ -19,11 +22,13 @@ export default function CellarClubTerms() {
   const [version] = useState(initial.version);
 
   const isIndividual = activeTab === "individual";
-  const individualContent = individualVersions[version] || individualVersions[LATEST_INDIVIDUAL_VERSION];
 
-  const sections = isIndividual ? individualContent.sections : corporateSections;
-  const declaration = isIndividual ? individualContent.declaration : corporateDeclaration;
-  const updatedLabel = isIndividual ? individualContent.label : "June 2026";
+  const individualContent = individualVersions[version] || individualVersions[LATEST_INDIVIDUAL_VERSION];
+  const corporateContent = corporateVersions[version] || corporateVersions[LATEST_CORPORATE_VERSION];
+
+  const sections = isIndividual ? individualContent.sections : corporateContent.sections;
+  const declaration = isIndividual ? individualContent.declaration : corporateContent.declaration;
+  const updatedLabel = isIndividual ? individualContent.label : corporateContent.label;
 
   const tabBase = {
     fontFamily: "'Courier New', Courier, monospace",
