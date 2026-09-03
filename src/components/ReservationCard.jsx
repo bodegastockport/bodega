@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { supabase } from "@/lib/supabase";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+
+const FALLBACK_DURATION = 30;
 
 const STATUS_STYLES = {
   confirmed: { backgroundColor: "#eaf0ec", color: "#2e6b45", border: "1px solid #c8dace" },
@@ -12,6 +16,7 @@ const btnPrimary = {
   border: "none", borderRadius: "0px", fontFamily: "'Courier New', Courier, monospace",
   fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.06em",
   cursor: "pointer", transition: "background-color 0.15s",
+  display: "inline-flex", alignItems: "center", gap: "6px",
 };
 
 const btnOutline = {
@@ -21,21 +26,77 @@ const btnOutline = {
   cursor: "pointer", transition: "background-color 0.15s, color 0.15s",
 };
 
+const inputStyle = {
+  backgroundColor: "#f3f2ee",
+  border: "1px solid #d8d6d0",
+  borderRadius: "0px",
+  fontFamily: "'Courier New', Courier, monospace",
+  fontSize: "12px",
+  color: "#0A242C",
+  padding: "5px 8px",
+  outline: "none",
+  width: "100%",
+};
+
+const labelStyle = {
+  display: "block",
+  fontSize: "10px",
+  textTransform: "uppercase",
+  letterSpacing: "0.08em",
+  color: "#777777",
+  marginBottom: "4px",
+};
+
+function timeToMinutes(t) {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function isOverlapping(startA, durationA, startB, durationB) {
+  const aStart = timeToMinutes(startA);
+  const aEnd = aStart + durationA;
+  const bStart = timeToMinutes(startB);
+  const bEnd = bStart + durationB;
+  return aStart < bEnd && bStart < aEnd;
+}
+
+function editStateFrom(reservation) {
+  return {
+    guest_name: reservation.guest_name || "",
+    email: reservation.email || "",
+    phone: reservation.phone || "",
+    date: reservation.date || "",
+    time: (reservation.time || "").slice(0, 5),
+    party_size: reservation.party_size || 1,
+    table_id: reservation.table_id || "",
+    special_requests: reservation.special_requests || "",
+  };
+}
+
 export default function ReservationCard({ reservation, onUpdate }) {
   const [tables, setTables] = useState([]);
+  const [slotDuration, setSlotDuration] = useState(FALLBACK_DURATION);
   const [selectedTable, setSelectedTable] = useState(reservation.table_id || "");
   const [reassigning, setReassigning] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState(null);
+  const [edit, setEdit] = useState(editStateFrom(reservation));
 
   useEffect(() => {
-    const loadTables = async () => {
-      const { data } = await supabase
+    const loadData = async () => {
+      const { data: tableData } = await supabase
         .from("tables")
         .select("id, name, capacity")
         .eq("active", true)
         .order("name");
-      setTables(data || []);
+      setTables(tableData || []);
+
+      const { data: settingsData } = await supabase.from("bar_settings").select();
+      const row = (settingsData || []).find((r) => r.key === "slot_duration");
+      if (row?.value) setSlotDuration(parseInt(row.value));
     };
-    loadTables();
+    loadData();
   }, []);
 
   const updateStatus = async (newStatus) => {
@@ -59,7 +120,151 @@ export default function ReservationCard({ reservation, onUpdate }) {
     onUpdate();
   };
 
+  const startEdit = () => {
+    setEdit(editStateFrom(reservation));
+    setEditError(null);
+    setEditing(true);
+  };
+
+  const setField = (key, value) => setEdit((p) => ({ ...p, [key]: value }));
+
+  const canSave = edit.guest_name.trim() && edit.email.trim() && edit.phone.trim() && edit.date && edit.time && edit.table_id && Number(edit.party_size) > 0;
+
+  const saveEdit = async () => {
+    if (!canSave) return;
+    setSaving(true);
+    setEditError(null);
+
+    const newTime = edit.time.slice(0, 5);
+
+    const { data: existing, error: fetchErr } = await supabase
+      .from("reservations")
+      .select("id, time")
+      .eq("date", edit.date)
+      .eq("table_id", edit.table_id)
+      .eq("status", "confirmed")
+      .neq("id", reservation.id);
+
+    if (fetchErr) {
+      setEditError("Could not check table availability. Please try again.");
+      setSaving(false);
+      return;
+    }
+
+    const conflict = (existing || []).some((r) =>
+      isOverlapping(r.time, slotDuration, newTime, slotDuration)
+    );
+
+    if (conflict) {
+      setEditError("That table already has a confirmed booking overlapping this time. Choose a different table or time.");
+      setSaving(false);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("reservations")
+      .update({
+        guest_name: edit.guest_name.trim(),
+        email: edit.email.trim(),
+        phone: edit.phone.trim(),
+        date: edit.date,
+        time: newTime,
+        party_size: Number(edit.party_size),
+        table_id: edit.table_id,
+        special_requests: edit.special_requests.trim() || null,
+      })
+      .eq("id", reservation.id);
+
+    setSaving(false);
+    if (error) {
+      setEditError("Something went wrong. The booking was not changed.");
+      return;
+    }
+    toast.success("Booking updated");
+    setSelectedTable(edit.table_id);
+    setEditing(false);
+    onUpdate();
+  };
+
   const statusStyle = STATUS_STYLES[reservation.status] || STATUS_STYLES.confirmed;
+
+  if (editing) {
+    return (
+      <div style={{ backgroundColor: "#eceae4", border: "1px solid #1E4D5A", padding: "20px", fontFamily: "'Courier New', Courier, monospace" }}>
+        <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#1E4D5A" }}>Edit booking</p>
+        <p className="text-xs mb-4 leading-relaxed" style={{ color: "#777777" }}>
+          Opening days, minimum notice and the walk-in cap don't apply here. Table conflicts are still checked.
+        </p>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+          <div>
+            <label style={labelStyle}>Date</label>
+            <input type="date" style={inputStyle} value={edit.date} onChange={(e) => setField("date", e.target.value)} />
+          </div>
+          <div>
+            <label style={labelStyle}>Time</label>
+            <input type="time" style={inputStyle} value={edit.time} onChange={(e) => setField("time", e.target.value)} />
+          </div>
+          <div>
+            <label style={labelStyle}>Guests</label>
+            <input type="number" min="1" style={inputStyle} value={edit.party_size} onChange={(e) => setField("party_size", e.target.value)} />
+          </div>
+          <div>
+            <label style={labelStyle}>Table</label>
+            <select style={inputStyle} value={edit.table_id} onChange={(e) => setField("table_id", e.target.value)}>
+              <option value="">Select a table</option>
+              {tables.map((t) => (
+                <option key={t.id} value={t.id}>{t.name} ({t.capacity})</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+          <div>
+            <label style={labelStyle}>Name</label>
+            <input style={inputStyle} value={edit.guest_name} onChange={(e) => setField("guest_name", e.target.value)} />
+          </div>
+          <div>
+            <label style={labelStyle}>Email</label>
+            <input type="email" style={inputStyle} value={edit.email} onChange={(e) => setField("email", e.target.value)} />
+          </div>
+          <div>
+            <label style={labelStyle}>Phone</label>
+            <input style={inputStyle} value={edit.phone} onChange={(e) => setField("phone", e.target.value)} />
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <label style={labelStyle}>Special requests</label>
+          <textarea style={{ ...inputStyle, minHeight: "56px", resize: "none" }} value={edit.special_requests} onChange={(e) => setField("special_requests", e.target.value)} />
+        </div>
+
+        {editError && <p className="mb-3" style={{ fontSize: "12px", color: "#c0392b" }}>{editError}</p>}
+
+        <div className="flex gap-2 flex-wrap">
+          <button
+            style={{ ...btnPrimary, opacity: !canSave || saving ? 0.6 : 1, cursor: !canSave || saving ? "not-allowed" : "pointer" }}
+            onMouseEnter={e => { if (canSave && !saving) e.currentTarget.style.backgroundColor = "#0A242C"; }}
+            onMouseLeave={e => { e.currentTarget.style.backgroundColor = "#1E4D5A"; }}
+            onClick={saveEdit}
+            disabled={!canSave || saving}
+          >
+            {saving && <Loader2 className="h-3 w-3 animate-spin" />} Save changes
+          </button>
+          <button
+            style={btnOutline}
+            onMouseEnter={e => { e.currentTarget.style.backgroundColor = "#1E4D5A"; e.currentTarget.style.color = "#f3f2ee"; }}
+            onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#1E4D5A"; }}
+            onClick={() => setEditing(false)}
+            disabled={saving}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ backgroundColor: "#eceae4", border: "1px solid #d8d6d0", padding: "20px", fontFamily: "'Courier New', Courier, monospace" }}>
@@ -138,6 +343,14 @@ export default function ReservationCard({ reservation, onUpdate }) {
               onClick={() => updateStatus("completed")}
             >
               Mark complete
+            </button>
+            <button
+              style={btnOutline}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = "#1E4D5A"; e.currentTarget.style.color = "#f3f2ee"; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#1E4D5A"; }}
+              onClick={startEdit}
+            >
+              Edit
             </button>
             <button
               style={btnOutline}
