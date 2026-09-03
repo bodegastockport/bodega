@@ -175,7 +175,14 @@ export default function Settings() {
     if (!newOverride.table_id || !newOverride.date) return;
     setSavingOverride(true);
     const { error } = await supabase.from('table_date_overrides').upsert({ table_id: newOverride.table_id, date: newOverride.date, available: false }, { onConflict: 'table_id,date' });
-    if (!error) { await loadOverrides(); setNewOverride({ table_id: "", date: "" }); setAddingOverride(false); toast.success("Table marked unavailable for that date"); }
+    if (!error) {
+      await loadOverrides();
+      setNewOverride({ table_id: "", date: "" });
+      setAddingOverride(false);
+      toast.success("Table marked unavailable for that date");
+    } else {
+      toast.error("Could not save. The change was not applied.");
+    }
     setSavingOverride(false);
   };
 
