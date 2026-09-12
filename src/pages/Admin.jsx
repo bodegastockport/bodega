@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
-import { parseISO, isToday, subDays, isAfter, startOfDay } from "date-fns";
+import { format, parseISO, isToday, subDays } from "date-fns";
 import { Search, Loader2, CalendarDays, Plus } from "lucide-react";
 import ReservationCard from "../components/ReservationCard";
 import AdminCalendarView from "../components/AdminCalendarView";
@@ -43,6 +43,8 @@ const TAB_LABELS = {
   team:         "Team",
   settings:     "Settings",
 };
+
+const PAST_ROW_LIMIT = 150;
 
 function TeamManager() {
   const [inviteEmail, setInviteEmail] = useState("");
@@ -143,17 +145,30 @@ export default function Admin() {
 
   const availableTabs = isAdmin ? ALL_TABS : TEAM_TABS;
 
-  const yesterday = startOfDay(subDays(new Date(), 1));
+  const cutoffDate = subDays(new Date(), 1);
+  const cutoffStr = format(cutoffDate, "yyyy-MM-dd");
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("reservations")
-      .select("*, tables(name)")
-      .order("date", { ascending: true })
-      .order("time", { ascending: true })
-      .limit(200);
-    setReservations(data || []);
+
+    const [{ data: currentAndFuture }, { data: recentPast }] = await Promise.all([
+      supabase
+        .from("reservations")
+        .select("*, tables(name)")
+        .gte("date", cutoffStr)
+        .order("date", { ascending: true })
+        .order("time", { ascending: true }),
+      supabase
+        .from("reservations")
+        .select("*, tables(name)")
+        .lt("date", cutoffStr)
+        .order("date", { ascending: false })
+        .order("time", { ascending: false })
+        .limit(PAST_ROW_LIMIT),
+    ]);
+
+    const merged = [...(recentPast || []).slice().reverse(), ...(currentAndFuture || [])];
+    setReservations(merged);
     setLoading(false);
   };
 
@@ -186,22 +201,14 @@ export default function Admin() {
     if (!q) return false;
     if (resTab === "upcoming") return r.status === "confirmed";
     if (resTab === "today")    return isToday(parseISO(r.date)) && r.status === "confirmed";
-    if (resTab === "past") {
-      const isPast = r.status === "completed" || r.status === "cancelled";
-      const isRecent = isAfter(startOfDay(parseISO(r.date)), yesterday);
-      return isPast && isRecent;
-    }
+    if (resTab === "past")     return r.status === "completed" || r.status === "cancelled";
     return true;
   });
 
   const counts = {
     upcoming: reservations.filter(r => r.status === "confirmed").length,
     today:    reservations.filter(r => isToday(parseISO(r.date)) && r.status === "confirmed").length,
-    past:     reservations.filter(r => {
-      const isPast = r.status === "completed" || r.status === "cancelled";
-      const isRecent = isAfter(startOfDay(parseISO(r.date)), yesterday);
-      return isPast && isRecent;
-    }).length,
+    past:     reservations.filter(r => r.status === "completed" || r.status === "cancelled").length,
   };
 
   return (
