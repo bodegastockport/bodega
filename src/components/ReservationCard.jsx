@@ -78,6 +78,7 @@ export default function ReservationCard({ reservation, onUpdate }) {
   const [slotDuration, setSlotDuration] = useState(FALLBACK_DURATION);
   const [selectedTable, setSelectedTable] = useState(reservation.table_id || "");
   const [reassigning, setReassigning] = useState(false);
+  const [reassignError, setReassignError] = useState(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState(null);
@@ -110,11 +111,47 @@ export default function ReservationCard({ reservation, onUpdate }) {
   };
 
   const reassignTable = async (tableId) => {
+    setReassignError(null);
+
+    if (!tableId) {
+      setReassigning(true);
+      setSelectedTable(tableId);
+      await supabase.from("reservations").update({ table_id: null }).eq("id", reservation.id);
+      setReassigning(false);
+      onUpdate();
+      return;
+    }
+
     setReassigning(true);
+
+    const { data: existing, error: fetchErr } = await supabase
+      .from("reservations")
+      .select("id, time")
+      .eq("date", reservation.date)
+      .eq("table_id", tableId)
+      .eq("status", "confirmed")
+      .neq("id", reservation.id);
+
+    if (fetchErr) {
+      setReassignError("Could not check table availability. Please try again.");
+      setReassigning(false);
+      return;
+    }
+
+    const conflict = (existing || []).some((r) =>
+      isOverlapping(r.time, slotDuration, reservation.time, slotDuration)
+    );
+
+    if (conflict) {
+      setReassignError("That table already has a confirmed booking overlapping this time.");
+      setReassigning(false);
+      return;
+    }
+
     setSelectedTable(tableId);
     await supabase
       .from("reservations")
-      .update({ table_id: tableId || null })
+      .update({ table_id: tableId })
       .eq("id", reservation.id);
     setReassigning(false);
     onUpdate();
@@ -317,6 +354,9 @@ export default function ReservationCard({ reservation, onUpdate }) {
               </option>
             ))}
           </select>
+          {reassignError && (
+            <p className="mt-1" style={{ fontSize: "10px", color: "#c0392b" }}>{reassignError}</p>
+          )}
         </div>
       </div>
 
