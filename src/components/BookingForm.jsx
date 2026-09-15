@@ -13,8 +13,9 @@ const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", 
 const TOTAL_VENUE_SEATS = 34;
 
 // Seats deliberately kept free for walk-ins. Online bookings stop once
-// this many seats remain unbooked for a given slot — confirmed with Bodega.
-const WALKIN_RESERVED_SEATS = 14;
+// this many seats remain unbooked for a given slot — confirmed with Bodega
+// (roughly 30% of total capacity, matching the Settings description).
+const WALKIN_RESERVED_SEATS = 10;
 
 // Seats bookable online before the system stops accepting further online
 // bookings for that slot.
