@@ -369,7 +369,7 @@ export default function Settings() {
             <div>
               <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#0A242C" }}>Walk-in cap</p>
               <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>
-                When on, online bookings stop accepting once 20 seats are taken at any point in time, keeping 14 seats free for walk-ins.
+                When on, this blocks out 30% of seats for walk-ins, leaving 70% bookable online.
               </p>
             </div>
             <Switch
