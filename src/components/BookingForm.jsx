@@ -7,7 +7,19 @@ import { Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const WALKIN_CAP_SEATS = 14;
+
+// Total seats across the venue's active tables. Used to work out the
+// walk-in reserve below. Update this if total table capacity changes.
+const TOTAL_VENUE_SEATS = 34;
+
+// Seats deliberately kept free for walk-ins. Online bookings stop once
+// this many seats remain unbooked for a given slot — confirmed with Bodega.
+const WALKIN_RESERVED_SEATS = 14;
+
+// Seats bookable online before the system stops accepting further online
+// bookings for that slot.
+const MAX_ONLINE_BOOKING_SEATS = TOTAL_VENUE_SEATS - WALKIN_RESERVED_SEATS;
+
 const FALLBACK_INTERVAL = 30;
 const FALLBACK_DURATION = 30;
 const MIN_BOOKING_MINUTES = 60;
@@ -172,7 +184,7 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
 
         if (walkinCapEnabled) {
           const seatsBooked = overlappingReservations.reduce((sum, r) => sum + (r.party_size || 0), 0);
-          if (seatsBooked >= WALKIN_CAP_SEATS) return { time: slot, available: false, maxCapacity: 0 };
+          if (seatsBooked >= MAX_ONLINE_BOOKING_SEATS) return { time: slot, available: false, maxCapacity: 0 };
         }
 
         const maxCap = Math.max(...freeTables.map(t => t.capacity));
@@ -239,7 +251,7 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
 
     if (walkinCapEnabled) {
       const seatsBooked = bookedAtSlot.reduce((sum, r) => sum + (r.party_size || 0), 0);
-      if (seatsBooked >= WALKIN_CAP_SEATS) {
+      if (seatsBooked >= MAX_ONLINE_BOOKING_SEATS) {
         setError("Sorry, that slot is no longer available. Please choose another time.");
         setSubmitting(false);
         return;
