@@ -94,6 +94,7 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
   const [focused, setFocused] = useState(null);
 
   const [openDays, setOpenDays] = useState({});
+  const [closedDates, setClosedDates] = useState([]);
   const [bookingInterval, setBookingInterval] = useState(FALLBACK_INTERVAL);
   const [slotDuration, setSlotDuration] = useState(FALLBACK_DURATION);
   const [bookingLeadDays, setBookingLeadDays] = useState(28);
@@ -111,6 +112,7 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
         const map = {};
         data.forEach((r) => { map[r.key] = r.value; });
         if (map.open_days) { try { setOpenDays(JSON.parse(map.open_days)); } catch {} }
+        if (map.closed_dates) { try { const parsed = JSON.parse(map.closed_dates); setClosedDates(Array.isArray(parsed) ? parsed : []); } catch {} }
         setBookingInterval(map.booking_interval ? parseInt(map.booking_interval) : FALLBACK_INTERVAL);
         setSlotDuration(map.slot_duration ? parseInt(map.slot_duration) : FALLBACK_DURATION);
         if (map.booking_lead_days) setBookingLeadDays(parseInt(map.booking_lead_days));
@@ -146,6 +148,9 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
       if (!dayConfig?.open) { setCheckingAvailability(false); return; }
 
       const dateStr = format(form.date, "yyyy-MM-dd");
+
+      if (closedDates.includes(dateStr)) { setCheckingAvailability(false); return; }
+
       const now = new Date();
       const closingMins = timeToMinutes(dayConfig.to);
 
@@ -196,11 +201,12 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
       setCheckingAvailability(false);
     };
     checkAvailability();
-  }, [form.date, settingsLoaded, openDays, bookingInterval, slotDuration, walkinCapEnabled, minNoticeHours]);
+  }, [form.date, settingsLoaded, openDays, closedDates, bookingInterval, slotDuration, walkinCapEnabled, minNoticeHours]);
 
   const isDateDisabled = (date) => {
     if (isBefore(date, startOfToday())) return true;
     if (date > addDays(new Date(), bookingLeadDays)) return true;
+    if (closedDates.includes(format(date, "yyyy-MM-dd"))) return true;
     const dayName = DAYS[date.getDay()];
     return !openDays[dayName]?.open;
   };
@@ -225,6 +231,12 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
     const dayConfig = openDays[dayName];
     const closingMins = dayConfig ? timeToMinutes(dayConfig.to) : timeToMinutes(form.time) + slotDuration;
     const formDur = effectiveDuration(form.time, closingMins, slotDuration);
+
+    if (closedDates.includes(dateStr)) {
+      setError("Sorry, we are closed on that date. Please choose another day.");
+      setSubmitting(false);
+      return;
+    }
 
     if (minNoticeHours > 0) {
       const [slotH, slotM] = form.time.split(":").map(Number);
