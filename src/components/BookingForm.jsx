@@ -213,15 +213,12 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
       setTimeSlots(slotsInfo);
       setCheckingAvailability(false);
 
-      // "Booked up" popup trigger: every slot unavailable, OR the only
-      // slot still open is the last slot of the day (Adam's "we still
-      // have 10pm left" case) — both read as fully booked to a customer.
+      // "Booked up" popup trigger: zero slots open, or only one slot left
+      // open at all (Adam's "we still have 10pm left" case) — both read
+      // as fully booked to a customer, regardless of which slot it is.
       if (slotsInfo.length > 0) {
         const openSlots = slotsInfo.filter(s => s.available);
-        const lastSlot = slotsInfo[slotsInfo.length - 1];
-        const bookedUp =
-          openSlots.length === 0 ||
-          (openSlots.length === 1 && openSlots[0].time === lastSlot.time);
+        const bookedUp = openSlots.length <= 1;
         if (bookedUp) setShowBookedUpDialog(true);
       }
     };
