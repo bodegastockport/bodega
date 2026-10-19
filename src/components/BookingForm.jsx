@@ -3,6 +3,7 @@ import { format, addDays, isBefore, startOfToday } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -24,6 +25,13 @@ const MAX_ONLINE_BOOKING_SEATS = TOTAL_VENUE_SEATS - WALKIN_RESERVED_SEATS;
 const FALLBACK_INTERVAL = 30;
 const FALLBACK_DURATION = 30;
 const MIN_BOOKING_MINUTES = 60;
+
+// Shown both as a permanent note near the time picker, and in the popup
+// that appears when a selected date is fully booked (or only has its
+// final slot of the day left). Keep these two in sync — Katie/Adam asked
+// for the same message in both places.
+const WALKIN_MESSAGE =
+  "If a time isn't available, it means we're fully booked for that slot. We always welcome walk-ins, though we can't guarantee a table.";
 
 const inputStyle = {
   backgroundColor: "#f3f2ee",
@@ -105,6 +113,10 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
   const [timeSlots, setTimeSlots] = useState([]);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
 
+  // Shows the "fully booked" popup. Set automatically once an availability
+  // check finishes for a selected date — see checkAvailability() below.
+  const [showBookedUpDialog, setShowBookedUpDialog] = useState(false);
+
   useEffect(() => {
     const loadSettings = async () => {
       const { data } = await supabase.from('bar_settings').select();
@@ -140,6 +152,7 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
     const checkAvailability = async () => {
       setCheckingAvailability(true);
       setTimeSlots([]);
+      setShowBookedUpDialog(false);
       setForm(p => ({ ...p, time: "", party_size: "" }));
 
       const dayName = DAYS[form.date.getDay()];
@@ -199,6 +212,18 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
 
       setTimeSlots(slotsInfo);
       setCheckingAvailability(false);
+
+      // "Booked up" popup trigger: every slot unavailable, OR the only
+      // slot still open is the last slot of the day (Adam's "we still
+      // have 10pm left" case) — both read as fully booked to a customer.
+      if (slotsInfo.length > 0) {
+        const openSlots = slotsInfo.filter(s => s.available);
+        const lastSlot = slotsInfo[slotsInfo.length - 1];
+        const bookedUp =
+          openSlots.length === 0 ||
+          (openSlots.length === 1 && openSlots[0].time === lastSlot.time);
+        if (bookedUp) setShowBookedUpDialog(true);
+      }
     };
     checkAvailability();
   }, [form.date, settingsLoaded, openDays, closedDates, bookingInterval, slotDuration, walkinCapEnabled, minNoticeHours]);
@@ -371,6 +396,10 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
         </div>
       </div>
 
+      <p style={{ fontSize: "11px", color: "#777777", fontFamily: "'Courier New', Courier, monospace", lineHeight: 1.4 }}>
+        {WALKIN_MESSAGE}
+      </p>
+
       {form.date && !checkingAvailability && noAvailability && (
         <p style={{ fontSize: "12px", color: "#c0392b" }}>No availability on this date. Please try another day.</p>
       )}
@@ -421,6 +450,19 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
       >
         {submitting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Reserving...</> : "Reserve a table"}
       </button>
+
+      <Dialog open={showBookedUpDialog} onOpenChange={setShowBookedUpDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: "15px" }}>
+              We're fully booked for this date
+            </DialogTitle>
+            <DialogDescription style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: "13px" }}>
+              {WALKIN_MESSAGE}
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </form>
   );
 }
