@@ -26,10 +26,15 @@ const FALLBACK_INTERVAL = 30;
 const FALLBACK_DURATION = 30;
 const MIN_BOOKING_MINUTES = 60;
 
+// The "fully booked" popup treats a date as booked up once nothing before
+// this time is still available — i.e. zero slots open, or the only slots
+// left are 10pm or later. Change this if Adam wants a different cutoff.
+const LAST_ORDERS_CUTOFF = "22:00";
+
 // Shown both as a permanent note near the time picker, and in the popup
-// that appears when a selected date is fully booked (or only has its
-// final slot of the day left). Keep these two in sync — Katie/Adam asked
-// for the same message in both places.
+// that appears when a selected date is fully booked (or only has slots
+// left at/after the cutoff above). Keep these two in sync — Katie/Adam
+// asked for the same message in both places.
 const WALKIN_MESSAGE =
   "If a time isn't available, it means we're fully booked for that slot. We always welcome walk-ins, though we can't guarantee a table.";
 
@@ -213,12 +218,13 @@ export default function BookingForm({ onSuccess, member = null, bottleOptions = 
       setTimeSlots(slotsInfo);
       setCheckingAvailability(false);
 
-      // "Booked up" popup trigger: zero slots open, or only one slot left
-      // open at all (Adam's "we still have 10pm left" case) — both read
-      // as fully booked to a customer, regardless of which slot it is.
+      // "Booked up" popup trigger: nothing is available before the cutoff
+      // (LAST_ORDERS_CUTOFF, 10pm by default) — i.e. zero slots open, or
+      // the only slots left are at/after that time. Any number of late
+      // slots being open still counts as "booked up".
       if (slotsInfo.length > 0) {
-        const openSlots = slotsInfo.filter(s => s.available);
-        const bookedUp = openSlots.length <= 1;
+        const cutoffMins = timeToMinutes(LAST_ORDERS_CUTOFF);
+        const bookedUp = slotsInfo.every(s => !s.available || timeToMinutes(s.time) >= cutoffMins);
         if (bookedUp) setShowBookedUpDialog(true);
       }
     };
