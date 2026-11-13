@@ -549,7 +549,7 @@ export default function CellarClub() {
                 decoding="async"
                 style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
               />
-              <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,10,10,0.6)" }} />
+              <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,10,10,0.78)" }} />
               <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
                 <div style={{ width: "100%", maxWidth: "340px" }}>
                   {rightPanelContent()}
