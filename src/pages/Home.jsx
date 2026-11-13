@@ -49,7 +49,7 @@ const HERO_IMAGES = [
 ];
 
 const FADE_DURATION = 1500; // ms
-const SLIDE_INTERVAL = 6000; // ms each image holds before crossfading
+const SLIDE_INTERVAL = 10000; // ms each image holds before crossfading
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -107,7 +107,7 @@ export default function Home() {
           {renderHeroImages()}
         </div>
 
-        <div style={{ marginLeft: "50vw", width: "50vw", minHeight: "100vh", backgroundColor: "#f3f2ee", borderLeft: "1px solid #d8d6d0", display: "flex", flexDirection: "column" }}>
+        <div style={{ marginLeft: "50vw", width: "50vw", minHeight: "calc(100vh - 56px)", backgroundColor: "#f3f2ee", borderLeft: "1px solid #d8d6d0", display: "flex", flexDirection: "column" }}>
           <div style={{ flex: 1, padding: "32px 36px", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div style={{ width: "100%", maxWidth: "400px" }}>
               <h1 style={{ fontSize: "28px", color: "#1E4D5A", fontWeight: 400, fontFamily: "'Courier New', Courier, monospace", lineHeight: "1.3", marginBottom: "14px" }}>
