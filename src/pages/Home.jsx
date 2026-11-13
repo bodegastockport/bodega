@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import SEO from "../components/SEO";
 import BookingForm from "../components/BookingForm";
 import BookingConfirmation from "../components/BookingConfirmation";
@@ -34,19 +34,66 @@ const schema = {
   "servesCuisine": ["Wine", "Charcuterie", "Cheese"],
   "priceRange": "££",
   "currenciesAccepted": "GBP",
-  "image": "https://bodegawine.co.uk/images/hero.webp",
+  "image": "https://bodegawine.co.uk/images/hero3.webp",
   "sameAs": [
     "https://www.instagram.com/bodegastockport",
     "https://www.tiktok.com/@bodegastockport"
   ]
 }
 
+const HERO_IMAGES = [
+  "/images/hero2.webp",
+  "/images/hero3.webp",
+  "/images/hero4.webp",
+  "/images/hero5.webp",
+];
+
+const FADE_DURATION = 1500; // ms
+const SLIDE_INTERVAL = 6000; // ms each image holds before crossfading
+
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [firstLoaded, setFirstLoaded] = useState(false);
+  const intervalRef = useRef(null);
+
+  useEffect(() => {
+    if (!firstLoaded) return;
+    intervalRef.current = setInterval(() => {
+      setActiveIndex(i => (i + 1) % HERO_IMAGES.length);
+    }, SLIDE_INTERVAL);
+    return () => clearInterval(intervalRef.current);
+  }, [firstLoaded]);
 
   const openModal = () => { setModalOpen(true); setConfirmed(null); };
   const closeModal = () => { setModalOpen(false); setConfirmed(null); };
+
+  // Returned inline (not as its own component) so it never remounts on
+  // state change — all images stay in the DOM and only opacity changes.
+  const renderHeroImages = () => HERO_IMAGES.map((src, i) => (
+    <img
+      key={src}
+      src={src}
+      alt="Wine at Bodega wine bar, Stockport"
+      width="1600"
+      height="2000"
+      loading={i === 0 ? "eager" : "lazy"}
+      fetchPriority={i === 0 ? "high" : "auto"}
+      decoding="async"
+      onLoad={() => { if (i === 0) setFirstLoaded(true); }}
+      style={{
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+        opacity: i === activeIndex ? 1 : 0,
+        transition: firstLoaded ? `opacity ${FADE_DURATION}ms ease-in-out` : "none",
+        zIndex: i === activeIndex ? 2 : 1,
+      }}
+    />
+  ));
 
   return (
     <>
@@ -58,17 +105,8 @@ export default function Home() {
       />
 
       <div className="hidden lg:block">
-        <div style={{ position: "fixed", top: 0, left: 0, width: "50vw", height: "100vh", zIndex: 0 }}>
-          <img
-            src="/images/hero.webp"
-            alt="Wine at Bodega wine bar, Stockport"
-            width="1600"
-            height="2000"
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-          />
+        <div style={{ position: "fixed", top: 0, left: 0, width: "50vw", height: "100vh", zIndex: 0, overflow: "hidden" }}>
+          {renderHeroImages()}
         </div>
 
         <div style={{ marginLeft: "50vw", width: "50vw", minHeight: "100vh", backgroundColor: "#f3f2ee", borderLeft: "1px solid #d8d6d0", display: "flex", flexDirection: "column" }}>
@@ -104,17 +142,8 @@ export default function Home() {
       </div>
 
       <div className="lg:hidden flex flex-col" style={{ backgroundColor: "#f3f2ee" }}>
-        <div style={{ position: "relative", width: "100%", height: "50vh", flexShrink: 0 }}>
-          <img
-            src="/images/hero.webp"
-            alt="Wine at Bodega wine bar, Stockport"
-            width="1600"
-            height="2000"
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-          />
+        <div style={{ position: "relative", width: "100%", height: "50vh", flexShrink: 0, overflow: "hidden" }}>
+          {renderHeroImages()}
         </div>
 
         <div style={{ padding: "32px 24px" }}>
