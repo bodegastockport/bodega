@@ -27,7 +27,7 @@ export default function GiftCards() {
       <div className="hidden lg:block">
         <div style={{ position: "fixed", top: 0, left: 0, width: "50vw", height: "100vh", zIndex: 0 }}>
           <img
-            src="/images/cellar-club.webp"
+            src="/images/gift-cards.webp"
             alt="Gift cards at Bodega, Stockport"
             width="1600"
             height="2000"
@@ -71,7 +71,7 @@ export default function GiftCards() {
       <div className="lg:hidden flex flex-col" style={{ backgroundColor: "#f3f2ee" }}>
         <div style={{ position: "relative", width: "100%", height: "50vh", flexShrink: 0 }}>
           <img
-            src="/images/cellar-club.webp"
+            src="/images/gift-cards.webp"
             alt="Gift cards at Bodega, Stockport"
             width="1600"
             height="2000"
