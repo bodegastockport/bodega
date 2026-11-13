@@ -105,7 +105,7 @@ export default function Home() {
       />
 
       <div className="hidden lg:block">
-        <div style={{ position: "fixed", top: 0, left: 0, width: "50vw", height: "calc(100vh - 56px)", zIndex: 0, overflow: "hidden" }}>
+        <div style={{ position: "fixed", top: 0, left: 0, width: "50vw", height: "100vh", zIndex: 0, overflow: "hidden" }}>
           {renderHeroImages()}
         </div>
 
