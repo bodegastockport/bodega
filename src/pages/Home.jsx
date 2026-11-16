@@ -49,7 +49,7 @@ const HERO_IMAGES = [
 ];
 
 const FADE_DURATION = 1500; // ms
-const SLIDE_INTERVAL = 10000; // ms each image holds before crossfading
+const SLIDE_INTERVAL = 5000; // ms each image holds before crossfading
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
