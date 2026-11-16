@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import SEO from "../components/SEO";
 import BookingForm from "../components/BookingForm";
@@ -39,13 +40,13 @@ const schema = {
     "https://www.instagram.com/bodegastockport",
     "https://www.tiktok.com/@bodegastockport"
   ]
-}
+};
 
 const HERO_IMAGES = [
-  "/images/hero2.webp",
   "/images/hero3.webp",
-  "/images/hero4.webp",
   "/images/hero5.webp",
+  "/images/hero4.webp",
+  "/images/hero2.webp",
 ];
 
 const FADE_DURATION = 1500; // ms
@@ -196,5 +197,5 @@ export default function Home() {
         </div>
       )}
     </>
-  )
+  );
 }
